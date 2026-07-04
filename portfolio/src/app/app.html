@@ -1,0 +1,876 @@
+<!-- Floating Glow Blobs -->
+<div class="glow-blob" style="top: 10%; left: 10%; width: 350px; height: 350px; background: rgba(59, 130, 246, 0.15);"></div>
+<div class="glow-blob" style="top: 40%; right: 10%; width: 400px; height: 400px; background: rgba(16, 185, 129, 0.1);"></div>
+<div class="glow-blob" style="bottom: 10%; left: 20%; width: 380px; height: 380px; background: rgba(99, 102, 241, 0.12);"></div>
+
+<!-- Floating Navigation Bar -->
+<header class="navbar">
+  <div class="nav-container">
+    <div class="nav-logo">
+      <span class="logo-text">Himanshu</span><span class="logo-dot">.</span>
+    </div>
+    <nav class="nav-links">
+      <a href="#about">About</a>
+      <a href="#skills">Skills</a>
+      <a href="#experience">Experience</a>
+      <a href="#projects">Projects</a>
+      <a href="#achievements">Achievements</a>
+      <a href="#education">Education</a>
+      <a href="#contact">Contact</a>
+    </nav>
+    <div class="nav-actions" style="display: flex; align-items: center;">
+      <!-- Light/Dark Mode Switcher -->
+      <button (click)="toggleTheme()" class="btn btn-secondary theme-toggle-btn" aria-label="Toggle Theme" style="border-radius: 50%; padding: 0; width: 38px; height: 38px; display: inline-flex; align-items: center; justify-content: center; margin-right: 0.75rem; cursor: pointer;">
+        <i class="fa-solid" [ngClass]="isLightTheme() ? 'fa-moon' : 'fa-sun'"></i>
+      </button>
+
+      <button (click)="scrollToContact()" class="btn btn-outline hire-me-btn">
+        Hire Me <i class="fa-solid fa-rocket"></i>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- Recruiter Highlight Mode Banner -->
+<div class="recruiter-highlight-banner" [ngClass]="{'active-recruiter': isRecruiterMode()}" (click)="toggleRecruiterMode()">
+  <div class="container banner-flex">
+    <i class="fa-solid fa-user-tie banner-icon animate-pulse"></i>
+    <span class="banner-text">
+      {{ isRecruiterMode() ? '★ RECRUITER MODE ACTIVE: Essential qualifications and analytics highlighted' : 'Are you a hiring manager or recruiter? Click here to enable recruiter highlights' }}
+    </span>
+    <button class="btn btn-secondary banner-toggle-btn">{{ isRecruiterMode() ? 'Disable' : 'Enable' }}</button>
+  </div>
+</div>
+
+<!-- Hero Section -->
+<section id="hero" class="hero-section">
+  <div class="dashboard-container">
+    
+    <!-- Column 1: Profile & Info -->
+    <div class="dashboard-col col-main" [ngClass]="{'highlight-border': isRecruiterMode()}">
+      <div class="badge-container">
+        <span class="badge-ready"><i class="fa-solid fa-bolt"></i> READY FOR NEW OPPORTUNITIES</span>
+      </div>
+      
+      <h1 class="dev-name">{{ name.toUpperCase() }}</h1>
+      <h2 class="dev-title">{{ title }}</h2>
+      
+      <div class="tech-pills">
+        <span class="tech-pill">ASP.NET Core</span>
+        <span class="tech-pill">Angular</span>
+        <span class="tech-pill">Azure</span>
+        <span class="tech-pill">SQL Server</span>
+        <span class="tech-pill">Docker</span>
+      </div>
+      
+      <p class="dev-desc">
+        Passionate about building scalable, secure, and high-performance web applications with clean architecture and modern microservices. Experienced in BFSI and corporate sectors.
+      </p>
+      
+      <div class="stats-row">
+        <div class="stat-box" [ngClass]="{'recruiter-highlight': isRecruiterMode()}">
+          <div class="stat-icon-num">
+            <i class="fa-solid fa-briefcase"></i>
+            <span class="stat-val">3.10+</span>
+          </div>
+          <span class="stat-lbl">EXPERIENCE</span>
+          <span class="stat-desc">Building enterprise systems</span>
+        </div>
+        <div class="stat-box">
+          <div class="stat-icon-num">
+            <i class="fa-solid fa-code"></i>
+            <span class="stat-val">15+</span>
+          </div>
+          <span class="stat-lbl">PROJECTS</span>
+          <span class="stat-desc">End-to-end solutions</span>
+        </div>
+        <div class="stat-box">
+          <div class="stat-icon-num">
+            <i class="fa-solid fa-server"></i>
+            <span class="stat-val">100%</span>
+          </div>
+          <span class="stat-lbl">SELF-HOSTED</span>
+          <span class="stat-desc">Personal infrastructure</span>
+        </div>
+      </div>
+      
+      <div class="contacts-list">
+        <a [href]="linkedIn" target="_blank" class="contact-item-row">
+          <div class="contact-left">
+            <i class="fa-brands fa-linkedin-in"></i>
+            <span>linkedin.com/in/himanshu-tripathi780</span>
+          </div>
+          <span class="contact-right">CONNECT</span>
+        </a>
+        <a [href]="gitHub" target="_blank" class="contact-item-row">
+          <div class="contact-left">
+            <i class="fa-brands fa-github"></i>
+            <span>github.com/Himanshutrip780</span>
+          </div>
+        </a>
+        <a href="mailto:himanshutrip780@gmail.com" class="contact-item-row" [ngClass]="{'recruiter-highlight-row': isRecruiterMode()}">
+          <div class="contact-left">
+            <i class="fa-solid fa-envelope"></i>
+            <span>himanshutrip780@gmail.com</span>
+          </div>
+        </a>
+        <div class="contact-item-row contact-split-row">
+          <div class="contact-left">
+            <i class="fa-solid fa-phone"></i>
+            <span>{{ contactPhone }}</span>
+          </div>
+          <div class="contact-right-loc">
+            <i class="fa-solid fa-location-dot"></i>
+            <span>Pune, India</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Column 2: Quick Links -->
+    <div class="dashboard-col col-links">
+      <div class="links-header">
+        <i class="fa-solid fa-link"></i>
+        <span>QUICK LINKS</span>
+      </div>
+      
+      <div class="quick-links-list">
+        <a href="#projects" class="quick-link-card projects-card">
+          <div class="link-card-left">
+            <div class="link-icon-bg blue-bg">
+              <i class="fa-solid fa-folder-open"></i>
+            </div>
+            <div class="link-card-text">
+              <div class="link-title-row">
+                <span class="link-title">My Projects</span>
+              </div>
+              <span class="link-sub">Explore case studies & code</span>
+            </div>
+          </div>
+          <i class="fa-solid fa-arrow-right arrow-icon"></i>
+        </a>
+        
+        <a href="https://hirenow.himanshuprojectportfolio.xyz" target="_blank" class="quick-link-card live-card green-glow">
+          <div class="link-card-left">
+            <div class="link-icon-bg green-bg">
+              <i class="fa-solid fa-user-tie"></i>
+            </div>
+            <div class="link-card-text">
+              <div class="link-title-row">
+                <span class="link-title">HireNow (ATS)</span>
+                <span class="live-indicator green"><span class="pulse-dot green"></span> Live System</span>
+              </div>
+              <span class="link-sub">Applicant Tracking System</span>
+            </div>
+          </div>
+          <i class="fa-solid fa-arrow-right arrow-icon"></i>
+        </a>
+        
+        <a href="https://workflow.himanshuprojectportfolio.xyz" target="_blank" class="quick-link-card live-card purple-glow">
+          <div class="link-card-left">
+            <div class="link-icon-bg purple-bg">
+              <i class="fa-solid fa-diagram-project"></i>
+            </div>
+            <div class="link-card-text">
+              <div class="link-title-row">
+                <span class="link-title">Workflow.io</span>
+                <span class="live-indicator purple"><span class="pulse-dot purple"></span> Live System</span>
+              </div>
+              <span class="link-sub">Workflow Management Platform</span>
+            </div>
+          </div>
+          <i class="fa-solid fa-arrow-right arrow-icon"></i>
+        </a>
+        
+        <button (click)="downloadResume()" class="quick-link-card btn-link-card resume-card cyan-glow" [ngClass]="{'recruiter-highlight-button': isRecruiterMode()}">
+          <div class="link-card-left">
+            <div class="link-icon-bg cyan-bg">
+              <i class="fa-solid fa-file-pdf"></i>
+            </div>
+            <div class="link-card-text">
+              <div class="link-title-row">
+                <span class="link-title">Curriculum Vitae</span>
+                <span class="live-indicator cyan">PDF</span>
+              </div>
+              <span class="link-sub">Resume • View / Download Document</span>
+            </div>
+          </div>
+          <i class="fa-solid fa-arrow-right arrow-icon"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Column 3: JSON Window & Tech Icons -->
+    <div class="dashboard-col col-code">
+      <div class="code-window-header">
+        <div class="window-dots">
+          <span class="w-dot red-dot"></span>
+          <span class="w-dot yellow-dot"></span>
+          <span class="w-dot green-dot"></span>
+        </div>
+        <span class="window-title">developer.json</span>
+      </div>
+      
+      <div class="code-window-body">
+        <pre class="json-code"><code>{{ '{' }}
+  <span class="json-key">"name"</span>: <span class="json-val">"Himanshu Tripathi"</span>,
+  <span class="json-key">"role"</span>: <span class="json-val">".NET Full Stack Developer"</span>,
+  <span class="json-key">"experience"</span>: <span class="json-val">"3.10+ years"</span>,
+  <span class="json-key">"skills"</span>: [
+    <span class="json-val">"ASP.NET Core"</span>,
+    <span class="json-val">"Angular"</span>,
+    <span class="json-val">"SQL Server"</span>,
+    <span class="json-val">"Azure"</span>,
+    <span class="json-val">"Docker"</span>,
+    <span class="json-val">"Kubernetes"</span>,
+    <span class="json-val">"REST Apis"</span>,
+    <span class="json-val">"Clean Architecture"</span>
+  ],
+  <span class="json-key">"status"</span>: <span class="json-val">"Ready to build impactful solutions"</span>
+{{ '}' }}</code></pre>
+      </div>
+      
+      <div class="tech-glow-row">
+        <div class="tech-icon-glow net-badge">.NET</div>
+        <div class="tech-icon-glow angular-badge"><i class="fa-brands fa-angular"></i></div>
+        <div class="tech-icon-glow azure-badge"><i class="fa-brands fa-microsoft"></i></div>
+        <div class="tech-icon-glow csharp-badge">C#</div>
+        <div class="tech-icon-glow docker-badge"><i class="fa-brands fa-docker"></i></div>
+        <div class="tech-icon-glow k8s-badge"><i class="fa-solid fa-dharmachakra"></i></div>
+        <div class="tech-icon-glow github-badge"><i class="fa-brands fa-github"></i></div>
+      </div>
+    </div>
+    
+  </div>
+  
+  <div class="scroll-indicator">
+    <a href="#about" aria-label="Scroll Down"><i class="fa-solid fa-chevron-down bounce"></i></a>
+  </div>
+</section>
+
+<!-- About Me Section -->
+<section id="about" class="about-section">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">About Me</h2>
+      <p class="section-subtitle">Passionate backend-heavy Full Stack Developer specializing in high-performance enterprise applications.</p>
+    </div>
+    
+    <div class="about-grid">
+      <div class="glass-card about-card main-about">
+        <h3>Professional Profile</h3>
+        <p class="about-p">
+          As a .NET Full Stack Developer with over 3.10 years of experience at <strong>Zensar Technologies</strong>, working with our client <strong>FIS Global</strong>, I design and maintain highly scalable, reliable, and secure financial and workflow systems.
+        </p>
+        <p class="about-p">
+          I am heavily focused on Clean Architecture, SOLID design principles, and automated CI/CD practices. This portfolio website and its linked applications represent my core belief in deployment engineering, run fully self-hosted from a personal Windows computer.
+        </p>
+        
+        <div class="info-badges">
+          <div class="info-badge">
+            <i class="fa-solid fa-building"></i>
+            <span>Zensar Technologies</span>
+          </div>
+          <div class="info-badge">
+            <i class="fa-solid fa-handshake"></i>
+            <span>Client: FIS Global</span>
+          </div>
+          <div class="info-badge">
+            <i class="fa-solid fa-location-dot"></i>
+            <span>Pune, India</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="glass-card stats-card">
+        <h3>Self-Hosting Highlight</h3>
+        <div class="hosting-stat-item">
+          <div class="h-icon-box blue"><i class="fa-brands fa-cloudflare"></i></div>
+          <div>
+            <h4>Zero Cloud Costs</h4>
+            <p>Runs entirely on a local workstation using Cloudflare Tunnel DNS routing.</p>
+          </div>
+        </div>
+        
+        <div class="hosting-stat-item">
+          <div class="h-icon-box green"><i class="fa-brands fa-docker"></i></div>
+          <div>
+            <h4>100% Containerized</h4>
+            <p>18 distinct microservices, frontends, and databases run on local Docker Desktop.</p>
+          </div>
+        </div>
+        
+        <div class="hosting-stat-item">
+          <div class="h-icon-box purple"><i class="fa-solid fa-shield-halved"></i></div>
+          <div>
+            <h4>Secure & Private</h4>
+            <p>Protected by Cloudflare edge proxy, HTTPS encryption, with no port forwarding or public IP exposure.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Skills Section -->
+<section id="skills" class="skills-section">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">Technical Skills</h2>
+      <p class="section-subtitle">A comprehensive breakdown of technologies and methodologies I use in enterprise architectures.</p>
+    </div>
+    
+    <!-- Skills Visualization Bar Grid (Always shown, highlighted in Recruiter Mode) -->
+    <div class="skills-visual-container mb-5 glass-card" [ngClass]="{'recruiter-highlight': isRecruiterMode()}">
+      <h3 style="font-size: 1.1rem; margin-bottom: 1.5rem;"><i class="fa-solid fa-chart-line" style="color: var(--primary); margin-right: 0.5rem;"></i> Core Proficiency Metrics</h3>
+      <div class="skills-bars-grid">
+        @for (bar of skillBars; track bar.name) {
+          <div class="skill-bar-row">
+            <div class="skill-bar-info">
+              <span class="skill-bar-name"><i class="fa-solid" [ngClass]="bar.icon"></i> {{ bar.name }}</span>
+              <span class="skill-bar-pct">{{ bar.percentage }}%</span>
+            </div>
+            <div class="skill-bar-bg">
+              <div class="skill-bar-fill" [style.width.%]="bar.percentage"></div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+    
+    <div class="skills-grid">
+      @for (group of skillGroups; track group.category) {
+        <div class="glass-card skill-card">
+          <div class="skill-category-header">
+            <div class="skill-icon-box"><i [class]="group.icon"></i></div>
+            <h3>{{ group.category }}</h3>
+          </div>
+          <div class="skill-tags">
+            @for (skill of group.items; track skill) {
+              <span class="skill-tag" [ngClass]="{'highlight-tag': isRecruiterMode() && (skill.includes('API') || skill.includes('Architecture') || skill.includes('Tuning') || skill.includes('Security'))}">{{ skill }}</span>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</section>
+
+<!-- Work Experience Section -->
+<section id="experience" class="experience-section">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">Professional Experience</h2>
+      <p class="section-subtitle">My professional journey designing enterprise software solutions.</p>
+    </div>
+    
+    <!-- Interactive Timeline -->
+    <div class="career-timeline-container glass-card mb-5">
+      <h3 style="font-size: 1.1rem; margin-bottom: 2rem;"><i class="fa-solid fa-clock-rotate-left" style="color: var(--primary); margin-right: 0.5rem;"></i> Professional Milestones</h3>
+      <div class="vertical-timeline">
+        @for (node of timeline; track node.title; let index = $index) {
+          <div class="timeline-node-row">
+            <div class="timeline-node-time">{{ node.year }}</div>
+            <div class="timeline-node-bullet-col">
+              <div class="timeline-bullet-point"></div>
+              @if (index < timeline.length - 1) {
+                <div class="timeline-bullet-line"></div>
+              }
+            </div>
+            <div class="timeline-node-details">
+              <h4>{{ node.title }}</h4>
+              <p>{{ node.desc }}</p>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+    
+    <div class="timeline">
+      @for (exp of experiences; track exp.role) {
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-date">{{ exp.period }}</div>
+          <div class="glass-card timeline-content">
+            <h3 class="role-title">{{ exp.role }}</h3>
+            <h4 class="company-name">
+              {{ exp.company }} 
+              @if (exp.client) {
+                <span class="client-badge">Client: {{ exp.client }}</span>
+              }
+            </h4>
+            
+            <ul class="resp-list">
+              @for (resp of exp.responsibilities; track resp) {
+                <li><i class="fa-solid fa-caret-right"></i> {{ resp }}</li>
+              }
+            </ul>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</section>
+
+<!-- Projects Section -->
+<section id="projects" class="projects-section">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">Integrated Case Studies</h2>
+      <p class="section-subtitle">Click through tabs to examine problem-solving, architectural design, and results on live applications.</p>
+    </div>
+    
+    <!-- Case Studies detailed panels -->
+    <div class="case-studies-grid">
+      @for (proj of deployedProjects; track proj.name) {
+        <div class="glass-card case-study-card mb-4" [ngClass]="{'recruiter-highlight': isRecruiterMode()}">
+          <div class="project-header" style="border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 1.25rem;">
+            <div class="project-icon-box"><i [class]="proj.icon"></i></div>
+            <div class="project-titles">
+              <h3 style="font-size: 1.5rem; margin: 0;">{{ proj.name }}</h3>
+              <p class="project-tagline" style="margin: 0; font-size: 0.9rem; color: var(--secondary);">{{ proj.tagline }}</p>
+            </div>
+            <div style="margin-left: auto;">
+              <a [href]="proj.url" target="_blank" class="btn btn-primary" style="padding: 0.4rem 1rem; font-size: 0.85rem;">
+                Launch Live App <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 0.75rem; margin-left: 0.25rem;"></i>
+              </a>
+            </div>
+          </div>
+
+          <!-- Tabs Nav -->
+          <div class="case-study-tabs">
+            <button class="tab-btn" [ngClass]="{'active': activeTabs()[proj.name] === 'overview'}" (click)="setProjectTab(proj.name, 'overview')">Overview</button>
+            <button class="tab-btn" [ngClass]="{'active': activeTabs()[proj.name] === 'challenge'}" (click)="setProjectTab(proj.name, 'challenge')">Business & Tech Challenges</button>
+            <button class="tab-btn" [ngClass]="{'active': activeTabs()[proj.name] === 'architecture'}" (click)="setProjectTab(proj.name, 'architecture')">System Architecture</button>
+            <button class="tab-btn" [ngClass]="{'active': activeTabs()[proj.name] === 'results'}" (click)="setProjectTab(proj.name, 'results')">Results & Tech Stack</button>
+          </div>
+
+          <!-- Tab Bodies -->
+          <div class="case-study-content" style="padding-top: 1.5rem;">
+            <!-- Tab 1: Overview -->
+            @if (activeTabs()[proj.name] === 'overview') {
+              <div class="tab-pane animate-fade-in">
+                <p style="font-size: 0.95rem; line-height: 1.6; margin-bottom: 1rem;">{{ proj.description }}</p>
+                <div class="alert-box info-alert">
+                  <strong><i class="fa-solid fa-lightbulb"></i> Business Challenge:</strong>
+                  <p style="margin: 0.25rem 0 0 0; font-size: 0.88rem;">{{ proj.businessProblem }}</p>
+                </div>
+              </div>
+            }
+
+            <!-- Tab 2: Challenge -->
+            @if (activeTabs()[proj.name] === 'challenge') {
+              <div class="tab-pane animate-fade-in">
+                <div class="alert-box danger-alert" style="margin-bottom: 1rem;">
+                  <strong><i class="fa-solid fa-triangle-exclamation"></i> Core Technical Blockers:</strong>
+                  <p style="margin: 0.25rem 0 0 0; font-size: 0.88rem;">{{ proj.technicalChallenge }}</p>
+                </div>
+              </div>
+            }
+
+            <!-- Tab 3: Architecture -->
+            @if (activeTabs()[proj.name] === 'architecture') {
+              <div class="tab-pane animate-fade-in">
+                <h4 style="font-size: 1rem; margin-bottom: 0.75rem;"><i class="fa-solid fa-sitemap"></i> High-Level Integration Topology</h4>
+                <div class="arch-flow-schema">
+                  @if (proj.name === 'HireNow') {
+                    <div class="flow-schema-block">Angular Client <i class="fa-solid fa-arrow-right"></i> Reverse Proxy (Nginx) <i class="fa-solid fa-arrow-right"></i> .NET 10 API Core <i class="fa-solid fa-arrow-right"></i> SQL Server DB (Shared Multi-Tenant)</div>
+                  } @else {
+                    <div class="flow-schema-block">Angular Host <i class="fa-solid fa-arrow-right"></i> YARP Gateway Router <i class="fa-solid fa-arrow-right"></i> Microservices (APIs via RabbitMQ) <i class="fa-solid fa-arrow-right"></i> Isolated PostgreSQL DBs</div>
+                  }
+                </div>
+                <p style="font-size: 0.88rem; margin-top: 1rem;"><strong>Architectural Lesson Learned:</strong> {{ proj.lessons }}</p>
+              </div>
+            }
+
+            <!-- Tab 4: Results -->
+            @if (activeTabs()[proj.name] === 'results') {
+              <div class="tab-pane animate-fade-in">
+                <div class="alert-box success-alert" style="margin-bottom: 1.25rem;">
+                  <strong><i class="fa-solid fa-circle-check"></i> Outcomes & Quantitative Impact:</strong>
+                  <p style="margin: 0.25rem 0 0 0; font-size: 0.88rem;">{{ proj.results }}</p>
+                </div>
+                <h4 style="font-size: 0.95rem; margin-bottom: 0.5rem;">Detailed Technology Stack:</h4>
+                <div class="project-tech">
+                  @for (tech of proj.techStackDetailed; track tech) {
+                    <span class="tech-tag" style="background: rgba(99, 102, 241, 0.08); border-color: rgba(99, 102, 241, 0.25);">{{ tech }}</span>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Other Projects from Resume -->
+    <div class="section-header" style="margin-top: 5rem;">
+      <h2 class="section-title">Other Featured Projects</h2>
+      <p class="section-subtitle">A collection of systems and applications from my professional and academic background.</p>
+    </div>
+    
+    <div class="projects-grid">
+      @for (proj of resumeProjects; track proj.name) {
+        <div class="glass-card project-card">
+          <div class="project-header">
+            <div class="project-icon-box"><i class="fa-solid fa-code"></i></div>
+            <div class="project-titles">
+              <h3>{{ proj.name }}</h3>
+              <p class="project-tagline">{{ proj.technologies }}</p>
+            </div>
+          </div>
+          <p class="project-desc">{{ proj.description }}</p>
+        </div>
+      }
+    </div>
+  </div>
+</section>
+
+<!-- Testimonials Section -->
+<section id="testimonials" class="testimonials-section">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">Social Proof</h2>
+      <p class="section-subtitle">What managers and team members say about collaborating with me.</p>
+    </div>
+
+    <div class="testimonials-grid">
+      @for (t of testimonials; track t.name) {
+        <div class="glass-card testimonial-card">
+          <i class="fa-solid fa-quote-left quote-icon"></i>
+          <p class="quote-text">"{{ t.quote }}"</p>
+          <div class="quote-author">
+            <div class="author-info">
+              <h4>{{ t.name }}</h4>
+              <p>{{ t.company }}</p>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</section>
+
+<!-- Architecture & Self-Hosting Section -->
+<section id="architecture" class="architecture-section">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">Architecture & Deployment</h2>
+      <p class="section-subtitle">How this portfolio and its integrated apps are hosted directly from my home Windows PC.</p>
+    </div>
+    
+    <div class="glass-card architecture-card">
+      <h3 class="arch-card-title">Production Infrastructure Topology</h3>
+      
+      <!-- Diagram -->
+      <div class="diagram-wrapper">
+        <div class="flow-node">
+          <div class="node-icon internet"><i class="fa-solid fa-globe"></i></div>
+          <span class="node-label">Public Users</span>
+          <span class="node-sub">Web Traffic</span>
+        </div>
+        
+        <div class="flow-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+        
+        <div class="flow-node">
+          <div class="node-icon cloudflare"><i class="fa-brands fa-cloudflare"></i></div>
+          <span class="node-label">Cloudflare DNS</span>
+          <span class="node-sub">Edge Proxy & HTTPS</span>
+        </div>
+        
+        <div class="flow-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+        
+        <div class="flow-node">
+          <div class="node-icon tunnel"><i class="fa-solid fa-circle-nodes"></i></div>
+          <span class="node-label">Cloudflare Tunnel</span>
+          <span class="node-sub">No Ports Opened</span>
+        </div>
+        
+        <div class="flow-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+        
+        <div class="flow-node">
+          <div class="node-icon host"><i class="fa-brands fa-windows"></i></div>
+          <span class="node-label">Windows Host</span>
+          <span class="node-sub">Docker Desktop</span>
+        </div>
+        
+        <div class="flow-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+        
+        <div class="flow-node">
+          <div class="node-icon proxy"><i class="fa-solid fa-shuffle"></i></div>
+          <span class="node-label">Nginx Proxy</span>
+          <span class="node-sub">VHost Routing</span>
+        </div>
+      </div>
+      
+      <div class="app-routing-boxes">
+        <div class="routing-box">
+          <span class="route-domain">himanshuprojectportfolio.xyz</span>
+          <div class="arrow-down"><i class="fa-solid fa-arrow-down"></i></div>
+          <span class="route-target active-portfolio">Portfolio Web App (SPA)</span>
+        </div>
+        <div class="routing-box">
+          <span class="route-domain">hirenow.himanshuprojectportfolio.xyz</span>
+          <div class="arrow-down"><i class="fa-solid fa-arrow-down"></i></div>
+          <span class="route-target active-ats">HireNow App (SPA + .NET 10 + MSSQL)</span>
+        </div>
+        <div class="routing-box">
+          <span class="route-domain">workflow.himanshuprojectportfolio.xyz</span>
+          <div class="arrow-down"><i class="fa-solid fa-arrow-down"></i></div>
+          <span class="route-target active-wf">Workflow.io (SPA + .NET 8 Microservices + PG + RMQ)</span>
+        </div>
+      </div>
+ 
+      <div class="arch-bullets">
+        <div class="bullet-item">
+          <i class="fa-solid fa-shield-halved"></i>
+          <div>
+            <strong>Strict Security:</strong> The home network is 100% isolated. Cloudflared dials outbound to Cloudflare servers, meaning no incoming ports are forwarded on the router, completely shielding the home IP.
+          </div>
+        </div>
+        <div class="bullet-item">
+          <i class="fa-solid fa-recycle"></i>
+          <div>
+            <strong>High Resilience:</strong> All containers are configured with <code>restart: unless-stopped</code>. If the Windows PC reboots, Docker Desktop initializes on startup, bringing up all 18 containers automatically.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Achievements, Education & Certs -->
+<section id="achievements" class="achievements-section">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">Achievements & Background</h2>
+      <p class="section-subtitle">Accolades, certifications, and educational foundation.</p>
+    </div>
+    
+    <div class="background-grid">
+      <!-- Achievements List -->
+      <div class="glass-card grid-card">
+        <h3>Key Achievements</h3>
+        <div class="achieve-list">
+          @for (ach of achievements; track ach.title) {
+            <div class="achieve-item">
+              <div class="ach-icon-box"><i [class]="ach.icon"></i></div>
+              <div>
+                <h4>{{ ach.title }}</h4>
+                <p>{{ ach.description }}</p>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+      
+      <!-- Education & Certifications -->
+      <div class="education-certs-group">
+        <!-- Education -->
+        <div id="education" class="glass-card education-card mb-4">
+          <h3>Education</h3>
+          <div class="edu-content">
+            <div class="edu-icon"><i class="fa-solid fa-university"></i></div>
+            <div>
+              <h4>{{ education.institution }}</h4>
+              <p class="edu-degree">{{ education.degree }} in {{ education.branch }}</p>
+              <p class="edu-gpa">{{ education.gpa }} | {{ education.year }}</p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Certifications -->
+        <div class="glass-card certs-card mb-4">
+          <h3>Professional Certifications</h3>
+          <div class="certs-list">
+            @for (cert of certifications; track cert.name) {
+              <div class="cert-item">
+                <i [class]="cert.icon"></i>
+                <div>
+                  <h4>{{ cert.name }}</h4>
+                  <p class="cert-auth">Issued by: {{ cert.authority }}</p>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Resume PDF Download Card -->
+        <div class="glass-card resume-card">
+          <h3>Resume / Curriculum Vitae</h3>
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; flex-wrap: wrap;">
+            <div style="display: flex; gap: 1rem; align-items: center;">
+              <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(16, 185, 129, 0.1); color: var(--secondary); display: flex; align-items: center; justify-content: center; font-size: 1.3rem; border: 1px solid rgba(16, 185, 129, 0.2); flex-shrink: 0;">
+                <i class="fa-solid fa-file-pdf"></i>
+              </div>
+              <div>
+                <h4 style="margin: 0; font-size: 1.1rem;">Full Professional Resume</h4>
+                <p style="margin: 0; font-size: 0.85rem; color: var(--text-dark);">PDF Format | Verified Credentials</p>
+              </div>
+            </div>
+            <button (click)="downloadResume()" class="btn btn-secondary" style="margin: 0; padding: 0.5rem 1.25rem; font-size: 0.95rem; cursor: pointer;">
+              <i class="fa-solid fa-download"></i> Download PDF
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Contact Section -->
+<section id="contact" class="contact-section">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">Contact & Scheduling</h2>
+      <p class="section-subtitle">Get in touch directly or book a calendar coordination meeting instantly.</p>
+    </div>
+    
+    <div class="contact-grid">
+      <!-- Contact Info & Calendly Booking Quick-card -->
+      <div class="glass-card contact-info-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+        <div>
+          <h3>Calendly Coordination</h3>
+          <p class="mb-4">Select a slot on my calendar below for a 15-minute introductory or technical screening call.</p>
+          
+          <!-- Mock Calendly scheduling widget -->
+          <div class="calendly-mockup-card mb-4" style="background: rgba(255, 255, 255, 0.02); border: 1px dashed rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 1.5rem; text-align: center;">
+            <i class="fa-solid fa-calendar-days" style="font-size: 2.2rem; color: var(--primary); margin-bottom: 1rem;"></i>
+            <h4 style="font-size: 1.05rem; margin: 0 0 0.5rem 0;">15-Min Screening Call</h4>
+            <p style="font-size: 0.82rem; color: var(--text-muted); margin: 0 0 1.25rem 0;">Select day and time slot via external booking</p>
+            <a href="https://calendly.com/himanshutrip780/15min" target="_blank" class="btn btn-primary" style="padding: 0.5rem 1.25rem; font-size: 0.88rem; width: 100%; justify-content: center; cursor: pointer;">
+              <i class="fa-solid fa-calendar-plus"></i> Open Calendly Scheduler
+            </a>
+          </div>
+        </div>
+
+        <div class="social-links" style="margin-top: 1rem;">
+          <a [href]="linkedIn" target="_blank" class="social-icon" aria-label="LinkedIn"><i class="fa-brands fa-linkedin"></i></a>
+          <a [href]="gitHub" target="_blank" class="social-icon" aria-label="GitHub"><i class="fa-brands fa-github"></i></a>
+        </div>
+      </div>
+      
+      <!-- Send Message form -->
+      <div class="glass-card contact-form-card">
+        <h3>Send a Message</h3>
+        <form (ngSubmit)="onSubmitContact()" #contactForm="ngForm">
+          <div class="form-group">
+            <label for="name">Name</label>
+            <input type="text" id="name" name="name" [(ngModel)]="contactModel.name" required placeholder="John Doe">
+          </div>
+          
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" [(ngModel)]="contactModel.email" required placeholder="john@example.com">
+          </div>
+          
+          <div class="form-group">
+            <label for="subject">Subject</label>
+            <input type="text" id="subject" name="subject" [(ngModel)]="contactModel.subject" required placeholder="Project Proposal">
+          </div>
+          
+          <div class="form-group">
+            <label for="message">Message</label>
+            <textarea id="message" name="message" [(ngModel)]="contactModel.message" required rows="4" placeholder="Hi Himanshu, let's discuss..."></textarea>
+          </div>
+          
+          @if (formStatus() === 'success') {
+            <div class="alert alert-success">
+              <i class="fa-solid fa-circle-check"></i> Message sent successfully! I will get back to you shortly.
+            </div>
+          }
+          
+          @if (formStatus() === 'error') {
+            <div class="alert alert-danger">
+              <i class="fa-solid fa-triangle-exclamation"></i> Error sending message. Please try again.
+            </div>
+          }
+          
+          <button type="submit" class="btn btn-primary w-full submit-btn" [disabled]="!contactForm.form.valid || formStatus() === 'sending'" style="cursor: pointer;">
+            @if (formStatus() === 'sending') {
+              <span><i class="fa-solid fa-spinner fa-spin"></i> Sending...</span>
+            } @else {
+              <span>Send Message <i class="fa-solid fa-paper-plane"></i></span>
+            }
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="footer">
+  <div class="container footer-content">
+    <p>&copy; 2026 Himanshu Tripathi. All Rights Reserved.
+      <a (click)="openInboxModal()" style="cursor: pointer; color: var(--text-dark); font-size: 0.85rem; margin-left: 1.5rem; text-decoration: underline; transition: color 0.3s;" onmouseover="this.style.color='white'" onmouseout="this.style.color='var(--text-dark)'">
+        <i class="fa-solid fa-inbox"></i> Local Inbox & Lead Analytics
+      </a>
+    </p>
+    <p class="host-badge"><i class="fa-solid fa-server"></i> Deployed self-hosted from home PC</p>
+  </div>
+</footer>
+
+<!-- Inbox & Lead Analytics Modal -->
+@if (showInbox()) {
+  <div class="inbox-modal-backdrop" (click)="closeInboxModal()">
+    <div class="inbox-modal-card glass-card" (click)="$event.stopPropagation()" style="max-width: 800px; width: 90%;">
+      <div class="inbox-header">
+        <h3><i class="fa-solid fa-inbox"></i> Local Inbox & Recruiter Lead Analytics</h3>
+        <button class="close-btn" (click)="closeInboxModal()">&times;</button>
+      </div>
+      <div class="inbox-body">
+        
+        <!-- Recruiter Lead Analytics Grid -->
+        <div class="analytics-dashboard-grid mb-4">
+          <div class="analytics-card">
+            <span class="analytics-val">{{ totalPageVisits() }}</span>
+            <span class="analytics-lbl">Page Visits</span>
+          </div>
+          <div class="analytics-card">
+            <span class="analytics-val">{{ resumeDownloads() }}</span>
+            <span class="analytics-lbl">Resume Downloads</span>
+          </div>
+          <div class="analytics-card">
+            <span class="analytics-val">{{ contactSubmissions() }}</span>
+            <span class="analytics-lbl">Messages Submitted</span>
+          </div>
+          <div class="analytics-card">
+            <span class="analytics-val">{{ avgMessageLength() }} ch</span>
+            <span class="analytics-lbl">Avg Message Length</span>
+          </div>
+        </div>
+
+        <h4 style="font-size: 0.95rem; margin-bottom: 0.75rem; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 0.5rem;"><i class="fa-solid fa-envelope"></i> Message Logs History (Stored Locally)</h4>
+        
+        @if (inboxMessages().length === 0) {
+          <div class="empty-inbox">
+            <i class="fa-solid fa-envelope-open"></i>
+            <p>No messages in local storage yet.</p>
+            <p class="sub">Submit the contact form to see messages here.</p>
+          </div>
+        } @else {
+          <div class="inbox-list" style="max-height: 250px; overflow-y: auto;">
+            @for (msg of inboxMessages(); track msg.date) {
+              <div class="inbox-item">
+                <div class="inbox-item-header">
+                  <span class="sender-name">{{ msg.name }}</span>
+                  <span class="send-date">{{ msg.date }}</span>
+                </div>
+                <div class="sender-email"><i class="fa-solid fa-envelope"></i> {{ msg.email }}</div>
+                <div class="message-subject"><strong>Subj:</strong> {{ msg.subject }}</div>
+                <div class="message-body">{{ msg.message }}</div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+      <div class="inbox-footer">
+        <button class="btn btn-outline" (click)="clearInbox()" [disabled]="inboxMessages().length === 0" style="margin: 0; cursor: pointer;">
+          <i class="fa-solid fa-trash-can"></i> Clear Inbox
+        </button>
+        <button class="btn btn-secondary" (click)="closeInboxModal()" style="margin: 0; cursor: pointer;">Close</button>
+      </div>
+    </div>
+  </div>
+}

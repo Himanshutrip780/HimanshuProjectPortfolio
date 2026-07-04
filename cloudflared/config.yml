@@ -1,0 +1,14 @@
+tunnel: 50a585f5-a020-4e2c-8c66-a82b2594f3f3
+credentials-file: /etc/cloudflared/50a585f5-a020-4e2c-8c66-a82b2594f3f3.json
+
+ingress:
+  - hostname: himanshuprojectportfolio.xyz
+    service: http://nginx:80
+  - hostname: www.himanshuprojectportfolio.xyz
+    service: http://nginx:80
+  - hostname: hirenow.himanshuprojectportfolio.xyz
+    service: http://nginx:80
+  - hostname: workflow.himanshuprojectportfolio.xyz
+    service: http://nginx:80
+  # Catch-all rule for requests that don't match any hostname
+  - service: http_status:404

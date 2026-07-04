@@ -1,0 +1,432 @@
+services:
+  # ==========================================
+  # CENTRAL REVERSE PROXY & TUNNEL
+  # ==========================================
+  nginx:
+    image: nginx:alpine
+    container_name: nginx-proxy
+    restart: unless-stopped
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      # Expose locally on loopback to allow testing without tunnel
+      - "127.0.0.1:80:80"
+    depends_on:
+      portfolio:
+        condition: service_healthy
+      ats_angular_frontend:
+        condition: service_healthy
+      workflow-gatewayapi:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/nginx-health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflared-tunnel
+    restart: unless-stopped
+    command: tunnel --config /etc/cloudflared-config/config.yml run portfolio
+    volumes:
+      - ./cloudflared/config.yml:/etc/cloudflared-config/config.yml:ro
+      - ${USERPROFILE}/.cloudflared:/etc/cloudflared:ro
+    depends_on:
+      nginx:
+        condition: service_healthy
+
+  # ==========================================
+  # PORTFOLIO WEBSITE
+  # ==========================================
+  portfolio:
+    build:
+      context: ./portfolio
+      dockerfile: Dockerfile
+    container_name: portfolio-web
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # ==========================================
+  # HIRENOW (ATS) APPLICATION
+  # ==========================================
+  hirenow-db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: ats_sql_server
+    restart: unless-stopped
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD}
+    ports:
+      # Optional: access SQL Server from host tools (SSMS) on loopback only
+      - "127.0.0.1:1433:1433"
+    volumes:
+      - ats_mssql_data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD", "/opt/mssql-tools18/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", "${MSSQL_SA_PASSWORD}", "-C", "-Q", "SELECT 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  ats_api_backend:
+    build:
+      context: ./HireNow/backend
+      dockerfile: Dockerfile
+    container_name: ats_api_backend
+    restart: unless-stopped
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+      - ConnectionStrings__DefaultConnection=Server=hirenow-db;Database=ATS_Db;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True;MultipleActiveResultSets=true;
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_USERNAME=${SMTP_USERNAME}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+      - SMTP_SENDER_EMAIL=${SMTP_SENDER_EMAIL}
+      - SMTP_SENDER_NAME=${SMTP_SENDER_NAME}
+    depends_on:
+      hirenow-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"] # assuming health check endpoint exists or fallback to root check
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      disable: true # Disable if no health endpoint compiled, default Docker check will run or fallback to TCP port check
+
+  ats_angular_frontend:
+    build:
+      context: ./HireNow/frontend
+      dockerfile: Dockerfile
+    container_name: ats_angular_frontend
+    restart: unless-stopped
+    depends_on:
+      - ats_api_backend
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # ==========================================
+  # WORKFLOW.IO APPLICATION
+  # ==========================================
+  workflow-postgres:
+    image: postgres:15-alpine
+    container_name: workflow.io-postgres
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5432:5432"
+    environment:
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - workflow_postgres_data:/var/lib/postgresql/data
+      - ./Workflow.IO/Workflow.IO/init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  workflow-rabbitmq:
+    image: rabbitmq:3-management
+    container_name: workflow.io-rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  workflow-userapi:
+    build:
+      context: ./Workflow.IO/Workflow.IO
+      dockerfile: UserApi/Dockerfile
+    container_name: workflow-userapi
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_URLS: "http://+:8080"
+      Jwt__SecurityKey: ${JWT_SECURITY_KEY}
+      Jwt__Issuer: "https://workflow.himanshuprojectportfolio.xyz"
+      Jwt__Audience: "workflow.io-api"
+      Database__ApplyMigrationsOnStartup: "true"
+      ConnectionStrings__DefaultConnection: "Host=workflow-postgres;Port=5432;Database=Workflow.IOUserDb;Username=postgres;Password=${POSTGRES_PASSWORD}"
+      RabbitMq__HostName: "workflow-rabbitmq"
+      RabbitMq__Port: "5672"
+      RabbitMq__UserName: ${RABBITMQ_USER}
+      RabbitMq__Password: ${RABBITMQ_PASSWORD}
+      RabbitMq__ExchangeName: "workflow.io.events"
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USERNAME: ${SMTP_USERNAME}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_SENDER_EMAIL: ${SMTP_SENDER_EMAIL}
+      SMTP_SENDER_NAME: ${SMTP_SENDER_NAME}
+    depends_on:
+      workflow-postgres:
+        condition: service_healthy
+      workflow-rabbitmq:
+        condition: service_started
+
+  workflow-projectapi:
+    build:
+      context: ./Workflow.IO/Workflow.IO
+      dockerfile: ProjectApi/Dockerfile
+    container_name: workflow-projectapi
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_URLS: "http://+:8080"
+      Jwt__SecurityKey: ${JWT_SECURITY_KEY}
+      Jwt__Issuer: "https://workflow.himanshuprojectportfolio.xyz"
+      Jwt__Audience: "workflow.io-api"
+      Database__ApplyMigrationsOnStartup: "true"
+      ConnectionStrings__DefaultConnection: "Host=workflow-postgres;Port=5432;Database=Workflow.IOProjectDb;Username=postgres;Password=${POSTGRES_PASSWORD}"
+      RabbitMq__HostName: "workflow-rabbitmq"
+      RabbitMq__Port: "5672"
+      RabbitMq__UserName: ${RABBITMQ_USER}
+      RabbitMq__Password: ${RABBITMQ_PASSWORD}
+      RabbitMq__ExchangeName: "workflow.io.events"
+    depends_on:
+      workflow-postgres:
+        condition: service_healthy
+      workflow-rabbitmq:
+        condition: service_started
+
+  workflow-taskapi:
+    build:
+      context: ./Workflow.IO/Workflow.IO
+      dockerfile: TaskApi/Dockerfile
+    container_name: workflow-taskapi
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_URLS: "http://+:8080"
+      Jwt__SecurityKey: ${JWT_SECURITY_KEY}
+      Jwt__Issuer: "https://workflow.himanshuprojectportfolio.xyz"
+      Jwt__Audience: "workflow.io-api"
+      Database__ApplyMigrationsOnStartup: "true"
+      ConnectionStrings__DefaultConnection: "Host=workflow-postgres;Port=5432;Database=Workflow.IOTaskDb;Username=postgres;Password=${POSTGRES_PASSWORD}"
+      Services__ProjectApi: "http://workflow-projectapi:8080/"
+      Services__UserApi: "http://workflow-userapi:8080/"
+      Services__ActivityApi: "http://workflow-activityapi:8080/"
+      RabbitMq__HostName: "workflow-rabbitmq"
+      RabbitMq__Port: "5672"
+      RabbitMq__UserName: ${RABBITMQ_USER}
+      RabbitMq__Password: ${RABBITMQ_PASSWORD}
+      RabbitMq__ExchangeName: "workflow.io.events"
+    depends_on:
+      workflow-postgres:
+        condition: service_healthy
+      workflow-rabbitmq:
+        condition: service_started
+      workflow-projectapi:
+        # wait for dependency API
+        condition: service_started
+
+  workflow-commentapi:
+    build:
+      context: ./Workflow.IO/Workflow.IO
+      dockerfile: CommentApi/Dockerfile
+    container_name: workflow-commentapi
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_URLS: "http://+:8080"
+      Jwt__SecurityKey: ${JWT_SECURITY_KEY}
+      Jwt__Issuer: "https://workflow.himanshuprojectportfolio.xyz"
+      Jwt__Audience: "workflow.io-api"
+      Database__ApplyMigrationsOnStartup: "true"
+      ConnectionStrings__DefaultConnection: "Host=workflow-postgres;Port=5432;Database=Workflow.IOCommentDb;Username=postgres;Password=${POSTGRES_PASSWORD}"
+      Services__TaskApi: "http://workflow-taskapi:8080/"
+      RabbitMq__HostName: "workflow-rabbitmq"
+      RabbitMq__Port: "5672"
+      RabbitMq__UserName: ${RABBITMQ_USER}
+      RabbitMq__Password: ${RABBITMQ_PASSWORD}
+      RabbitMq__ExchangeName: "workflow.io.events"
+    depends_on:
+      workflow-postgres:
+        condition: service_healthy
+      workflow-rabbitmq:
+        condition: service_started
+      workflow-taskapi:
+        condition: service_started
+
+  workflow-notificationapi:
+    build:
+      context: ./Workflow.IO/Workflow.IO
+      dockerfile: NotificationApi/Dockerfile
+    container_name: workflow-notificationapi
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_URLS: "http://+:8080"
+      Jwt__SecurityKey: ${JWT_SECURITY_KEY}
+      Jwt__Issuer: "https://workflow.himanshuprojectportfolio.xyz"
+      Jwt__Audience: "workflow.io-api"
+      Database__ApplyMigrationsOnStartup: "true"
+      ConnectionStrings__DefaultConnection: "Host=workflow-postgres;Port=5432;Database=Workflow.IONotificationDb;Username=postgres;Password=${POSTGRES_PASSWORD}"
+      RabbitMq__HostName: "workflow-rabbitmq"
+      RabbitMq__Port: "5672"
+      RabbitMq__UserName: ${RABBITMQ_USER}
+      RabbitMq__Password: ${RABBITMQ_PASSWORD}
+      RabbitMq__ExchangeName: "workflow.io.events"
+    depends_on:
+      workflow-postgres:
+        condition: service_healthy
+      workflow-rabbitmq:
+        condition: service_started
+
+  workflow-activityapi:
+    build:
+      context: ./Workflow.IO/Workflow.IO
+      dockerfile: ActivityApi/Dockerfile
+    container_name: workflow-activityapi
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_URLS: "http://+:8080"
+      Jwt__SecurityKey: ${JWT_SECURITY_KEY}
+      Jwt__Issuer: "https://workflow.himanshuprojectportfolio.xyz"
+      Jwt__Audience: "workflow.io-api"
+      Database__ApplyMigrationsOnStartup: "true"
+      ConnectionStrings__DefaultConnection: "Host=workflow-postgres;Port=5432;Database=Workflow.IOActivityDb;Username=postgres;Password=${POSTGRES_PASSWORD}"
+      RabbitMq__HostName: "workflow-rabbitmq"
+      RabbitMq__Port: "5672"
+      RabbitMq__UserName: ${RABBITMQ_USER}
+      RabbitMq__Password: ${RABBITMQ_PASSWORD}
+      RabbitMq__ExchangeName: "workflow.io.events"
+      Services__TaskApi: "http://workflow-taskapi:8080/"
+      Services__ProjectApi: "http://workflow-projectapi:8080/"
+    depends_on:
+      workflow-postgres:
+        condition: service_healthy
+      workflow-rabbitmq:
+        condition: service_started
+      workflow-projectapi:
+        condition: service_started
+      workflow-taskapi:
+        condition: service_started
+
+  workflow-fileapi:
+    build:
+      context: ./Workflow.IO/Workflow.IO
+      dockerfile: FileApi/Dockerfile
+    container_name: workflow-fileapi
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_URLS: "http://+:8080"
+      Jwt__SecurityKey: ${JWT_SECURITY_KEY}
+      Jwt__Issuer: "https://workflow.himanshuprojectportfolio.xyz"
+      Jwt__Audience: "workflow.io-api"
+      Database__ApplyMigrationsOnStartup: "true"
+      ConnectionStrings__DefaultConnection: "Host=workflow-postgres;Port=5432;Database=Workflow.IOFileDb;Username=postgres;Password=${POSTGRES_PASSWORD}"
+      Services__TaskApi: "http://workflow-taskapi:8080/"
+      Storage__RootPath: "/app/uploads"
+      RabbitMq__HostName: "workflow-rabbitmq"
+      RabbitMq__Port: "5672"
+      RabbitMq__UserName: ${RABBITMQ_USER}
+      RabbitMq__Password: ${RABBITMQ_PASSWORD}
+      RabbitMq__ExchangeName: "workflow.io.events"
+    volumes:
+      - workflow_file_uploads:/app/uploads
+    depends_on:
+      workflow-postgres:
+        condition: service_healthy
+      workflow-rabbitmq:
+        condition: service_started
+      workflow-taskapi:
+        condition: service_started
+
+  workflow-analyticsapi:
+    build:
+      context: ./Workflow.IO/Workflow.IO
+      dockerfile: AnalyticsApi/Dockerfile
+    container_name: workflow-analyticsapi
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_URLS: "http://+:8080"
+      Jwt__SecurityKey: ${JWT_SECURITY_KEY}
+      Jwt__Issuer: "https://workflow.himanshuprojectportfolio.xyz"
+      Jwt__Audience: "workflow.io-api"
+      Database__ApplyMigrationsOnStartup: "true"
+      ConnectionStrings__DefaultConnection: "Host=workflow-postgres;Port=5432;Database=Workflow.IOAnalyticsDb;Username=postgres;Password=${POSTGRES_PASSWORD}"
+      Services__ProjectApi: "http://workflow-projectapi:8080/"
+      RabbitMq__HostName: "workflow-rabbitmq"
+      RabbitMq__Port: "5672"
+      RabbitMq__UserName: ${RABBITMQ_USER}
+      RabbitMq__Password: ${RABBITMQ_PASSWORD}
+      RabbitMq__ExchangeName: "workflow.io.events"
+    depends_on:
+      workflow-postgres:
+        condition: service_healthy
+      workflow-rabbitmq:
+        condition: service_started
+      workflow-projectapi:
+        condition: service_started
+
+  workflow-realtimeapi:
+    build:
+      context: ./Workflow.IO/Workflow.IO
+      dockerfile: RealtimeApi/Dockerfile
+    container_name: workflow-realtimeapi
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_URLS: "http://+:8080"
+      Jwt__SecurityKey: ${JWT_SECURITY_KEY}
+      Jwt__Issuer: "https://workflow.himanshuprojectportfolio.xyz"
+      Jwt__Audience: "workflow.io-api"
+      RabbitMq__HostName: "workflow-rabbitmq"
+      RabbitMq__Port: "5672"
+      RabbitMq__UserName: ${RABBITMQ_USER}
+      RabbitMq__Password: ${RABBITMQ_PASSWORD}
+      RabbitMq__ExchangeName: "workflow.io.events"
+      Services__ProjectApi: "http://workflow-projectapi:8080/"
+      Services__TaskApi: "http://workflow-taskapi:8080/"
+    depends_on:
+      workflow-rabbitmq:
+        condition: service_started
+      workflow-projectapi:
+        condition: service_started
+      workflow-taskapi:
+        condition: service_started
+
+  workflow-gatewayapi:
+    build:
+      context: ./Workflow.IO/Workflow.IO
+      dockerfile: GatewayApi/Dockerfile
+    container_name: workflow-gatewayapi
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_URLS: "http://+:8080"
+      Jwt__SecurityKey: ${JWT_SECURITY_KEY}
+      Jwt__Issuer: "https://workflow.himanshuprojectportfolio.xyz"
+      Jwt__Audience: "workflow.io-api"
+      ReverseProxy__Clusters__users__Destinations__destination1__Address: "http://workflow-userapi:8080/"
+      ReverseProxy__Clusters__projects__Destinations__destination1__Address: "http://workflow-projectapi:8080/"
+      ReverseProxy__Clusters__tasks__Destinations__destination1__Address: "http://workflow-taskapi:8080/"
+      ReverseProxy__Clusters__comments__Destinations__destination1__Address: "http://workflow-commentapi:8080/"
+      ReverseProxy__Clusters__files__Destinations__destination1__Address: "http://workflow-fileapi:8080/"
+      ReverseProxy__Clusters__notifications__Destinations__destination1__Address: "http://workflow-notificationapi:8080/"
+      ReverseProxy__Clusters__activities__Destinations__destination1__Address: "http://workflow-activityapi:8080/"
+      ReverseProxy__Clusters__analytics__Destinations__destination1__Address: "http://workflow-analyticsapi:8080/"
+      ReverseProxy__Clusters__realtime__Destinations__destination1__Address: "http://workflow-realtimeapi:8080/"
+    depends_on:
+      - workflow-userapi
+      - workflow-projectapi
+      - workflow-taskapi
+      - workflow-commentapi
+      - workflow-fileapi
+      - workflow-notificationapi
+      - workflow-activityapi
+      - workflow-analyticsapi
+      - workflow-realtimeapi
+
+
+volumes:
+  ats_mssql_data:
+  workflow_postgres_data:
+  workflow_file_uploads:
