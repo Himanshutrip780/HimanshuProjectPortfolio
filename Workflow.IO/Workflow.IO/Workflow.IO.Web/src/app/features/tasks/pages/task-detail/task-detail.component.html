@@ -1,0 +1,391 @@
+
+    <div class="task-detail-container">
+      <div class="task-detail-header-bar">
+        <a [routerLink]="['/projects', task()?.projectId, 'tasks']" class="back-link">
+          <span class="material-symbols-outlined">arrow_back</span> Back to task list
+        </a>
+        @if (task(); as t) {
+          <button type="button" class="btn btn-danger-outline btn-sm delete-task-btn" (click)="deleteTask()">
+            <span class="material-symbols-outlined">delete</span> Delete Task
+          </button>
+        }
+      </div>
+
+      @if (task(); as t) {
+        <div class="task-detail-grid">
+          <!-- Left Column: Core task details & discussions -->
+          <div class="task-main-col">
+            <div class="task-card main-details-card">
+              <!-- Title & Issue Key -->
+              <div class="task-title-section">
+                <span class="task-key-badge">{{ t.issueKey }}</span>
+                <form [formGroup]="editForm" class="title-form">
+                  <input class="title-input-el" formControlName="title" placeholder="Task Title" (blur)="saveTask()" />
+                </form>
+              </div>
+
+              <!-- Description Section -->
+              <div class="task-description-section">
+                <h3 class="section-title-label">Description</h3>
+                <form [formGroup]="editForm">
+                  <textarea class="desc-textarea-el" formControlName="description" rows="5" placeholder="Add a detailed description for this task..." (blur)="saveTask()"></textarea>
+                </form>
+              </div>
+            </div>
+
+            <!-- Subtasks Section -->
+            <div class="task-card subtasks-card">
+              <div class="card-header-row">
+                <h3 class="card-section-title">
+                  <span class="material-symbols-outlined">checklist</span> Subtasks
+                </h3>
+                @if (subTasks().length > 0) {
+                  <span class="subtask-progress-text">{{ getCompletedSubtasksCount() }}/{{ subTasks().length }} completed</span>
+                }
+              </div>
+              
+              <form [formGroup]="subTaskForm" (ngSubmit)="addSubTask()" class="add-subtask-form">
+                <div class="input-group">
+                  <input class="form-control-input" placeholder="Add a quick checklist item..." formControlName="title" />
+                  <button type="submit" class="btn btn-primary btn-sm">Add</button>
+                </div>
+              </form>
+
+              @if (subTasks().length > 0) {
+                <ul class="subtasks-list-items">
+                  @for (st of subTasks(); track st.subTaskId) {
+                    <li class="subtask-row-item" [class.completed]="st.isCompleted">
+                      <label class="subtask-checkbox-label">
+                        <input
+                          type="checkbox"
+                          [checked]="st.isCompleted"
+                          (change)="toggleSubTask(st)"
+                        />
+                        <span class="subtask-text">{{ st.title }}</span>
+                      </label>
+                      <button type="button" class="btn-delete-item" (click)="deleteSubTask(st.subTaskId)" title="Delete subtask">
+                        <span class="material-symbols-outlined">close</span>
+                      </button>
+                    </li>
+                  }
+                </ul>
+              } @else {
+                <div class="empty-subtasks-msg">No checklist items yet. Add one above to break down this task.</div>
+              }
+            </div>
+
+            <!-- Comments Section -->
+            <div class="task-card comments-card">
+              <h3 class="card-section-title">
+                <span class="material-symbols-outlined">forum</span> Comments & Discussion
+              </h3>
+              
+              <form [formGroup]="commentForm" (ngSubmit)="addComment()" class="comment-input-area">
+                <app-rich-text-editor formControlName="body" />
+                <div class="comment-submit-row">
+                  <button type="submit" class="btn btn-primary" [disabled]="commentForm.invalid">Post Comment</button>
+                </div>
+              </form>
+
+              @if (comments().length > 0) {
+                <ul class="comments-list">
+                  @for (c of comments(); track c.commentId) {
+                    <li class="comment-bubble-item">
+                      @if (getUserAvatarUrl(c.authorId); as avatar) {
+                        <img class="comment-author-avatar" [src]="avatar" [title]="getUserDisplayName(c.authorId)" alt="Avatar" style="object-fit: cover;" />
+                      } @else {
+                        <div class="comment-author-avatar" [style.background-color]="getAssigneeColor(c.authorId)" [title]="getUserDisplayName(c.authorId)">
+                          {{ getUserInitials(c.authorId) }}
+                        </div>
+                      }
+                      <div class="comment-content-wrapper">
+                        <div class="comment-header-row">
+                          <span class="comment-author-name">{{ getUserDisplayName(c.authorId) }}</span>
+                          <button type="button" class="btn-delete-comment" (click)="deleteComment(c.commentId)" title="Delete comment">
+                            <span class="material-symbols-outlined">delete</span>
+                          </button>
+                        </div>
+                        <div class="comment-body-text" [innerHTML]="c.body"></div>
+                      </div>
+                    </li>
+                  }
+                </ul>
+              } @else {
+                <div class="empty-comments-msg">No discussions yet. Start the conversation!</div>
+              }
+            </div>
+          </div>
+
+          <!-- Right Column: Settings & Metadata Inspector -->
+          <div class="task-sidebar-col">
+            <!-- Status & Planning Properties Card -->
+            <div class="task-card inspector-card">
+              <h3 class="inspector-title">Properties</h3>
+
+              <div class="inspector-grid">
+                <!-- Status selector -->
+                <div class="property-row">
+                  <span class="property-label">Status</span>
+                  <div class="property-value">
+                    <select [value]="t.status" (change)="onStatusChange($event)" class="property-select status-select-el">
+                      <option [value]="TaskStatus.Todo">Todo</option>
+                      <option [value]="TaskStatus.InProgress">In progress</option>
+                      <option [value]="TaskStatus.Review">Review</option>
+                      <option [value]="TaskStatus.Done">Done</option>
+                      <option [value]="TaskStatus.Blocked">Blocked</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Priority -->
+                <div class="property-row">
+                  <span class="property-label">Priority</span>
+                  <div class="property-value">
+                    <form [formGroup]="editForm">
+                      <select formControlName="priority" (change)="saveTask()" class="property-select">
+                        <option [value]="TaskPriority.Low">Low</option>
+                        <option [value]="TaskPriority.Medium">Medium</option>
+                        <option [value]="TaskPriority.High">High</option>
+                        <option [value]="TaskPriority.Critical">Critical</option>
+                      </select>
+                    </form>
+                  </div>
+                </div>
+
+                <!-- Assignee Picker -->
+                <div class="property-row">
+                  <span class="property-label">Assignee</span>
+                  <div class="property-value assignee-picker-block">
+                    @if (t.assigneeId) {
+                      <div class="active-assignee-row">
+                        @if (getUserAvatarUrl(t.assigneeId); as avatar) {
+                          <img class="assignee-avatar-icon" [src]="avatar" [title]="getUserDisplayName(t.assigneeId)" alt="Avatar" style="object-fit: cover;" />
+                        } @else {
+                          <div class="assignee-avatar-icon" [style.background-color]="getAssigneeColor(t.assigneeId)" [title]="getUserDisplayName(t.assigneeId)">
+                            {{ getUserInitials(t.assigneeId) }}
+                          </div>
+                        }
+                        <span class="assignee-id-txt" [title]="t.assigneeId">{{ getUserDisplayName(t.assigneeId) }}</span>
+                        <button type="button" class="btn-clear-assignee" (click)="clearAssignee()" title="Remove assignee">
+                          <span class="material-symbols-outlined">close</span>
+                        </button>
+                      </div>
+                    } @else {
+                      <span class="unassigned-txt">Unassigned</span>
+                    }
+                    <div class="user-picker-wrapper">
+                      <app-user-picker
+                        label="Reassign"
+                        (userSelected)="assignToUser($event)"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Story Points -->
+                <div class="property-row">
+                  <span class="property-label">Story Points</span>
+                  <div class="property-value">
+                    <input
+                      type="number"
+                      class="property-input-number"
+                      [value]="t.storyPoints ?? ''"
+                      placeholder="Not estimated"
+                      (change)="onStoryPointsChange($event)"
+                    />
+                  </div>
+                </div>
+
+                <!-- Sprint -->
+                <div class="property-row">
+                  <span class="property-label">Sprint</span>
+                  <div class="property-value">
+                    <select [value]="t.sprintId ?? ''" (change)="onSprintChange($event)" class="property-select">
+                      <option value="">Backlog</option>
+                      @for (s of sprints(); track s.sprintId) {
+                        <option [value]="s.sprintId">{{ s.name }}</option>
+                      }
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Epic -->
+                <div class="property-row">
+                  <span class="property-label">Epic</span>
+                  <div class="property-value">
+                    <select [value]="t.epicId ?? ''" (change)="onEpicChange($event)" class="property-select">
+                      <option value="">None</option>
+                      @for (e of epics(); track e.epicId) {
+                        <option [value]="e.epicId">{{ e.name }}</option>
+                      }
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Team -->
+                <div class="property-row">
+                  <span class="property-label">Team</span>
+                  <div class="property-value">
+                    <form [formGroup]="editForm">
+                      <select formControlName="teamId" (change)="saveTask()" class="property-select">
+                        <option value="">None</option>
+                        @for (team of teams(); track team.teamId) {
+                          <option [value]="team.teamId">{{ team.name }}</option>
+                        }
+                      </select>
+                    </form>
+                  </div>
+                </div>
+
+                <!-- Initial ETA -->
+                <div class="property-row">
+                  <span class="property-label">Initial ETA</span>
+                  <div class="property-value">
+                    <form [formGroup]="editForm">
+                      <input type="date" formControlName="initialEta" (change)="saveTask()" class="property-input-date" />
+                    </form>
+                  </div>
+                </div>
+
+                <!-- Latest ETA -->
+                <div class="property-row">
+                  <span class="property-label">Latest ETA</span>
+                  <div class="property-value">
+                    <form [formGroup]="editForm">
+                      <input type="date" formControlName="latestEta" (change)="saveTask()" class="property-input-date" />
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Attachments Card -->
+            <div class="task-card attachments-card">
+              <h3 class="card-section-title">
+                <span class="material-symbols-outlined">attachment</span> Attachments
+              </h3>
+              <div class="file-upload-zone">
+                <label class="file-upload-label">
+                  <span class="material-symbols-outlined">upload</span> Upload Attachment
+                  <input type="file" (change)="onFileSelected($event)" style="display:none" />
+                </label>
+              </div>
+              @if (attachments().length > 0) {
+                <ul class="attachments-list-items">
+                  @for (f of attachments(); track f.fileAttachmentId) {
+                    <li class="attachment-row-item">
+                      <span class="material-symbols-outlined file-type-icon">description</span>
+                      <div class="file-name-meta">
+                        <span class="file-name-txt" [title]="f.originalFileName">{{ f.originalFileName }}</span>
+                        <span class="file-size-txt">{{ f.sizeInBytes }} bytes</span>
+                      </div>
+                      <div class="file-row-actions">
+                        <button type="button" class="btn-icon-action" (click)="download(f)" title="Download">
+                          <span class="material-symbols-outlined">download</span>
+                        </button>
+                        <button type="button" class="btn-icon-action delete-act" (click)="removeFile(f.fileAttachmentId)" title="Delete">
+                          <span class="material-symbols-outlined">delete</span>
+                        </button>
+                      </div>
+                    </li>
+                  }
+                </ul>
+              }
+            </div>
+
+            <!-- Task Links Card -->
+            <div class="task-card links-card">
+              <h3 class="card-section-title">
+                <span class="material-symbols-outlined">link</span> Linked Tasks
+              </h3>
+              <form [formGroup]="linkForm" (ngSubmit)="addLink()" class="add-link-inline-form">
+                <input class="form-control-input" placeholder="Task ID..." formControlName="targetTaskId" />
+                <select formControlName="linkType" class="property-select">
+                  <option [value]="TaskLinkType.RelatesTo">Relates to</option>
+                  <option [value]="TaskLinkType.Blocks">Blocks</option>
+                  <option [value]="TaskLinkType.IsBlockedBy">Is blocked by</option>
+                </select>
+                <button type="submit" class="btn btn-primary btn-sm">Link</button>
+              </form>
+              @if (links().length > 0) {
+                <ul class="links-list-items">
+                  @for (link of links(); track link.taskLinkId) {
+                    <li class="link-row-item">
+                      <span class="link-relation-label">{{ getLinkRelationLabel(link.linkType) }}</span>
+                      <a [routerLink]="['/tasks', link.targetTaskId]" class="link-target-key">
+                        {{ link.targetIssueKey ?? link.targetTaskId.slice(0, 8) }}
+                      </a>
+                      <button type="button" class="btn-delete-link" (click)="deleteLink(link.taskLinkId)" title="Remove link">
+                        <span class="material-symbols-outlined">close</span>
+                      </button>
+                    </li>
+                  }
+                </ul>
+              }
+            </div>
+
+            <!-- Watchers Card -->
+            <div class="task-card watchers-card">
+              <div class="card-header-row">
+                <h3 class="card-section-title">
+                  <span class="material-symbols-outlined">visibility</span> Watchers
+                </h3>
+                <div class="watcher-actions">
+                  <button type="button" class="btn-text-action btn-sm" (click)="watch()">Watch</button>
+                  <button type="button" class="btn-text-action btn-sm delete-act" (click)="unwatch()">Unwatch</button>
+                </div>
+              </div>
+              @if (watchers().length > 0) {
+                <div class="watchers-avatar-grid">
+                  @for (w of watchers(); track w.taskWatcherId) {
+                    @if (getUserAvatarUrl(w.userId); as avatar) {
+                      <img class="watcher-avatar-circle" [src]="avatar" [title]="'Watcher: ' + getUserDisplayName(w.userId)" alt="Avatar" style="object-fit: cover;" />
+                    } @else {
+                      <div class="watcher-avatar-circle" [style.background-color]="getAssigneeColor(w.userId)" [title]="'Watcher: ' + getUserDisplayName(w.userId)">
+                        {{ getUserInitials(w.userId) }}
+                      </div>
+                    }
+                  }
+                </div>
+              } @else {
+                <div class="empty-watchers-msg">No watchers yet.</div>
+              }
+            </div>
+
+            <!-- Work Logs Card -->
+            <div class="task-card worklogs-card">
+              <h3 class="card-section-title">
+                <span class="material-symbols-outlined">history</span> Work Logs
+              </h3>
+              <form [formGroup]="workLogForm" (ngSubmit)="addWorkLog()" class="add-worklog-inline-form">
+                <input type="number" placeholder="Mins" class="form-control-input" formControlName="timeSpentMinutes" style="width: 70px" />
+                <input placeholder="Comment..." class="form-control-input" formControlName="comment" />
+                <button type="submit" class="btn btn-primary btn-sm">Log</button>
+              </form>
+              @if (workLogs().length > 0) {
+                <ul class="worklogs-list-items">
+                  @for (log of workLogs(); track log.workLogId) {
+                    <li class="worklog-row-item">
+                      <span class="worklog-time-badge">{{ log.timeSpentMinutes }}m</span>
+                      <span class="worklog-comment-text">{{ log.comment ?? 'No details provided' }}</span>
+                    </li>
+                  }
+                </ul>
+              }
+            </div>
+          </div>
+        </div>
+      } @else if (error()) {
+        <div class="error-panel-view">
+          <span class="material-symbols-outlined error-icon-panel">error</span>
+          <p class="error-msg-txt">{{ error() }}</p>
+          <a [routerLink]="['/projects']" class="btn btn-primary">Go to Workspace</a>
+        </div>
+      } @else {
+        <div class="loading-panel-view">
+          <div class="spinner"></div>
+          <p>Loading task details...</p>
+        </div>
+      }
+    </div>
+  

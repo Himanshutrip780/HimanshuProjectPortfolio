@@ -1,0 +1,303 @@
+
+    <div class="page-container">
+      <header class="page-header">
+        <div class="header-left">
+          <h1>Workspace Members</h1>
+          <p class="subtitle">View and manage all members in your Workflow.IO workspace.</p>
+        </div>
+        <div class="header-right">
+          <span class="badge-total">{{ filteredUsers().length }} of {{ users().length }} Members</span>
+        </div>
+      </header>
+
+      <!-- Search, Filters, and Layout Toolbar -->
+      <section class="toolbar-panel">
+        <div class="toolbar-left">
+          <div class="search-input-wrapper">
+            <span class="material-symbols-outlined search-icon">search</span>
+            <input 
+              type="text" 
+              placeholder="Search members by name or email..." 
+              [value]="searchQuery()"
+              (input)="onSearchChange($event)"
+            />
+          </div>
+          
+          <div class="filter-dropdown-wrapper">
+            <span class="material-symbols-outlined filter-icon">filter_list</span>
+            <select [value]="roleFilter()" (change)="onRoleFilterChange($event)">
+              <option value="">All Roles</option>
+              <option value="Admin">Admin</option>
+              <option value="User">User</option>
+              <option value="Guest">Guest</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="toolbar-right">
+          <div class="view-toggle-group">
+            <button 
+              type="button" 
+              class="btn-toggle" 
+              [class.active]="viewMode() === 'grid'"
+              (click)="viewMode.set('grid')"
+              title="Grid View"
+            >
+              <span class="material-symbols-outlined">grid_view</span>
+            </button>
+            <button 
+              type="button" 
+              class="btn-toggle" 
+              [class.active]="viewMode() === 'list'"
+              (click)="viewMode.set('list')"
+              title="List View"
+            >
+              <span class="material-symbols-outlined">view_list</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      @if (loading()) {
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p>Loading workspace members...</p>
+        </div>
+      } @else if (error()) {
+        <div class="error-state">
+          <span class="material-symbols-outlined text-danger">error</span>
+          <p>{{ error() }}</p>
+        </div>
+      } @else if (filteredUsers().length === 0) {
+        <div class="empty-state">
+          <span class="material-symbols-outlined">search_off</span>
+          <h3>No Members Found</h3>
+          <p>No workspace members match your current query or filters.</p>
+        </div>
+      } @else {
+        <!-- Grid/Card Layout View -->
+        @if (viewMode() === 'grid') {
+          <div class="team-grid">
+            @for (user of filteredUsers(); track user.userId) {
+              <div class="team-card hover-scale" (click)="selectUser(user)">
+                <div class="team-card-header">
+                  @if (user.avatarUrl; as avatar) {
+                    <img [src]="avatar" class="avatar-large" alt="Avatar" />
+                  } @else {
+                    <div class="avatar-large-placeholder" [style.background-color]="getUserBgColor(user.userId)">
+                      {{ getUserInitials(user) }}
+                    </div>
+                  }
+                  
+                  <div class="user-info">
+                    <h3>{{ user.firstName }} {{ user.lastName }}</h3>
+                    <span class="user-email">{{ user.email }}</span>
+                  </div>
+                </div>
+
+                <div class="team-card-body">
+                  <div class="detail-row">
+                    <span class="detail-label">Role</span>
+                    <span class="detail-value role-badge" [class.admin-role]="user.role === 'Admin'">
+                      {{ user.role || 'Member' }}
+                    </span>
+                  </div>
+                  <div class="detail-row">
+                    <span class="detail-label">Status</span>
+                    <span class="detail-value status-indicator">
+                      <span class="status-dot"></span> Active
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Assigned Workspace Projects Section -->
+                <div class="assigned-projects-section">
+                  <span class="projects-title-label">Assigned Projects</span>
+                  @if (loadingProjects()) {
+                    <div class="card-loader-mini">
+                      <div class="spinner-tiny"></div>
+                    </div>
+                  } @else {
+                    @if (getMemberProjects(user.userId).length === 0) {
+                      <span class="no-projects-badge">No Projects</span>
+                    } @else {
+                      <div class="card-projects-list">
+                        @for (p of getMemberProjects(user.userId); track p.projectId) {
+                          <span 
+                            class="project-mini-badge" 
+                            [style.border-left-color]="getProjectColorBorder(p.name)"
+                            [title]="p.name + ' (' + p.key + ')'"
+                          >
+                            {{ p.key }}
+                          </span>
+                        }
+                      </div>
+                    }
+                  }
+                </div>
+
+                <div class="team-card-footer">
+                  <span class="member-since">Member since May 2026</span>
+                </div>
+              </div>
+            }
+          </div>
+        } @else {
+          <!-- List Layout View -->
+          <div class="team-list-view panel">
+            <div class="table-scroll">
+              <table class="members-table">
+                <thead>
+                  <tr>
+                    <th>Member Name</th>
+                    <th>Email Address</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Assigned Workspace Projects</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (user of filteredUsers(); track user.userId) {
+                    <tr class="member-row" (click)="selectUser(user)">
+                      <td class="member-name-cell">
+                        @if (user.avatarUrl; as avatar) {
+                          <img [src]="avatar" class="avatar-mini" alt="Avatar" />
+                        } @else {
+                          <div class="avatar-mini-placeholder" [style.background-color]="getUserBgColor(user.userId)">
+                            {{ getUserInitials(user) }}
+                          </div>
+                        }
+                        <span class="member-name">{{ user.firstName }} {{ user.lastName }}</span>
+                      </td>
+                      <td class="email-text">{{ user.email }}</td>
+                      <td>
+                        <span class="role-badge" [class.admin-role]="user.role === 'Admin'">
+                          {{ user.role || 'Member' }}
+                        </span>
+                      </td>
+                      <td>
+                        <span class="status-indicator">
+                          <span class="status-dot"></span> Active
+                        </span>
+                      </td>
+                      <td>
+                        @if (loadingProjects()) {
+                          <div class="card-loader-mini">
+                            <div class="spinner-tiny"></div>
+                          </div>
+                        } @else {
+                          @if (getMemberProjects(user.userId).length === 0) {
+                            <span class="no-projects-text-small">None</span>
+                          } @else {
+                            <div class="list-projects-list">
+                              @for (p of getMemberProjects(user.userId); track p.projectId) {
+                                <span 
+                                  class="project-mini-badge"
+                                  [style.border-left-color]="getProjectColorBorder(p.name)"
+                                  [title]="p.name"
+                                >
+                                  {{ p.key }}
+                                </span>
+                              }
+                            </div>
+                          }
+                        }
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        }
+      }
+
+      <!-- Detailed Member Modal Overlay -->
+      @if (selectedUser(); as user) {
+        <div class="modal-overlay" (click)="closeDetailsModal()">
+          <div class="modal-container" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+              <h3>Member Profile</h3>
+              <button type="button" class="btn-close" (click)="closeDetailsModal()">×</button>
+            </div>
+            
+            <div class="modal-body">
+              <div class="profile-summary-header">
+                @if (user.avatarUrl; as avatar) {
+                  <img [src]="avatar" class="profile-modal-avatar" alt="Avatar" />
+                } @else {
+                  <div class="profile-modal-avatar-placeholder" [style.background-color]="getUserBgColor(user.userId)">
+                    {{ getUserInitials(user) }}
+                  </div>
+                }
+                <h2>{{ user.firstName }} {{ user.lastName }}</h2>
+                <span class="modal-role-badge" [class.admin-role]="user.role === 'Admin'">
+                  {{ user.role || 'Member' }}
+                </span>
+              </div>
+
+              <div class="modal-details-grid">
+                <div class="modal-info-item">
+                  <span class="info-label">Email Address</span>
+                  <a href="mailto:{{ user.email }}" class="info-value email-link">
+                    <span class="material-symbols-outlined icon-inline">mail</span>
+                    {{ user.email }}
+                  </a>
+                </div>
+                
+                <div class="modal-info-item">
+                  <span class="info-label">Account Status</span>
+                  <span class="info-value status-tag">
+                    <span class="status-dot"></span> Active
+                  </span>
+                </div>
+
+                <div class="modal-info-item">
+                  <span class="info-label">Date Joined</span>
+                  <span class="info-value">May 24, 2026</span>
+                </div>
+
+                <div class="modal-info-item full-width">
+                  <span class="info-label">Assigned Workspace Projects</span>
+                  
+                  @if (loadingProjects()) {
+                    <div class="projects-loader">
+                      <div class="spinner-sm"></div>
+                      <span>Resolving project links...</span>
+                    </div>
+                  } @else {
+                    @if (userProjects().length === 0) {
+                      <p class="no-projects-text">This user is not currently assigned to any projects.</p>
+                    } @else {
+                      <div class="projects-links-list">
+                        @for (proj of userProjects(); track proj.projectId) {
+                          <a 
+                            [routerLink]="['/projects', proj.projectId, 'tasks']" 
+                            (click)="closeDetailsModal()" 
+                            class="project-link-card"
+                          >
+                            <div class="proj-avatar-mini" [style.background-image]="'linear-gradient(135deg, ' + getProjectColor(proj.name) + ')'">
+                              {{ proj.key.slice(0, 2) }}
+                            </div>
+                            <div class="proj-text">
+                              <span class="proj-name">{{ proj.name }}</span>
+                              <span class="proj-key">{{ proj.key }}</span>
+                            </div>
+                            <span class="material-symbols-outlined arrow-icon">chevron_right</span>
+                          </a>
+                        }
+                      </div>
+                    }
+                  }
+                </div>
+              </div>
+            </div>
+
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" (click)="closeDetailsModal()">Close</button>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  

@@ -1,0 +1,84 @@
+
+    @if (project(); as p) {
+      <div class="project-shell-container">
+        <!-- Project Sidebar Navigation -->
+        <aside class="project-sidebar">
+          <div class="project-info">
+            <a routerLink="/projects" class="back-link">
+              <span class="material-symbols-outlined">arrow_back</span>
+              <span>Back to projects</span>
+            </a>
+            <div class="project-title-block">
+              <span class="material-symbols-outlined project-avatar-icon">inventory_2</span>
+              <div class="project-meta-info">
+                <h2 class="project-name">{{ p.name }}</h2>
+                <span class="project-key">{{ p.key }}</span>
+              </div>
+            </div>
+            @if (myRole()) {
+              <div class="role-badge">Role: {{ myRole() }}</div>
+            }
+          </div>
+          
+          <nav class="project-nav">
+            <a [routerLink]="['tasks']" routerLinkActive="active" class="proj-nav-item">
+              <span class="material-symbols-outlined">list_alt</span>
+              <span>Tasks</span>
+            </a>
+            <a [routerLink]="['board']" routerLinkActive="active" class="proj-nav-item">
+              <span class="material-symbols-outlined">view_kanban</span>
+              <span>Board</span>
+            </a>
+            <a [routerLink]="['backlog']" routerLinkActive="active" class="proj-nav-item">
+              <span class="material-symbols-outlined">view_headline</span>
+              <span>Backlog</span>
+            </a>
+            <a [routerLink]="['sprints']" routerLinkActive="active" class="proj-nav-item">
+              <span class="material-symbols-outlined">schedule</span>
+              <span>Sprints</span>
+            </a>
+            <a [routerLink]="['planning']" routerLinkActive="active" class="proj-nav-item">
+              <span class="material-symbols-outlined">view_cozy</span>
+              <span>Planning</span>
+            </a>
+            <a [routerLink]="['daily-updates']" routerLinkActive="active" class="proj-nav-item">
+              <span class="material-symbols-outlined">mail</span>
+              <span>Daily Updates</span>
+            </a>
+            <a [routerLink]="['activity']" routerLinkActive="active" class="proj-nav-item">
+              <span class="material-symbols-outlined">history</span>
+              <span>Activity</span>
+            </a>
+            <a [routerLink]="['members']" routerLinkActive="active" class="proj-nav-item">
+              <span class="material-symbols-outlined">group</span>
+              <span>Members</span>
+            </a>
+            <a [routerLink]="['analytics']" routerLinkActive="active" class="proj-nav-item">
+              <span class="material-symbols-outlined">analytics</span>
+              <span>Analytics</span>
+            </a>
+            <a [routerLink]="['settings']" routerLinkActive="active" class="proj-nav-item">
+              <span class="material-symbols-outlined">settings</span>
+              <span>Settings</span>
+            </a>
+          </nav>
+        </aside>
+
+        <!-- Project Sub-Page Content -->
+        <div class="project-main-content">
+          <router-outlet />
+        </div>
+      </div>
+    } @else if (error()) {
+      <div class="error-container">
+        <span class="material-symbols-outlined error-icon">warning</span>
+        <p class="error">{{ error() }}</p>
+        <a routerLink="/projects" class="btn">Back to Projects</a>
+      </div>
+    } @else {
+      <div class="loading-container">
+        <span class="material-symbols-outlined loading-spinner">autorenew</span>
+        <p>Loading project details...</p>
+      </div>
+    }
+  

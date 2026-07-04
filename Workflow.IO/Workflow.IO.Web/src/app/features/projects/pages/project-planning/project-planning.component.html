@@ -1,0 +1,98 @@
+
+    <section class="panel">
+      <h2>Planning</h2>
+
+      @if (loading()) {
+        <p>Loading…</p>
+      } @else if (error()) {
+        <p class="error">{{ error() }}</p>
+      } @else {
+        <section>
+          <h3>Components</h3>
+          <form [formGroup]="componentForm" (ngSubmit)="createComponent()" class="inline">
+            <input type="text" placeholder="Enter component name..." formControlName="name" />
+            <button type="submit">Add</button>
+          </form>
+          <ul>
+            @for (c of components(); track c.componentId) {
+              <li>{{ c.name }}</li>
+            }
+          </ul>
+        </section>
+
+        <section>
+          <h3>Versions</h3>
+          <form [formGroup]="versionForm" (ngSubmit)="createVersion()" class="inline">
+            <input type="text" placeholder="Enter version name..." formControlName="name" />
+            <button type="submit">Add</button>
+          </form>
+          <ul>
+            @for (v of versions(); track v.releaseVersionId) {
+              <li>
+                {{ v.name }}
+                @if (!v.isReleased) {
+                  <button type="button" (click)="releaseVersion(v.releaseVersionId)">Release</button>
+                } @else {
+                  <span class="released">Released</span>
+                }
+              </li>
+            }
+          </ul>
+        </section>
+
+        <section>
+          <h3>Epics</h3>
+          <form [formGroup]="epicForm" (ngSubmit)="createEpic()" class="inline">
+            <input type="text" placeholder="Enter epic name..." formControlName="name" />
+            <button type="submit">Add epic</button>
+          </form>
+          <ul>
+            @for (e of epics(); track e.epicId) {
+              <li>{{ e.name }}</li>
+            }
+          </ul>
+        </section>
+
+        <section>
+          <h3>My filters (all projects)</h3>
+          <ul>
+            @for (f of myFilters(); track f.savedFilterId) {
+              <li>
+                <strong>{{ f.name }}</strong>
+                <code>{{ f.jqlQuery }}</code>
+                <button type="button" (click)="executeFilter(f.savedFilterId)">Run</button>
+              </li>
+            }
+          </ul>
+        </section>
+
+        <section>
+          <h3>Project saved filters</h3>
+          <form [formGroup]="filterForm" (ngSubmit)="createFilter()" class="stack">
+            <input type="text" placeholder="Enter filter name..." formControlName="name" />
+            <textarea placeholder="Enter JQL query..." formControlName="jqlQuery" rows="2"></textarea>
+            <button type="submit">Save filter</button>
+          </form>
+          <ul>
+            @for (f of filters(); track f.savedFilterId) {
+              <li>
+                <strong>{{ f.name }}</strong>
+                <code>{{ f.jqlQuery }}</code>
+                <button type="button" (click)="executeFilter(f.savedFilterId)">Run</button>
+              </li>
+            }
+          </ul>
+          @if (filterResults().length > 0) {
+            <h4>Filter results ({{ filterResults().length }})</h4>
+            <ul>
+              @for (t of filterResults(); track t.taskId) {
+                <li>{{ t.issueKey }} — {{ t.title }}</li>
+              }
+            </ul>
+          }
+        </section>
+
+
+      }
+    </section>
+  

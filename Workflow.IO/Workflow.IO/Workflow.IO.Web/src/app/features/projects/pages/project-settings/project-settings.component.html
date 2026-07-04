@@ -1,0 +1,22 @@
+
+    <section class="panel">
+      <h2>Project settings</h2>
+      <form [formGroup]="form" (ngSubmit)="save()">
+        <label>Name</label>
+        <input type="text" formControlName="name" />
+        <label>Description</label>
+        <textarea formControlName="description" rows="3"></textarea>
+        <button type="submit" [disabled]="saving()">Save changes</button>
+      </form>
+      <div class="danger">
+        <button type="button" class="warn" (click)="archive()">Archive project</button>
+        <button type="button" class="danger-btn" (click)="remove()">Delete project</button>
+      </div>
+      @if (message()) {
+        <p class="msg">{{ message() }}</p>
+      }
+      @if (error()) {
+        <p class="error">{{ error() }}</p>
+      }
+    </section>
+  

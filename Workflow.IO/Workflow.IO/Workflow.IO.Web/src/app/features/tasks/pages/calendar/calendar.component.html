@@ -1,0 +1,312 @@
+<div class="page-container">
+  <header class="page-header">
+    <div class="header-left">
+      <h1>Calendar</h1>
+      <p class="subtitle">Track and reschedule task deadlines dynamically.</p>
+    </div>
+
+    <div class="header-right">
+      <div class="view-toggles">
+        <button 
+          type="button" 
+          class="toggle-btn" 
+          [class.active]="currentView() === 'month'" 
+          (click)="currentView.set('month')"
+        >
+          Month
+        </button>
+        <button 
+          type="button" 
+          class="toggle-btn" 
+          [class.active]="currentView() === 'week'" 
+          (click)="currentView.set('week')"
+        >
+          Week
+        </button>
+        <button 
+          type="button" 
+          class="toggle-btn" 
+          [class.active]="currentView() === 'day'" 
+          (click)="currentView.set('day')"
+        >
+          Day
+        </button>
+        <button 
+          type="button" 
+          class="toggle-btn" 
+          [class.active]="currentView() === 'burndown'" 
+          (click)="currentView.set('burndown')"
+        >
+          Burndown Chart
+        </button>
+      </div>
+
+      <div class="calendar-controls">
+        <button (click)="previous()" class="nav-btn" title="Previous">
+          <span class="material-symbols-outlined">chevron_left</span>
+        </button>
+        <span class="current-month-label">{{ navigationLabel() }}</span>
+        <button (click)="next()" class="nav-btn" title="Next">
+          <span class="material-symbols-outlined">chevron_right</span>
+        </button>
+        <button (click)="goToToday()" class="today-btn">Today</button>
+      </div>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Loading calendar...</p>
+    </div>
+  } @else if (error()) {
+    <div class="error-state">
+      <span class="material-symbols-outlined" style="color: var(--danger-color);">error</span>
+      <p>{{ error() }}</p>
+    </div>
+  } @else {
+    <div class="calendar-layout">
+      <!-- LEFT: MAIN CALENDAR GRID -->
+      <div class="calendar-main-pane">
+        <!-- Weekday header (only shown for Month & Week views) -->
+        @if (currentView() !== 'day' && currentView() !== 'burndown') {
+          <div class="days-of-week">
+            <span>Sun</span>
+            <span>Mon</span>
+            <span>Tue</span>
+            <span>Wed</span>
+            <span>Thu</span>
+            <span>Fri</span>
+            <span>Sat</span>
+          </div>
+        }
+
+        <!-- Monthly Grid View -->
+        @if (currentView() === 'month') {
+          <div class="days-grid month-view">
+            @for (day of calendarDays(); track day.date.toISOString()) {
+              <div 
+                class="day-cell" 
+                [class.not-current]="!day.isCurrentMonth"
+                [class.today]="day.isToday"
+                (dragover)="onDragOver($event)"
+                (drop)="onDrop($event, day.date)"
+              >
+                <div class="day-header">
+                  <span class="day-number">{{ day.date.getDate() }}</span>
+                  <button 
+                    type="button" 
+                    class="quick-add-btn" 
+                    (click)="createQuickTask(day.date, $event)" 
+                    title="Quick Add Task"
+                  >
+                    <span class="material-symbols-outlined">add</span>
+                  </button>
+                </div>
+                
+                <div class="day-tasks-container">
+                  @for (task of day.tasks; track task.taskId) {
+                    <a 
+                      [routerLink]="['/tasks', task.taskId]" 
+                      class="task-item-pills"
+                      [style.border-left-color]="getProjectColor(getProjectName(task.projectId))"
+                      [title]="task.title"
+                      draggable="true"
+                      (dragstart)="onDragStart($event, task)"
+                    >
+                      <span class="prio-dot" [ngClass]="getPriorityClass(task.priority)">
+                        {{ getPrioritySymbol(task.priority) }}
+                      </span>
+                      <span class="task-key-prefix">{{ task.issueKey }}</span>
+                      <span class="task-title-text">{{ task.title }}</span>
+                    </a>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        }
+
+        <!-- Weekly Grid View -->
+        @if (currentView() === 'week') {
+          <div class="days-grid week-view">
+            @for (day of weekDays(); track day.date.toISOString()) {
+              <div 
+                class="day-cell"
+                [class.today]="day.isToday"
+                (dragover)="onDragOver($event)"
+                (drop)="onDrop($event, day.date)"
+              >
+                <div class="day-header">
+                  <span class="day-number">{{ day.date | date:'EEE d' }}</span>
+                  <button 
+                    type="button" 
+                    class="quick-add-btn" 
+                    (click)="createQuickTask(day.date, $event)" 
+                    title="Quick Add Task"
+                  >
+                    <span class="material-symbols-outlined">add</span>
+                  </button>
+                </div>
+                
+                <div class="day-tasks-container">
+                  @for (task of day.tasks; track task.taskId) {
+                    <a 
+                      [routerLink]="['/tasks', task.taskId]" 
+                      class="task-item-pills"
+                      [style.border-left-color]="getProjectColor(getProjectName(task.projectId))"
+                      [title]="task.title"
+                      draggable="true"
+                      (dragstart)="onDragStart($event, task)"
+                    >
+                      <span class="prio-dot" [ngClass]="getPriorityClass(task.priority)">
+                        {{ getPrioritySymbol(task.priority) }}
+                      </span>
+                      <span class="task-key-prefix">{{ task.issueKey }}</span>
+                      <span class="task-title-text">{{ task.title }}</span>
+                    </a>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        }
+
+        <!-- Daily Grid View -->
+        @if (currentView() === 'day') {
+          <div class="days-grid day-view">
+            @for (day of dayViewData(); track day.date.toISOString()) {
+              <div 
+                class="day-cell"
+                [class.today]="day.isToday"
+                (dragover)="onDragOver($event)"
+                (drop)="onDrop($event, day.date)"
+              >
+                <div class="day-header">
+                  <span class="day-number" style="font-size: 1.1rem; font-weight: 700;">
+                    {{ day.date | date:'EEEE, MMMM d' }}
+                  </span>
+                  <button 
+                    type="button" 
+                    class="quick-add-btn" 
+                    style="opacity: 1;"
+                    (click)="createQuickTask(day.date, $event)" 
+                    title="Quick Add Task"
+                  >
+                    <span class="material-symbols-outlined" style="font-size: 1.5rem;">add</span>
+                  </button>
+                </div>
+                
+                <div class="day-tasks-container" style="gap: 0.75rem; padding: 0.5rem 0;">
+                  @for (task of day.tasks; track task.taskId) {
+                    <a 
+                      [routerLink]="['/tasks', task.taskId]" 
+                      class="task-item-pills"
+                      style="font-size: 0.85rem; padding: 0.5rem 0.75rem;"
+                      [style.border-left-color]="getProjectColor(getProjectName(task.projectId))"
+                      [title]="task.title"
+                      draggable="true"
+                      (dragstart)="onDragStart($event, task)"
+                    >
+                      <span class="prio-dot" style="font-size: 0.8rem;" [ngClass]="getPriorityClass(task.priority)">
+                        {{ getPrioritySymbol(task.priority) }}
+                      </span>
+                      <span class="task-key-prefix" style="font-size: 0.75rem;">{{ task.issueKey }}</span>
+                      <span class="task-title-text">{{ task.title }}</span>
+                    </a>
+                  }
+                  @if (day.tasks.length === 0) {
+                    <p style="font-size: 0.875rem; color: var(--text-muted); text-align: center; margin-top: 2rem;">
+                      No tasks scheduled for today.
+                    </p>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        }
+
+        <!-- Burndown View -->
+        @if (currentView() === 'burndown') {
+          <div class="burndown-container" style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem;">
+            <div class="burndown-header" style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;">
+              <h3 style="margin: 0; font-size: 1.1rem; font-weight: 700; color: var(--text-primary);">Sprint Burndown</h3>
+              <div class="project-selector" style="display: flex; align-items: center; gap: 0.5rem;">
+                <label for="burndownProjectSelect" style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 500;">Select Project:</label>
+                <select 
+                  id="burndownProjectSelect" 
+                  [value]="burndownProjectId()" 
+                  (change)="onBurndownProjectChange($any($event.target).value)"
+                  style="padding: 0.35rem 0.75rem; font-size: 0.85rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); background-color: var(--bg-panel); color: var(--text-primary);"
+                >
+                  @for (proj of projects(); track proj.projectId) {
+                    <option [value]="proj.projectId">{{ proj.name }}</option>
+                  }
+                </select>
+              </div>
+            </div>
+            
+            <div style="position: relative; width: 100%; min-height: 350px;">
+              <canvas #burndownCanvas></canvas>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- RIGHT: SIDEBAR AGENDA & DEADLINES -->
+      <div class="calendar-sidebar">
+        <!-- Today's Agenda -->
+        <div class="sidebar-card">
+          <h2>
+            <span class="material-symbols-outlined">today</span>
+            Today's Agenda
+          </h2>
+          <div class="agenda-list">
+            @for (task of todayAgenda(); track task.taskId) {
+              <a [routerLink]="['/tasks', task.taskId]" class="agenda-item">
+                <span class="agenda-title" [title]="task.title">{{ task.title }}</span>
+                <div class="agenda-meta">
+                  <span class="agenda-meta-left">
+                    <span class="prio-dot" [ngClass]="getPriorityClass(task.priority)">
+                      {{ getPrioritySymbol(task.priority) }}
+                    </span>
+                    <span>{{ task.issueKey }}</span>
+                  </span>
+                  <span>{{ getProjectName(task.projectId) }}</span>
+                </div>
+              </a>
+            } @empty {
+              <div class="empty-agenda">No tasks due today.</div>
+            }
+          </div>
+        </div>
+
+        <!-- Upcoming Deadlines (Next 7 Days) -->
+        <div class="sidebar-card">
+          <h2>
+            <span class="material-symbols-outlined">alarm</span>
+            Upcoming Deadlines
+          </h2>
+          <div class="agenda-list" style="max-height: 380px;">
+            @for (task of upcomingDeadlines(); track task.taskId) {
+              <a [routerLink]="['/tasks', task.taskId]" class="agenda-item">
+                <span class="agenda-title" [title]="task.title">{{ task.title }}</span>
+                <div class="agenda-meta">
+                  <span class="agenda-meta-left">
+                    <span class="prio-dot" [ngClass]="getPriorityClass(task.priority)">
+                      {{ getPrioritySymbol(task.priority) }}
+                    </span>
+                    <span>{{ task.issueKey }}</span>
+                  </span>
+                  <span class="deadline-date">{{ task.dueDate | date:'EEE d' }}</span>
+                </div>
+              </a>
+            } @empty {
+              <div class="empty-agenda">No deadlines in the next 7 days.</div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>

@@ -1,0 +1,243 @@
+
+    <div class="shell" [class.sidebar-collapsed]="collapsed()">
+      <!-- Full Height Left Sidebar -->
+      <aside class="sidebar">
+        <!-- Stunning Logo Section -->
+        <div class="sidebar-brand-header">
+          <a routerLink="/" class="brand-link">
+            <div class="brand-logo-container">
+              <img src="/logo.png" alt="WorkFlow.IO Logo" class="brand-logo-img pulse-anim" />
+              <div class="brand-glow"></div>
+            </div>
+            <span class="brand-text">WorkFlow<span class="text-accent">.IO</span></span>
+          </a>
+        </div>
+
+
+
+        <nav class="sidebar-scroll-area">
+          <!-- Workspace Section -->
+          <div class="nav-section">
+            <div class="nav-section-title">{{ auth.activeOrganization()?.name || 'Workspace' }}</div>
+            <a routerLink="/projects" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-item">
+              <span class="material-symbols-outlined">home</span>
+              <span class="nav-label">Overview</span>
+            </a>
+            <a routerLink="/projects" routerLinkActive="active" [routerLinkActiveOptions]="{exact: false}" class="nav-item">
+              <span class="material-symbols-outlined">folder</span>
+              <span class="nav-label">Projects</span>
+            </a>
+            <a routerLink="/tasks" routerLinkActive="active" class="nav-item">
+              <span class="material-symbols-outlined">task_alt</span>
+              <span class="nav-label">Tasks</span>
+            </a>
+            <a routerLink="/calendar" routerLinkActive="active" class="nav-item">
+              <span class="material-symbols-outlined">calendar_today</span>
+              <span class="nav-label">Calendar</span>
+            </a>
+            <a routerLink="/timeline" routerLinkActive="active" class="nav-item">
+              <span class="material-symbols-outlined">timeline</span>
+              <span class="nav-label">Timeline</span>
+            </a>
+            <a routerLink="/reports" routerLinkActive="active" class="nav-item">
+              <span class="material-symbols-outlined">bar_chart</span>
+              <span class="nav-label">Reports</span>
+            </a>
+          </div>
+
+          <!-- People Section -->
+          <div class="nav-section">
+            <div class="nav-section-title">People</div>
+            <a routerLink="/teams" routerLinkActive="active" class="nav-item">
+              <span class="material-symbols-outlined">groups</span>
+              <span class="nav-label">Teams</span>
+            </a>
+            <a routerLink="/team" routerLinkActive="active" class="nav-item">
+              <span class="material-symbols-outlined">group</span>
+              <span class="nav-label">Workspace Members</span>
+            </a>
+            <a routerLink="/clients" routerLinkActive="active" class="nav-item">
+              <span class="material-symbols-outlined">business</span>
+              <span class="nav-label">Clients</span>
+            </a>
+          </div>
+
+          <!-- Tools Section -->
+          <div class="nav-section">
+            <div class="nav-section-title">Tools</div>
+            <a routerLink="/notifications" routerLinkActive="active" class="nav-item notif-link">
+              <span class="material-symbols-outlined">notifications</span>
+              <span class="nav-label">Notifications</span>
+              @if (unreadCount() > 0) {
+                <span class="badge-count">{{ unreadCount() }}</span>
+              }
+            </a>
+            <a routerLink="/profile" routerLinkActive="active" class="nav-item">
+              <span class="material-symbols-outlined">settings</span>
+              <span class="nav-label">Settings</span>
+            </a>
+          </div>
+
+
+        </nav>
+
+        <!-- Profile Footer -->
+        @if (auth.currentUser(); as user) {
+          <div class="sidebar-user-footer">
+            <div class="user-info-wrapper" routerLink="/profile">
+              @if (auth.userAvatar(); as avatar) {
+                <img [src]="avatar" class="user-avatar-img" alt="Avatar" />
+              } @else {
+                <div class="user-avatar-initial">{{ userInitials(user) }}</div>
+              }
+              <div class="user-details">
+                <span class="user-name">{{ auth.displayName() || 'User Profile' }}</span>
+                <span class="user-email-sub">{{ user.email }}</span>
+              </div>
+            </div>
+            <div class="user-footer-actions">
+              <button type="button" class="btn-user-menu" routerLink="/profile" title="User settings">
+                <span class="material-symbols-outlined">more_vert</span>
+              </button>
+              <button type="button" class="btn-collapse" (click)="collapsed.set(!collapsed())" aria-label="Toggle sidebar" [title]="collapsed() ? 'Expand sidebar' : 'Collapse sidebar'">
+                <span class="material-symbols-outlined">{{ collapsed() ? 'chevron_right' : 'chevron_left' }}</span>
+              </button>
+            </div>
+          </div>
+        }
+      </aside>
+
+      <div class="main-wrapper">
+        <!-- Top Bar Header -->
+        <header class="top-bar">
+          <div class="top-bar-left">
+            <div class="global-search-container" (click)="openSearchOverlay()" style="cursor: pointer;">
+              <span class="material-symbols-outlined search-icon">search</span>
+              <span class="global-search-placeholder">Search projects, tasks, teams...</span>
+              <span class="search-shortcut">⌘ K</span>
+            </div>
+          </div>
+          
+          <div class="top-bar-right">
+            <!-- Light/Dark Mode Switcher -->
+            <button type="button" class="icon-btn theme-toggle" (click)="toggleTheme()" [title]="isDarkMode() ? 'Switch to Light Mode' : 'Switch to Dark Mode'">
+              <span class="material-symbols-outlined">
+                {{ isDarkMode() ? 'light_mode' : 'dark_mode' }}
+              </span>
+            </button>
+
+            <!-- Notifications Icon -->
+            <button type="button" class="icon-btn notif-btn" routerLink="/notifications" title="Notifications">
+              <span class="material-symbols-outlined">notifications</span>
+              @if (unreadCount() > 0) {
+                <span class="badge-dot"></span>
+              }
+            </button>
+
+            <!-- User Tag & Dropdown trigger -->
+            @if (auth.currentUser(); as user) {
+              <div class="top-user-menu" routerLink="/profile">
+                <span class="user-tag">{{ userInitials(user) }}</span>
+                <span class="user-email-text">{{ user.email }}</span>
+                <span class="material-symbols-outlined expand-icon">expand_more</span>
+              </div>
+            }
+
+            <!-- Sign Out -->
+            <button type="button" class="btn-signout" (click)="signOut()" title="Sign out">
+              <span class="material-symbols-outlined">logout</span>
+              <span>Sign Out</span>
+            </button>
+          </div>
+        </header>
+
+        <!-- Main Router Outlet Area -->
+        <main class="content">
+          <div class="fade-in-container">
+            <router-outlet />
+          </div>
+        </main>
+      </div>
+
+      <!-- Global Search Modal Overlay -->
+      @if (showSearchOverlay()) {
+        <div class="search-overlay-backdrop" (click)="closeSearchOverlay()">
+          <div class="search-overlay-card" (click)="$event.stopPropagation()">
+            <div class="search-overlay-header">
+              <span class="material-symbols-outlined search-overlay-icon">search</span>
+              <input 
+                #searchInput
+                type="text" 
+                class="search-overlay-input" 
+                placeholder="Search projects, tasks, teams..." 
+                [formControl]="searchOverlayControl"
+              />
+              <button class="btn-close-overlay" (click)="closeSearchOverlay()">ESC</button>
+            </div>
+
+            <div class="search-overlay-results">
+              @if (searchOverlayControl.value.trim().length === 0) {
+                <div class="search-tip">
+                  <span class="material-symbols-outlined">lightbulb</span>
+                  <p>Type to search projects, tasks, or team members...</p>
+                </div>
+              } @else if (hasNoResults()) {
+                <div class="search-empty">
+                  <span class="material-symbols-outlined">search_off</span>
+                  <p>No results found for "{{ searchOverlayControl.value }}"</p>
+                </div>
+              } @else {
+                <!-- Projects -->
+                @if (matchedProjects().length > 0) {
+                  <div class="result-category">
+                    <div class="category-title">Projects</div>
+                    @for (p of matchedProjects(); track p.projectId) {
+                      <a [routerLink]="['/projects', p.projectId, 'tasks']" (click)="closeSearchOverlay()" class="result-item">
+                        <span class="material-symbols-outlined item-icon font-indigo">folder</span>
+                        <div class="item-info">
+                          <span class="item-title">{{ p.name }}</span>
+                          <span class="item-meta">{{ p.key }} • {{ p.description || 'No description' }}</span>
+                        </div>
+                      </a>
+                    }
+                  </div>
+                }
+
+                <!-- Tasks -->
+                @if (matchedTasks().length > 0) {
+                  <div class="result-category">
+                    <div class="category-title">Tasks</div>
+                    @for (t of matchedTasks(); track t.taskId) {
+                      <a [routerLink]="['/tasks', t.taskId]" (click)="closeSearchOverlay()" class="result-item">
+                        <span class="material-symbols-outlined item-icon font-emerald">task_alt</span>
+                        <div class="item-info">
+                          <span class="item-title">{{ t.issueKey }}: {{ t.title }}</span>
+                          <span class="item-meta">Status: {{ getTaskStatusLabel(t.status) }}</span>
+                        </div>
+                      </a>
+                    }
+                  </div>
+                }
+
+                <!-- Users -->
+                @if (matchedUsers().length > 0) {
+                  <div class="result-category">
+                    <div class="category-title">Team Members</div>
+                    @for (u of matchedUsers(); track u.userId) {
+                      <a routerLink="/team" (click)="closeSearchOverlay()" class="result-item">
+                        <span class="material-symbols-outlined item-icon font-amber">person</span>
+                        <div class="item-info">
+                          <span class="item-title">{{ u.firstName }} {{ u.lastName }}</span>
+                          <span class="item-meta">{{ u.email }} • {{ u.role || 'Member' }}</span>
+                        </div>
+                      </a>
+                    }
+                  </div>
+                }
+              }
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  

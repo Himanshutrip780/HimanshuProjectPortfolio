@@ -1,0 +1,11 @@
+@TaskApi_HostAddress = http://localhost:5260
+@ProjectId = 00000000-0000-0000-0000-000000000000
+@TaskId = 00000000-0000-0000-0000-000000000000
+
+GET {{TaskApi_HostAddress}}/api/projects/{{ProjectId}}/tasks
+Accept: application/json
+
+###
+
+GET {{TaskApi_HostAddress}}/api/tasks/{{TaskId}}
+Accept: application/json

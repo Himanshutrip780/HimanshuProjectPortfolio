@@ -1,0 +1,37 @@
+
+    <div class="picker">
+      <label>{{ label() }}</label>
+      <input
+        type="search"
+        [placeholder]="placeholder()"
+        [(ngModel)]="searchText"
+        (ngModelChange)="onSearchChange($event)"
+        autocomplete="off"
+      />
+      @if (selected(); as user) {
+        <p class="selected">
+          Selected: <strong>{{ user.firstName }} {{ user.lastName }}</strong>
+          ({{ user.email }})
+          <button type="button" (click)="clear()">Clear</button>
+        </p>
+      }
+      @if (suggestions().length > 0 && !selected()) {
+        <ul class="suggestions">
+          @for (user of suggestions(); track user.userId) {
+            <li>
+              <button type="button" (click)="pick(user)">
+                {{ user.firstName }} {{ user.lastName }} — {{ user.email }}
+              </button>
+            </li>
+          }
+        </ul>
+      }
+      @if (searching()) {
+        <p class="hint">Searching…</p>
+      } @else if (searchText.length >= 2 && suggestions().length === 0 && !selected()) {
+        <p class="hint">No users found. Try another email.</p>
+      } @else if (searchText.length < 2) {
+        <p class="hint">Type at least 2 characters of an email to search.</p>
+      }
+    </div>
+  

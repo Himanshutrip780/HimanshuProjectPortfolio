@@ -1,0 +1,5 @@
+C:\ATS\backend\ATS.Application\obj\Debug\net8.0\ATS.Application.csproj.AssemblyReference.cache
+C:\ATS\backend\ATS.Application\obj\Debug\net8.0\ATS.Application.GeneratedMSBuildEditorConfig.editorconfig
+C:\ATS\backend\ATS.Application\obj\Debug\net8.0\ATS.Application.AssemblyInfoInputs.cache
+C:\ATS\backend\ATS.Application\obj\Debug\net8.0\ATS.Application.AssemblyInfo.cs
+C:\ATS\backend\ATS.Application\obj\Debug\net8.0\ATS.Application.csproj.CoreCompileInputs.cache

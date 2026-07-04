@@ -1,0 +1,331 @@
+<div class="flex flex-col gap-6 w-full animate-fade-in pb-8">
+  
+  <!-- Top Headers & Actions -->
+  <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-6 shrink-0">
+    <div class="flex flex-col gap-1">
+      <h2 class="text-2xl font-bold tracking-tight text-foreground">Offer Letters</h2>
+      <p class="text-xs text-muted-foreground">Draft, dispatch, and track official candidate employment agreements</p>
+    </div>
+    <button 
+      (click)="toggleCreateForm()" 
+      class="btn-primary py-2.5 px-4 flex items-center justify-center gap-2 text-xs font-semibold shrink-0" 
+      *ngIf="!showCreateForm() && selectedOffer() === null"
+    >
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+      Generate Offer
+    </button>
+  </div>
+
+  <div class="flex gap-6 relative">
+    
+    <!-- Left Panel: Offers List -->
+    <div class="flex-1 flex flex-col gap-6 transition-all duration-300" [class.mr-[480px]]="showCreateForm() || selectedOffer() !== null">
+      
+      <!-- Database Controls (Search, Status Filter, and Sort in One Line) -->
+      <div class="flex flex-row items-center justify-between gap-3 bg-card border border-border p-2 rounded-xl shrink-0 select-none shadow-level1 text-xs">
+        <div class="flex items-center gap-2 flex-1 min-w-0">
+          <!-- Search bar with relative positioning to prevent icon overlap -->
+          <div class="search-input-wrapper relative w-full max-w-[200px] shrink-0">
+            <span class="absolute inset-y-0 left-2.5 flex items-center pointer-events-none text-muted-foreground">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.602 10.602Z"/></svg>
+            </span>
+            <input 
+              type="text" 
+              [ngModel]="searchQuery()" 
+              (ngModelChange)="onSearchChanged($event)"
+              placeholder="Search candidate or job..." 
+              class="input-field py-1 pl-8 bg-background text-xs w-full"
+            />
+          </div>
+
+          <!-- Status Filter -->
+          <select 
+            [ngModel]="statusFilter()" 
+            (ngModelChange)="onStatusFilterChange($event)"
+            class="input-field py-1 w-32 bg-background appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2371717a%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:0.85rem] bg-[right_0.5rem_center] bg-no-repeat pr-5 text-xs cursor-pointer shrink-0"
+          >
+            <option value="">All Statuses</option>
+            <option value="0">Draft</option>
+            <option value="1">Approved</option>
+            <option value="2">Sent</option>
+            <option value="3">Accepted</option>
+            <option value="4">Rejected</option>
+            <option value="5">Negotiating</option>
+            <option value="6">Withdrawn</option>
+          </select>
+        </div>
+
+        <!-- Sorting triggers -->
+        <div class="flex items-center gap-2.5 shrink-0 font-semibold text-muted-foreground text-[10px]">
+          <span class="text-[9px] uppercase tracking-wider font-bold">Sort:</span>
+          <button (click)="toggleSort('startDate')" class="hover:text-foreground flex items-center gap-0.5 cursor-pointer transition-colors">
+            Date
+            @if (sortBy() === 'startDate') {
+              <span class="text-[9px] font-bold text-primary">{{ sortOrder() === 'asc' ? '▲' : '▼' }}</span>
+            }
+          </button>
+          <span class="text-muted-foreground/30">•</span>
+          <button (click)="toggleSort('salary')" class="hover:text-foreground flex items-center gap-0.5 cursor-pointer transition-colors">
+            Salary
+            @if (sortBy() === 'salary') {
+              <span class="text-[9px] font-bold text-primary">{{ sortOrder() === 'asc' ? '▲' : '▼' }}</span>
+            }
+          </button>
+        </div>
+      </div>
+
+      @if (loading()) {
+        <div class="flex flex-col items-center justify-center flex-1 gap-3 text-muted-foreground min-h-[300px] bg-card border border-border rounded-[20px]">
+          <span class="animate-spin border-4 border-primary/20 border-t-primary rounded-full w-8 h-8"></span>
+          <p class="text-xs">Loading candidate offers...</p>
+        </div>
+      } @else {
+        <div class="space-y-4">
+          @if (getFilteredOffers().length === 0) {
+            <div class="bg-card border border-border rounded-[20px] p-12 text-center flex flex-col items-center justify-center gap-4 shadow-level1">
+              <svg class="w-12 h-12 text-muted-foreground" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></svg>
+              <h4 class="text-base font-bold text-foreground">No offer letters found</h4>
+              <p class="text-xs text-muted-foreground max-w-xs leading-normal">Try adjusting your filters or search terms.</p>
+            </div>
+          } @else {
+            @for (offer of getPaginatedOffers(); track offer.id) {
+              <div 
+                (click)="viewOfferDetails(offer)"
+                [ngClass]="{ 'border-primary bg-secondary/50': selectedOffer()?.id === offer.id }"
+                class="card-level1 py-2 px-4 flex items-center justify-between cursor-pointer hover:shadow-level2 transition-all duration-200 text-xs gap-4"
+              >
+                <!-- Candidate Info Column -->
+                <div class="flex items-center gap-3 min-w-0 flex-1">
+                  <div class="w-7 h-7 rounded-[8px] bg-primary/10 text-primary border border-primary/20 flex items-center justify-center shrink-0">
+                    <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></svg>
+                  </div>
+                  <span class="font-bold text-foreground truncate min-w-[120px]">{{ offer.candidateName }}</span>
+                </div>
+
+                <!-- Job Title Column -->
+                <div class="flex-1 min-w-0 text-muted-foreground truncate">
+                  {{ offer.jobTitle }}
+                </div>
+
+                <!-- Salary & Date Column -->
+                <div class="flex-1 shrink-0 hidden sm:flex items-center gap-4 text-muted-foreground">
+                  <span class="font-semibold">${{ offer.salary | number }}</span>
+                  <span class="text-[10px] text-muted-foreground/60">Starts: {{ offer.startDate | date:'shortDate' }}</span>
+                </div>
+
+                <!-- Status & Action Column -->
+                <div class="flex items-center gap-3 shrink-0">
+                  <span [class]="getStatusClass(offer.status)" class="text-[9px] font-bold px-2 py-0.5 border rounded-full uppercase tracking-wider select-none">
+                    {{ getStatusLabel(offer.status) }}
+                  </span>
+                  <svg class="w-3.5 h-3.5 text-muted-foreground" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/></svg>
+                </div>
+              </div>
+            }
+
+            <!-- Pagination Controls -->
+            <div class="flex items-center justify-between border-t border-border/60 pt-6 mt-6 shrink-0 text-xs select-none">
+              <button 
+                type="button"
+                [disabled]="pageIndex() === 1" 
+                (click)="prevPage()" 
+                class="btn-secondary py-1.5 px-3 rounded-[10px] font-semibold flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              >
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5"/></svg>
+                Previous
+              </button>
+              <span class="font-bold text-muted-foreground">Page {{ pageIndex() }}</span>
+              <button 
+                type="button"
+                [disabled]="pageIndex() * pageSize() >= getFilteredOffers().length" 
+                (click)="nextPage()" 
+                class="btn-secondary py-1.5 px-3 rounded-[10px] font-semibold flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              >
+                Next
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/></svg>
+              </button>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Right Panel 1: Create Form Drawer -->
+    @if (showCreateForm()) {
+      <div class="fixed top-0 right-0 w-full sm:w-[460px] h-full border-l border-border bg-card shadow-level2 flex flex-col z-40 animate-fade-in">
+        <div class="h-16 border-b border-border flex items-center justify-between px-6 shrink-0 bg-secondary/20">
+          <h4 class="text-sm font-bold tracking-tight">Generate Offer Letter</h4>
+          <button (click)="toggleCreateForm()" class="p-1 rounded-[8px] hover:bg-secondary text-muted-foreground hover:text-foreground cursor-pointer transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+
+        <form [formGroup]="offerForm" (ngSubmit)="onCreateOffer()" class="flex-1 overflow-y-auto p-6 space-y-4 scrollbar-thin">
+          <div class="space-y-1.5">
+            <label class="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Select Candidate</label>
+            <select formControlName="applicationId" class="input-field appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2371717a%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.1rem] bg-[right_0.6rem_center] bg-no-repeat pr-8">
+              <option value="" disabled selected>-- Choose candidate application --</option>
+              @for (app of applications(); track app.id) {
+                <option [value]="app.id">
+                  {{ app.candidateName }} - {{ app.jobTitle }}
+                </option>
+              }
+            </select>
+          </div>
+
+          <div class="space-y-1.5">
+            <label class="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Annual Base Salary ($)</label>
+            <input type="number" formControlName="salary" class="input-field">
+          </div>
+
+          <div class="space-y-1.5">
+            <label class="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Proposed Start Date</label>
+            <input type="date" formControlName="startDate" class="input-field">
+          </div>
+
+          <div class="space-y-1.5">
+            <label class="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Customize Offer Letter</label>
+            <textarea formControlName="offerLetterContent" rows="8" placeholder="Drafting offer letter..." class="input-field font-mono text-xs leading-relaxed"></textarea>
+          </div>
+
+          <div class="flex justify-end gap-3 border-t border-border pt-4 mt-6 shrink-0">
+            <button type="button" (click)="toggleCreateForm()" class="btn-secondary py-2 px-4">Cancel</button>
+            <button type="submit" [disabled]="submitting() || offerForm.invalid" class="btn-primary py-2 px-4">
+              @if (submitting()) { Generating... } @else { Generate PDF Letter }
+            </button>
+          </div>
+        </form>
+      </div>
+    }
+
+    <!-- Right Panel 2: Offer Letter Details & Signature Drawer -->
+    @if (selectedOffer() !== null) {
+      <div class="fixed top-0 right-0 w-full sm:w-[460px] h-full border-l border-border bg-card shadow-level2 flex flex-col z-40 animate-fade-in">
+        <div class="h-16 border-b border-border flex items-center justify-between px-6 shrink-0 bg-secondary/20">
+          <div class="flex items-center gap-3">
+            <h4 class="text-sm font-bold tracking-tight">Offer Overview</h4>
+            <span [class]="getStatusClass(selectedOffer()?.status || 0)" class="text-[9px] font-bold px-2 py-0.5 border rounded-full uppercase tracking-wider select-none">
+              {{ getStatusLabel(selectedOffer()?.status || 0) }}
+            </span>
+          </div>
+          <button (click)="closeDetails()" class="p-1 rounded-[8px] hover:bg-secondary text-muted-foreground hover:text-foreground cursor-pointer transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin">
+          <!-- Offer Status Transition Actions (Visual Buttons) -->
+          <div class="bg-card border border-border rounded-[20px] p-5 space-y-3 shadow-level1 select-none">
+            <label class="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">Offer Status Transitions</label>
+            
+            <div class="flex flex-col gap-2">
+              <!-- Approve Offer: visible when draft (0) -->
+              <button 
+                *ngIf="selectedOffer()?.status === 0"
+                (click)="onTransitionStatus(1)"
+                class="w-full py-2 bg-amber-500/10 text-amber-700 dark:text-amber-400 hover:bg-amber-500/20 border border-amber-500/20 rounded-[10px] text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-2"
+              >
+                <svg class="w-4 h-4 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+                <span>Approve Offer Requisition</span>
+              </button>
+
+              <!-- Send to Candidate: visible when approved (1) -->
+              <button 
+                *ngIf="selectedOffer()?.status === 1"
+                (click)="onTransitionStatus(2)"
+                class="w-full py-2 bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 rounded-[10px] text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-2"
+              >
+                <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"/></svg>
+                <span>Send Offer to Candidate</span>
+              </button>
+
+              <!-- Withdraw Offer: visible when not draft/withdrawn/accepted/rejected (0, 3, 4, 6) -->
+              <button 
+                *ngIf="selectedOffer()?.status !== 0 && selectedOffer()?.status !== 3 && selectedOffer()?.status !== 4 && selectedOffer()?.status !== 6"
+                (click)="onTransitionStatus(6)"
+                class="w-full py-2 bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-500/20 border border-red-500/20 rounded-[10px] text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-2"
+              >
+                <svg class="w-4 h-4 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                <span>Withdraw Active Offer</span>
+              </button>
+
+              <!-- Reset to Draft (Fallback: only if withdrawn/rejected to allow editing) -->
+              <button 
+                *ngIf="selectedOffer()?.status === 6 || selectedOffer()?.status === 4"
+                (click)="onTransitionStatus(0)"
+                class="w-full py-2 bg-secondary text-foreground hover:bg-border rounded-[10px] text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer border border-border flex items-center justify-center gap-2"
+              >
+                <svg class="w-4 h-4 text-foreground" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>
+                <span>Reset Offer to Draft</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Document Preview Sheet -->
+          <div class="bg-white border border-slate-200 text-slate-700 shadow-level2 rounded-[20px] p-8 space-y-5 select-none text-left">
+            <div class="flex justify-between items-center border-b-2 border-primary pb-3">
+              <span class="font-display font-extrabold text-xs tracking-widest text-slate-800">▲ {{ companyName() | uppercase }}</span>
+              <span class="text-[9px] font-bold text-slate-400 tracking-wider">OFFER OF EMPLOYMENT</span>
+            </div>
+
+            <div class="space-y-3">
+              <textarea 
+                [ngModel]="editedLetterContent()" 
+                (ngModelChange)="editedLetterContent.set($event)"
+                rows="14" 
+                class="w-full text-[11px] leading-relaxed text-slate-800 font-sans border border-slate-200 focus:ring-1 focus:ring-primary rounded-lg p-3 resize-y bg-slate-50/50"
+                placeholder="Write offer letter content here..."
+              ></textarea>
+              <div class="flex justify-end pt-2">
+                <button 
+                  (click)="saveOfferLetterContent()" 
+                  [disabled]="savingLetter()"
+                  class="btn-primary py-1.5 px-4 text-[10px] uppercase font-bold cursor-pointer"
+                >
+                  <span class="flex items-center gap-1">
+                    <svg class="w-3 h-3 text-white shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.746 3.746 0 0 1 3.296-1.043A3.746 3.746 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 3.296 1.043 3.746 3.746 0 0 1 1.043 3.296A3.745 3.745 0 0 1 21 12Z"/></svg>
+                    <span>{{ savingLetter() ? 'Saving...' : 'Save Offer Letter' }}</span>
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            <div class="border-t border-dashed border-slate-200 my-4"></div>
+
+            <!-- Signature Display -->
+            <div class="flex flex-col gap-1 text-[11px]">
+              @if (selectedOffer()?.status === 3) {
+                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Candidate Signature Verification:</span>
+                <span class="font-signature text-xl text-primary py-1 block">{{ (selectedOffer()?.eSignatureDetails || '').split(' at ')[0].replace('Digitally Signed by ', '') }}</span>
+                <span class="text-[8px] text-slate-400 leading-none truncate block">{{ selectedOffer()?.eSignatureDetails }}</span>
+              } @else {
+                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Signature Pending Candidate E-Sign</span>
+              }
+            </div>
+          </div>
+
+          <!-- Simulate Candidate Acceptance -->
+          @if (selectedOffer()?.status === 0 || selectedOffer()?.status === 1 || selectedOffer()?.status === 2) {
+            <div class="bg-card border border-border rounded-[20px] p-5 space-y-4 shadow-level1">
+              <div>
+                <h4 class="text-xs font-bold text-foreground uppercase tracking-wider">Simulate Candidate Acceptance</h4>
+                <p class="text-[11px] text-muted-foreground mt-1">Type the candidate's name to sign and accept the offer letter:</p>
+              </div>
+              
+              <form [formGroup]="signForm" (ngSubmit)="onSignOffer()" class="space-y-4">
+                <div class="space-y-1.5">
+                  <label class="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Candidate Full Name</label>
+                  <input type="text" formControlName="signatureName" placeholder="{{ selectedOffer()?.candidateName }} (Full Name)" class="input-field">
+                </div>
+
+                <button type="submit" [disabled]="signing() || signForm.invalid" class="btn-primary w-full py-2.5 mt-2 flex items-center justify-center gap-2">
+                  @if (signing()) { Signing Offer... } @else { Confirm Electronic Signature }
+                </button>
+              </form>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  </div>
+</div>

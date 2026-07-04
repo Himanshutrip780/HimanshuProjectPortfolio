@@ -1,0 +1,70 @@
+
+    <div class="page-container">
+      <header class="page-header">
+        <div class="header-left">
+          <h1>Clients</h1>
+          <p class="subtitle">View and monitor client relations and associated projects.</p>
+        </div>
+        <div class="header-right">
+          <span class="badge-total">{{ clientsList().length }} Clients</span>
+        </div>
+      </header>
+
+      <div class="clients-list panel">
+        <div class="table-scroll">
+          <table class="clients-table">
+            <thead>
+              <tr>
+                <th>Client Name</th>
+                <th>Industry</th>
+                <th>Contact Person</th>
+                <th>Email Address</th>
+                <th>Aligned Projects</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (client of clientsList(); track client.clientId) {
+                <tr class="client-row">
+                  <td class="client-name-cell">
+                    <span class="client-logo-avatar" [style.background-color]="getClientBgColor(client.name)">
+                      {{ client.name.charAt(0) }}
+                    </span>
+                    <span class="client-name">{{ client.name }}</span>
+                  </td>
+                  <td>
+                    <span class="industry-tag">{{ client.industry }}</span>
+                  </td>
+                  <td>{{ client.contactPerson }}</td>
+                  <td class="email-text">{{ client.email }}</td>
+                  <td>
+                    <div class="projects-badge-container">
+                      <span class="projects-count-badge">{{ client.projectsCount }} Projects</span>
+                      @if (client.projects.length > 0) {
+                        <div class="projects-tooltip">
+                          <div class="tooltip-header">Aligned Projects</div>
+                          <ul>
+                            @for (p of client.projects; track p.projectId) {
+                              <li class="tooltip-project-item">
+                                <span class="project-key">[{{ p.key }}]</span>
+                                <span class="project-name">{{ p.name }}</span>
+                              </li>
+                            }
+                          </ul>
+                        </div>
+                      }
+                    </div>
+                  </td>
+                  <td>
+                    <span class="status-badge" [class]="getClientStatusClass(client.status)">
+                      {{ client.status }}
+                    </span>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  

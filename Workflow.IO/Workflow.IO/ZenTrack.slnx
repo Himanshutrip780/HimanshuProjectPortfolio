@@ -1,0 +1,16 @@
+<Solution>
+  <Project Path="ActivityApi/ActivityApi.csproj" />
+  <Project Path="AnalyticsApi/AnalyticsApi.csproj" />
+  <Project Path="CommentApi/CommentApi.csproj" />
+  <Project Path="FileApi/FileApi.csproj" />
+  <Project Path="GatewayApi/GatewayApi.csproj" />
+  <Project Path="JwtAuthenticationManager/JwtAuthenticationManager.csproj" />
+  <Project Path="NotificationApi/NotificationApi.csproj" />
+  <Project Path="ProjectApi/ProjectApi.csproj" Id="514a1fb2-3aa6-4d9f-9dd3-f6bb7e58bad0" />
+  <Project Path="RealtimeApi/RealtimeApi.csproj" />
+  <Project Path="TaskApi/TaskApi.csproj" />
+  <Project Path="UserApi/UserApi.csproj" />
+  <Project Path="Workflow.IO.DataSeeder/Workflow.IO.DataSeeder.csproj" />
+  <Project Path="Workflow.IO.Shared/Workflow.IO.Shared.csproj" />
+  <Project Path="Workflow.IO/Workflow.IO.csproj" />
+</Solution>

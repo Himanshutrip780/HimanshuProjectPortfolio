@@ -1,0 +1,83 @@
+{
+  "/users": {
+    "target": "http://127.0.0.1:5270",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/projects": {
+    "target": "http://127.0.0.1:5270",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/tasks": {
+    "target": "http://127.0.0.1:5270",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/teams": {
+    "target": "http://127.0.0.1:5270",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/sprints": {
+    "target": "http://127.0.0.1:5270",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/subtasks": {
+    "target": "http://127.0.0.1:5270",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/comments": {
+    "target": "http://127.0.0.1:5270",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/notifications": {
+    "target": "http://127.0.0.1:5270",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/activities": {
+    "target": "http://127.0.0.1:5270",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/attachments": {
+    "target": "http://127.0.0.1:5270",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/analytics": {
+    "target": "http://127.0.0.1:5270",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/issues": {
+    "target": "http://127.0.0.1:5270",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/versions": {
+    "target": "http://127.0.0.1:5270",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/links": {
+    "target": "http://127.0.0.1:5270",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/filters": {
+    "target": "http://127.0.0.1:5270",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/hubs": {
+    "target": "http://127.0.0.1:5270",
+    "secure": false,
+    "changeOrigin": true,
+    "ws": true
+  }
+}

@@ -1,0 +1,303 @@
+<div class="auth-page-container" [class.dark-theme]="isDarkMode()">
+  <!-- Theme Toggler (Floating Top Right) -->
+  <button type="button" class="theme-toggle-btn" (click)="toggleTheme()" aria-label="Toggle Theme">
+    <span class="material-symbols-outlined">
+      {{ isDarkMode() ? 'light_mode' : 'dark_mode' }}
+    </span>
+  </button>
+
+  <div class="split-layout">
+    <!-- Left Section: Branding & Features -->
+    <div class="branding-section">
+      <!-- Background Mesh Glows -->
+      <div class="mesh-background">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+      </div>
+      
+      <!-- Decorative Dot Grid Pattern -->
+      <div class="dot-grid"></div>
+      
+      <!-- Logo at the Top Left -->
+      <div class="logo-area">
+        <div class="logo-container">
+          <img src="/logo.png" class="logo-image" alt="Workflow.IO Logo" />
+        </div>
+        <div class="logo-text-group">
+          <span class="logo-text">Workflow<span class="text-accent">.IO</span></span>
+          <span class="logo-subtitle">Build. Ship. Repeat.</span>
+        </div>
+      </div>
+      
+      <!-- Main Branding Content -->
+      <div class="branding-content">
+        <!-- Headline & Tagline -->
+        <h1 class="headline">The all-in-one workspace for modern <span class="gradient-text">software teams</span></h1>
+        <p class="tagline">
+          Plan, track, and ship better software — all in one place.<br>
+          Workflow.IO helps teams move fast and stay aligned.
+        </p>
+
+        <!-- Feature Cards Grid -->
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="feature-icon-wrapper purple-box">
+              <span class="material-symbols-outlined feature-icon">developer_board</span>
+            </div>
+            <div class="feature-text">
+              <h3>Project Tracking</h3>
+              <p>Plan sprints, manage issues, and track progress in real-time.</p>
+            </div>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon-wrapper green-box">
+              <span class="material-symbols-outlined feature-icon">groups</span>
+            </div>
+            <div class="feature-text">
+              <h3>Team Collaboration</h3>
+              <p>Comment, mention, and share updates seamlessly.</p>
+            </div>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon-wrapper amber-box">
+              <span class="material-symbols-outlined feature-icon">trending_up</span>
+            </div>
+            <div class="feature-text">
+              <h3>Agile Workflow</h3>
+              <p>Flexible boards, roadmaps, and custom workflows.</p>
+            </div>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon-wrapper blue-box">
+              <span class="material-symbols-outlined feature-icon">bar_chart</span>
+            </div>
+            <div class="feature-text">
+              <h3>Powerful Analytics</h3>
+              <p>Get actionable insights and deliver with confidence.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dashboard Mockup Image -->
+        <div class="dashboard-preview-container">
+          <img src="/dashboard_mockup.png?v=2" class="dashboard-preview-img" alt="WorkFlow.IO Dashboard Mockup" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Section: Login Card -->
+    <div class="form-section">
+      <div class="form-wrapper">
+        <div class="auth-card glass-panel">
+          <div class="auth-card-header">
+            <h2>Welcome back</h2>
+            <p class="subtitle">Log in to your Workflow.IO workspace</p>
+          </div>
+
+          <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate class="auth-form">
+            <!-- Email field -->
+            <div class="form-group">
+              <label for="email">Email address</label>
+              <div class="input-with-icon">
+                <span class="material-symbols-outlined input-icon">mail</span>
+                <input
+                  id="email"
+                  type="email"
+                  formControlName="email"
+                  autocomplete="email"
+                  placeholder="you@company.com"
+                  [class.invalid]="emailInvalid()"
+                />
+              </div>
+              @if (emailInvalid()) {
+                <p class="field-error">Enter a valid email address.</p>
+              }
+              @if (serverErrorFor('email'); as emailError) {
+                <p class="field-error">{{ emailError }}</p>
+              }
+            </div>
+
+            <!-- Password field -->
+            <div class="form-group">
+              <div class="password-label-row">
+                <label for="password">Password</label>
+                <a class="forgot-link" (click)="onForgotPassword()">Forgot password?</a>
+              </div>
+              <div class="input-with-icon">
+                <span class="material-symbols-outlined input-icon">lock</span>
+                <input
+                  id="password"
+                  [type]="showPassword() ? 'text' : 'password'"
+                  formControlName="password"
+                  autocomplete="current-password"
+                  placeholder="Enter your password"
+                  [class.invalid]="passwordInvalid()"
+                />
+                <button type="button" class="password-toggle-btn" (click)="togglePassword()">
+                  <span class="material-symbols-outlined">
+                    {{ showPassword() ? 'visibility_off' : 'visibility' }}
+                  </span>
+                </button>
+              </div>
+              @if (passwordInvalid()) {
+                <p class="field-error">Password is required (min 8 characters).</p>
+              }
+              @if (serverErrorFor('password'); as passwordError) {
+                <p class="field-error">{{ passwordError }}</p>
+              }
+            </div>
+
+            <!-- Remember Me & Custom Checkbox -->
+            <div class="form-options">
+              <label class="checkbox-container">
+                <input type="checkbox" formControlName="rememberMe" />
+                <span class="checkmark"></span>
+                <span>Keep me signed in</span>
+              </label>
+            </div>
+
+            @if (auth.lastError(); as errorMessage) {
+              <div class="alert-box error-alert" role="alert">
+                <span class="material-symbols-outlined">error</span>
+                <span>{{ errorMessage }}</span>
+              </div>
+            }
+
+            <!-- Submit Button -->
+            <button type="submit" class="btn btn-primary submit-btn w-full mt-2" [disabled]="auth.isLoading()">
+              @if (auth.isLoading()) {
+                <span class="spinner-sm"></span> Signing in...
+              } @else {
+                <span>Sign in to Workspace</span>
+                <span class="material-symbols-outlined">arrow_forward</span>
+              }
+            </button>
+          </form>
+
+          <!-- Social Login Separator -->
+          <div class="separator">
+            <span>or continue with</span>
+          </div>
+
+          <!-- Social Buttons -->
+          <div class="social-buttons">
+            <button type="button" class="btn-social" (click)="socialLogin('Google')" title="Google">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
+                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
+              </svg>
+            </button>
+            <button type="button" class="btn-social" (click)="socialLogin('GitHub')" title="GitHub">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.464-1.11-1.464-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.831.092-.646.35-1.086.636-1.336-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.577.688.48C19.137 20.162 22 16.418 22 12c0-5.523-4.477-10-10-10z"/>
+              </svg>
+            </button>
+            <button type="button" class="btn-social" (click)="socialLogin('Microsoft')" title="Microsoft">
+              <svg width="20" height="20" viewBox="0 0 23 23" fill="none">
+                <rect x="0" y="0" width="9.5" height="9.5" fill="#F25022" />
+                <rect x="10.5" y="0" width="9.5" height="9.5" fill="#7FBA00" />
+                <rect x="0" y="10.5" width="9.5" height="9.5" fill="#00A4EF" />
+                <rect x="10.5" y="10.5" width="9.5" height="9.5" fill="#FFB900" />
+              </svg>
+            </button>
+          </div>
+
+          <div class="auth-card-footer">
+            <span>Don't have an account?</span>
+            <a routerLink="/auth/register">Sign up</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Unified Footer -->
+  <footer class="auth-footer">
+    <div class="footer-left">
+      <span class="footer-item"><span class="material-symbols-outlined footer-icon">shield</span> Enterprise-grade security</span>
+      <span class="footer-separator">·</span>
+      <span class="footer-item"><span class="material-symbols-outlined footer-icon">verified_user</span> SOC 2 Compliant</span>
+      <span class="footer-separator">·</span>
+      <span class="footer-item"><span class="material-symbols-outlined footer-icon">bolt</span> 99.9% Uptime</span>
+    </div>
+    <div class="footer-right">
+      <span>&copy; 2024 Workflow.IO. All rights reserved.</span>
+    </div>
+  </footer>
+</div>
+
+<!-- Active Social OAuth Simulator Modal Overlay -->
+@if (activeSocialProvider(); as provider) {
+  <div class="oauth-modal-backdrop" (click)="closeSocialLogin()">
+    <div class="oauth-modal-container glass-panel" (click)="$event.stopPropagation()">
+      <div class="oauth-modal-header">
+        @if (provider === 'Google') {
+          <div class="provider-brand google-brand">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
+              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
+            </svg>
+            <span>Sign in with Google</span>
+          </div>
+        } @else if (provider === 'GitHub') {
+          <div class="provider-brand github-brand">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.464-1.11-1.464-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.831.092-.646.35-1.086.636-1.336-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.577.688.48C19.137 20.162 22 16.418 22 12c0-5.523-4.477-10-10-10z"/>
+            </svg>
+            <span>Sign in with GitHub</span>
+          </div>
+        } @else if (provider === 'Microsoft') {
+          <div class="provider-brand microsoft-brand">
+            <svg width="18" height="18" viewBox="0 0 23 23" fill="none">
+              <rect x="0" y="0" width="11" height="11" fill="#F25022" />
+              <rect x="12" y="0" width="11" height="11" fill="#7FBA00" />
+              <rect x="0" y="12" width="11" height="11" fill="#00A4EF" />
+              <rect x="12" y="12" width="11" height="11" fill="#FFB900" />
+            </svg>
+            <span>Sign in with Microsoft</span>
+          </div>
+        }
+        <button type="button" class="btn-close-oauth" (click)="closeSocialLogin()">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+
+      <div class="oauth-modal-body">
+        @if (socialAuthenticating()) {
+          <div class="oauth-loading-state">
+            <span class="spinner-lg"></span>
+            <h3>Authenticating with {{ provider }}...</h3>
+            <p>Verifying secure identity and connecting to Workflow.IO workspace.</p>
+          </div>
+        } @else {
+          <p class="oauth-intro">Select a workspace identity account to authorize and log in.</p>
+          
+          <div class="oauth-accounts-list">
+            @for (acc of oauthAccounts; track acc.email) {
+              <div class="oauth-account-item" (click)="selectOauthAccount(acc.email)">
+                <div class="account-avatar">
+                  <img [src]="acc.avatar" [alt]="acc.name" />
+                </div>
+                <div class="account-info">
+                  <span class="account-name">{{ acc.name }}</span>
+                  <span class="account-email">{{ acc.email }}</span>
+                </div>
+                <div class="account-badge">{{ acc.role }}</div>
+              </div>
+            }
+          </div>
+
+          <div class="oauth-notice">
+            <span class="material-symbols-outlined">shield</span>
+            <span>Secure sandbox identity provider. Redirects directly to authorization context.</span>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+}

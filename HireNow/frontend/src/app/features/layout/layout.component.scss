@@ -1,0 +1,57 @@
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.99) translateY(4px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.15s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-slide-down {
+  animation: slideDown 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Sidebar scrollbar config */
+aside {
+  nav::-webkit-scrollbar {
+    width: 3px;
+  }
+  nav::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 9999px;
+  }
+}
+
+/* Nav Item hover and active states conforming to Ashby/Linear styles */
+nav a {
+  position: relative;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  
+  &:hover:not(.active-nav-item) {
+    background-color: var(--secondary);
+    color: var(--foreground) !important;
+    transform: translateX(2px);
+  }
+}
+
+/* Flat Active Nav item style */
+.active-nav-item {
+  background-color: var(--primary) !important;
+  color: var(--primary-foreground) !important;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);
+  
+  svg {
+    color: var(--primary-foreground) !important;
+  }
+  
+  .active-indicator {
+    opacity: 1 !important;
+  }
+}
+

@@ -1,0 +1,36 @@
+
+    <section class="page">
+      <h1>All users (Admin)</h1>
+
+      @if (loading()) {
+        <p>Loading users…</p>
+      } @else if (error()) {
+        <p class="error">{{ error() }}</p>
+        <button type="button" (click)="loadUsers()">Retry</button>
+      } @else if (users().length === 0) {
+        <p class="empty">No users found.</p>
+      } @else {
+        <ul>
+          @for (u of users(); track u.userId) {
+            <li>
+              @if (editingId() === u.userId) {
+                <form [formGroup]="editForm" (ngSubmit)="saveEdit(u.userId)">
+                  <input type="text" formControlName="firstName" placeholder="Enter first name..." />
+                  <input type="text" formControlName="lastName" placeholder="Enter last name..." />
+                  <input formControlName="email" type="email" />
+                  <button type="submit">Save</button>
+                  <button type="button" (click)="cancelEdit()">Cancel</button>
+                </form>
+              } @else {
+                <span>{{ u.email }} — {{ u.firstName }} {{ u.lastName }} ({{ u.role }})</span>
+                <div class="actions">
+                  <button type="button" (click)="startEdit(u)">Edit</button>
+                  <button type="button" class="danger" (click)="removeUser(u)">Delete</button>
+                </div>
+              }
+            </li>
+          }
+        </ul>
+      }
+    </section>
+  

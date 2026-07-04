@@ -1,0 +1,8 @@
+<Solution>
+  <Project Path="ATS.API/ATS.API.csproj" />
+  <Project Path="ATS.Application/ATS.Application.csproj" />
+  <Project Path="ATS.Domain/ATS.Domain.csproj" />
+  <Project Path="ATS.Infrastructure/ATS.Infrastructure.csproj" />
+  <Project Path="ATS.Persistence/ATS.Persistence.csproj" />
+  <Project Path="ATS.Shared/ATS.Shared.csproj" />
+</Solution>

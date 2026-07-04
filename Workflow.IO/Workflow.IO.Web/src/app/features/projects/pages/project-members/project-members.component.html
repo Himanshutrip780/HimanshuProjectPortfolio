@@ -1,0 +1,43 @@
+
+    <section class="panel">
+      <h2>Members</h2>
+
+      @if (loading()) {
+        <p>Loading members…</p>
+      } @else if (error()) {
+        <p class="error">{{ error() }}</p>
+      } @else {
+        <app-user-picker
+          label="Add member by email"
+          (userSelected)="onUserPicked($event)"
+        />
+
+        <form [formGroup]="addForm" (ngSubmit)="addMember()" class="add">
+          <select formControlName="role">
+            <option [value]="ProjectRole.Member">Member</option>
+            <option [value]="ProjectRole.Admin">Admin</option>
+            <option [value]="ProjectRole.Viewer">Viewer</option>
+          </select>
+          <button type="submit" [disabled]="!selectedUser()">Add member</button>
+        </form>
+
+        <ul>
+          @for (m of memberRows(); track m.projectMemberId) {
+            <li>
+              <span>{{ m.label }}</span>
+              <select
+                [value]="m.role"
+                (change)="changeRole(m.userId, $event)"
+              >
+                <option [value]="ProjectRole.Owner">Owner</option>
+                <option [value]="ProjectRole.Admin">Admin</option>
+                <option [value]="ProjectRole.Member">Member</option>
+                <option [value]="ProjectRole.Viewer">Viewer</option>
+              </select>
+              <button type="button" (click)="remove(m.userId)">Remove</button>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+  

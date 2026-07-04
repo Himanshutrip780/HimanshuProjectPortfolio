@@ -1,0 +1,19 @@
+
+    <div class="editor">
+      <div class="toolbar">
+        <button type="button" (click)="format('bold')" title="Bold"><b>B</b></button>
+        <button type="button" (click)="format('italic')" title="Italic"><i>I</i></button>
+        <button type="button" (click)="format('underline')" title="Underline"><u>U</u></button>
+        <button type="button" (click)="format('insertUnorderedList')" title="Bullet list">• List</button>
+        <button type="button" (click)="format('insertOrderedList')" title="Numbered list">1. List</button>
+      </div>
+      <div
+        #editable
+        class="editable"
+        contenteditable="true"
+        [attr.data-placeholder]="placeholder()"
+        (input)="onInput()"
+        (blur)="onTouched()"
+      ></div>
+    </div>
+  

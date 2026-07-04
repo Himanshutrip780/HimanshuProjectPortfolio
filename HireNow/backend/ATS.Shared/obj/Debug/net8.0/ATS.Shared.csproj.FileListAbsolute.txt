@@ -1,0 +1,11 @@
+C:\ATS\backend\ATS.Shared\bin\Debug\net8.0\ATS.Shared.deps.json
+C:\ATS\backend\ATS.Shared\bin\Debug\net8.0\ATS.Shared.dll
+C:\ATS\backend\ATS.Shared\bin\Debug\net8.0\ATS.Shared.pdb
+C:\ATS\backend\ATS.Shared\obj\Debug\net8.0\ATS.Shared.GeneratedMSBuildEditorConfig.editorconfig
+C:\ATS\backend\ATS.Shared\obj\Debug\net8.0\ATS.Shared.AssemblyInfoInputs.cache
+C:\ATS\backend\ATS.Shared\obj\Debug\net8.0\ATS.Shared.AssemblyInfo.cs
+C:\ATS\backend\ATS.Shared\obj\Debug\net8.0\ATS.Shared.csproj.CoreCompileInputs.cache
+C:\ATS\backend\ATS.Shared\obj\Debug\net8.0\ATS.Shared.dll
+C:\ATS\backend\ATS.Shared\obj\Debug\net8.0\refint\ATS.Shared.dll
+C:\ATS\backend\ATS.Shared\obj\Debug\net8.0\ATS.Shared.pdb
+C:\ATS\backend\ATS.Shared\obj\Debug\net8.0\ref\ATS.Shared.dll

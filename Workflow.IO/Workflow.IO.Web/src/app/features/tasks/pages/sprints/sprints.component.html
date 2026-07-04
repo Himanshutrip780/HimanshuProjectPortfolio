@@ -1,0 +1,52 @@
+
+    <section class="panel">
+      <h2>Sprints</h2>
+
+      <form [formGroup]="createForm" (ngSubmit)="createSprint()" class="inline">
+        <input type="text" placeholder="Enter sprint name..." formControlName="name" />
+        <input type="date" formControlName="startDate" />
+        <input type="date" formControlName="endDate" />
+        <button type="submit" [disabled]="busy()">Create</button>
+      </form>
+
+      @if (loading()) {
+        <p>Loading sprints…</p>
+      } @else if (error()) {
+        <p class="error">{{ error() }}</p>
+      } @else if (sprints().length === 0) {
+        <p>No sprints yet.</p>
+      } @else {
+        <ul>
+          @for (s of sprints(); track s.sprintId) {
+            <li>
+              @if (editingId() === s.sprintId) {
+                <form [formGroup]="editForm" (ngSubmit)="saveEdit(s.sprintId)">
+                  <input type="text" formControlName="name" />
+                  <input type="date" formControlName="startDate" />
+                  <input type="date" formControlName="endDate" />
+                  <button type="submit">Save</button>
+                  <button type="button" (click)="cancelEdit()">Cancel</button>
+                </form>
+              } @else {
+                <div>
+                  <strong>{{ s.name }}</strong>
+                  <span>{{ s.startDate }} → {{ s.endDate }}</span>
+                  <span class="status">{{ statusLabel(s.status) }}</span>
+                </div>
+                <div class="actions">
+                  <button type="button" (click)="startEdit(s)">Edit</button>
+                  @if (s.status === SprintStatus.Planned) {
+                    <button type="button" (click)="startSprint(s.sprintId)">Start</button>
+                  }
+                  @if (s.status === SprintStatus.Active) {
+                    <button type="button" (click)="completeSprint(s.sprintId)">Complete</button>
+                  }
+                  <button type="button" class="danger" (click)="deleteSprint(s.sprintId)">Delete</button>
+                </div>
+              }
+            </li>
+          }
+        </ul>
+      }
+    </section>
+  

@@ -1,0 +1,10 @@
+﻿<Project>
+  <ItemGroup Condition="'$(MSBuildProjectExtension)' == '.csproj'">
+    <Content
+      Include="$(MSBuildThisFileDirectory)Workflow.IO.Shared\appsettings.shared.json"
+      Link="appsettings.shared.json"
+      Condition="Exists('$(MSBuildThisFileDirectory)Workflow.IO.Shared\appsettings.shared.json')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+</Project>

@@ -1,0 +1,191 @@
+::ng-deep {
+  .fc {
+    color: var(--foreground);
+    background: transparent;
+    height: 100%;
+    font-family: var(--font-sans);
+    
+    /* Modern border style - extremely subtle and clean */
+    .fc-theme-standard td, .fc-theme-standard th {
+      border: 1px solid rgba(255, 255, 255, 0.03) !important;
+    }
+    
+    .fc-scrollgrid {
+      border: 1px solid rgba(255, 255, 255, 0.05) !important;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
+      background: rgba(20, 20, 25, 0.3);
+      backdrop-filter: blur(8px);
+    }
+    
+    .fc-col-header-cell {
+      background: rgba(255, 255, 255, 0.02) !important;
+      color: var(--muted-foreground) !important;
+      padding: 16px 0 !important;
+      font-size: 10px !important;
+      font-weight: 800 !important;
+      text-transform: uppercase !important;
+      letter-spacing: 0.12em !important;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+    }
+
+    /* Modern Day Grid Cells Styling */
+    .fc-daygrid-day {
+      transition: background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.015) !important;
+      }
+    }
+
+    .fc-daygrid-day-number {
+      color: var(--muted-foreground);
+      font-size: 11px;
+      padding: 8px !important;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+
+    /* Sleek Highlight for Today's Cell */
+    .fc-day-today {
+      background: rgba(139, 92, 246, 0.03) !important;
+      box-shadow: inset 0 0 0 1px rgba(139, 92, 246, 0.15) !important;
+      
+      .fc-daygrid-day-number {
+        background: linear-gradient(135deg, #8b5cf6, #6366f1) !important;
+        color: white !important;
+        border-radius: 50% !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 22px !important;
+        height: 22px !important;
+        margin: 6px !important;
+        padding: 0 !important;
+        font-weight: 700 !important;
+        box-shadow: 0 4px 12px rgba(139, 92, 246, 0.35);
+      }
+    }
+
+    /* Sleek Header Navigation Buttons */
+    .fc-button {
+      border-radius: 12px !important;
+      padding: 7px 15px !important;
+      font-size: 11px !important;
+      font-weight: 700 !important;
+      text-transform: uppercase !important;
+      letter-spacing: 0.05em !important;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    }
+
+    .fc-button-primary {
+      background: rgba(255, 255, 255, 0.03) !important;
+      border: 1px solid rgba(255, 255, 255, 0.06) !important;
+      color: var(--foreground) !important;
+      box-shadow: none !important;
+      
+      &:hover {
+        background: rgba(255, 255, 255, 0.08) !important;
+        border-color: rgba(255, 255, 255, 0.12) !important;
+        transform: translateY(-1px);
+        color: white !important;
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+
+      &:disabled {
+        background: transparent !important;
+        border-color: rgba(255, 255, 255, 0.02) !important;
+        color: var(--muted-foreground) !important;
+        opacity: 0.3;
+      }
+
+      &.fc-button-active {
+        background: var(--primary) !important;
+        border-color: var(--primary) !important;
+        color: white !important;
+        box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3) !important;
+      }
+    }
+
+    .fc-toolbar-title {
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      color: var(--foreground);
+      font-family: var(--font-display);
+    }
+
+    /* Modern Event Pill Design - Glassmorphism, Rounded, Clean Accent line */
+    .fc-event {
+      border: none !important;
+      border-radius: 6px !important;
+      padding: 4px 8px !important;
+      margin: 2px 5px !important;
+      font-size: 10px !important;
+      font-weight: 600 !important;
+      cursor: pointer !important;
+      position: relative !important;
+      overflow: hidden !important;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+      background: rgba(255, 255, 255, 0.02) !important;
+      border-left: 3px solid var(--event-color, #8b5cf6) !important;
+      color: var(--foreground) !important;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2) !important;
+
+      &:hover {
+        transform: translateY(-1px) scale(1.01);
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.35) !important;
+        background: rgba(255, 255, 255, 0.05) !important;
+      }
+
+      /* Dynamic Event status styles */
+      &.status-scheduled {
+        --event-color: #6366f1;
+        border-left: 3px solid #6366f1 !important;
+        background: rgba(99, 102, 241, 0.08) !important;
+        color: #a5b4fc !important;
+        &:hover { background: rgba(99, 102, 241, 0.14) !important; }
+      }
+      &.status-completed {
+        --event-color: #10b981;
+        border-left: 3px solid #10b981 !important;
+        background: rgba(16, 185, 129, 0.08) !important;
+        color: #6ee7b7 !important;
+        &:hover { background: rgba(16, 185, 129, 0.14) !important; }
+      }
+      &.status-cancelled {
+        --event-color: #f43f5e;
+        border-left: 3px solid #f43f5e !important;
+        background: rgba(244, 63, 94, 0.08) !important;
+        color: #fda4af !important;
+        &:hover { background: rgba(244, 63, 94, 0.14) !important; }
+      }
+      &.status-rescheduled {
+        --event-color: #f59e0b;
+        border-left: 3px solid #f59e0b !important;
+        background: rgba(245, 158, 11, 0.08) !important;
+        color: #fde047 !important;
+        &:hover { background: rgba(245, 158, 11, 0.14) !important; }
+      }
+    }
+    
+    .fc-event-title {
+      font-weight: 600 !important;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.99) translateY(3px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}

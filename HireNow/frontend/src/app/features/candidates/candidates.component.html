@@ -1,0 +1,1271 @@
+<div class="flex flex-col gap-6 w-full animate-fade-in pb-8 relative">
+
+  <!-- Toast/Status Banner -->
+  @if (toast(); as t) {
+    <div 
+      [ngClass]="t.type === 'success' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400' : 'bg-red-500/10 border-red-500/30 text-red-600 dark:text-red-400'"
+      class="fixed bottom-6 right-6 z-50 glass-panel border px-5 py-3.5 rounded-[16px] shadow-lg flex items-center gap-3 animate-fade-in-up text-xs font-bold"
+    >
+      <span>{{ t.type === 'success' ? '✓' : '✗' }}</span>
+      <span>{{ t.message }}</span>
+    </div>
+  }
+
+  <!-- ================= STATE 1: TALENT DIRECTORY ================= -->
+  @if (selectedCandidate() === null) {
+    <!-- Directory Header & Controls -->
+    <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between shrink-0">
+      <div class="flex flex-col gap-1">
+        <h2 class="text-2xl font-bold tracking-tight text-foreground">Talent Directory</h2>
+        <p class="text-xs text-muted-foreground">Upload resumes, parse candidate metadata, and diagnose application-position fit.</p>
+      </div>
+    </div>
+
+    <!-- Resume Uploader -->
+    @if (canUploadResume()) {
+      <div 
+        class="bg-card border border-border rounded-[20px] p-6 space-y-4 shadow-level1" 
+        (drop)="onFileDropped($event)" 
+        (dragover)="onDragOver($event)"
+      >
+        <div class="flex flex-col lg:flex-row gap-6 items-start lg:items-center">
+          <!-- Position Select Selector -->
+          <div class="w-full lg:w-80 shrink-0">
+            <label class="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Score candidate against position</label>
+            <div class="relative">
+              <select 
+                [(ngModel)]="selectedJobId" 
+                class="input-field appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2371717a%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.1rem] bg-[right_0.6rem_center] bg-no-repeat pr-8 text-xs py-2.5"
+              >
+                <option value="">-- No specific position --</option>
+                @for (job of jobs(); track job.id) {
+                  <option [value]="job.id">{{ job.title }} ({{ job.departmentName }})</option>
+                }
+              </select>
+            </div>
+          </div>
+          
+          <!-- Drag Zone -->
+          <div 
+            (click)="fileInput.click()"
+            class="flex-1 w-full border-2 border-dashed border-border hover:border-primary hover:bg-primary/5 transition-all duration-150 rounded-[20px] p-6 flex flex-col items-center justify-center gap-2.5 cursor-pointer text-center relative"
+          >
+            <span class="text-primary bg-primary/10 p-2.5 rounded-[14px]">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0 3 3m-3-3-3 3M6.75 19.5a4.5 4.5 0 0 1-1.41-8.775 5.25 5.25 0 0 1 10.233-2.33 3 3 0 0 1 3.758 3.848A3.752 3.752 0 0 1 18 19.5H6.75Z"/></svg>
+            </span>
+            <p class="text-xs text-muted-foreground leading-normal">
+              Drag and drop resume here (PDF, DOCX, TXT) or 
+              <span class="text-primary font-bold hover:underline cursor-pointer ml-1">
+                browse local files
+              </span>
+            </p>
+            <input #fileInput type="file" (change)="onFileSelected($event)" style="display: none;">
+          </div>
+        </div>
+
+        <!-- Alerts -->
+        @if (uploading()) {
+          <div class="p-3 bg-primary/10 border border-primary/20 text-primary text-xs font-semibold rounded-[14px] flex items-center gap-2.5 animate-pulse">
+            <span class="animate-spin border-2 border-primary/30 border-t-primary rounded-full w-4 h-4"></span>
+            <span>Parsing resume metadata and computing application AI metrics...</span>
+          </div>
+        }
+        @if (uploadSuccess()) {
+          <div class="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-semibold rounded-[14px] flex items-center gap-2 animate-fade-in">
+            <span>✅</span> {{ uploadSuccess() }}
+          </div>
+        }
+        @if (uploadError()) {
+          <div class="p-3 bg-destructive/10 border border-destructive/20 text-destructive text-xs font-semibold rounded-[14px] flex items-center gap-2 animate-fade-in">
+            <span>⚠️</span> {{ uploadError() }}
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Search, Filter & Sort Controls -->
+    <div class="flex flex-col md:flex-row gap-4 justify-between items-center bg-card border border-border rounded-[20px] p-5 shadow-level1 shrink-0 select-none">
+      <div class="flex flex-1 flex-col sm:flex-row gap-4 w-full md:w-auto">
+        <!-- Search Input -->
+        <div class="search-input-wrapper flex-1 min-w-[200px]">
+          <span class="absolute left-2.5 top-2.5 text-muted-foreground">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.602 10.602Z"/></svg>
+          </span>
+          <input 
+            type="text" 
+            [ngModel]="searchQuery()" 
+            (ngModelChange)="onSearchChanged($event)"
+            placeholder="Search candidates..." 
+            class="input-field text-xs py-2 bg-background"
+          >
+        </div>
+
+        <!-- Filter by Job Requisition -->
+        <div class="w-full sm:w-48 shrink-0">
+          <select 
+            [ngModel]="selectedJobFilter()" 
+            (ngModelChange)="selectedJobFilter.set($event)"
+            class="input-field text-xs py-2 appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2371717a%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1rem] bg-[right_0.5rem_center] bg-no-repeat pr-6 bg-background"
+          >
+            <option value="">Filter by Job: All</option>
+            @for (job of jobs(); track job.id) {
+              <option [value]="job.id">{{ job.title }}</option>
+            }
+          </select>
+        </div>
+
+        <!-- Filter by AI Match Score -->
+        <div class="w-full sm:w-44 shrink-0">
+          <select 
+            [ngModel]="aiMatchFilter()" 
+            (ngModelChange)="aiMatchFilter.set($event)"
+            class="input-field text-xs py-2 appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2371717a%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1rem] bg-[right_0.5rem_center] bg-no-repeat pr-6 bg-background"
+          >
+            <option value="all">AI Match: All</option>
+            <option value="80+">80%+ Match</option>
+            <option value="60+">60%+ Match</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Sorting -->
+      <div class="w-full md:w-48 shrink-0">
+        <select 
+          [ngModel]="sortBy()" 
+          (ngModelChange)="sortBy.set($event)"
+          class="input-field text-xs py-2 appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2371717a%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1rem] bg-[right_0.5rem_center] bg-no-repeat pr-6 bg-background"
+        >
+          <option value="date">Sort: Date Registered</option>
+          <option value="name">Sort: Candidate Name</option>
+          <option value="score">Sort: AI Match Score</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Candidate List Grid -->
+    @if (loading()) {
+      <div class="flex-1 flex flex-col items-center justify-center min-h-[300px] gap-4 text-muted-foreground bg-card border border-border rounded-[20px]">
+        <div class="relative w-10 h-10">
+          <div class="absolute inset-0 rounded-full border-4 border-primary/20"></div>
+          <div class="absolute inset-0 rounded-full border-4 border-t-primary animate-spin"></div>
+        </div>
+        <p class="text-xs font-medium">Retrieving talent listings...</p>
+      </div>
+    } @else {
+      <div class="flex-1 overflow-y-auto pb-4">
+        @if (getFilteredCandidates().length === 0) {
+          <div class="bg-card border border-border rounded-[20px] p-12 text-center flex flex-col items-center justify-center gap-4 max-w-2xl mx-auto mt-6 shadow-level1 animate-fade-in">
+            <span class="text-muted-foreground bg-secondary p-4 rounded-full">
+              <svg class="w-10 h-10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z"/></svg>
+            </span>
+            <h4 class="text-base font-bold text-foreground">No matching candidates found</h4>
+            <p class="text-xs text-muted-foreground max-w-xs leading-normal">No candidate profiles match the selected job requisition or AI Match filters.</p>
+          </div>
+        } @else {
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            @for (cand of getFilteredCandidates(); track cand.id) {
+              <div 
+                (click)="viewCandidateDetails(cand.id)"
+                class="card-level1 p-6 flex flex-col justify-between min-h-[220px] cursor-pointer hover:shadow-level2 transition-all duration-200"
+              >
+                <div class="space-y-4">
+                  <!-- Card Header -->
+                  <div class="flex items-start gap-4">
+                    <!-- Initials Avatar -->
+                    <div class="w-11 h-11 rounded-[14px] bg-primary/10 text-primary border border-primary/20 flex items-center justify-center font-bold text-sm shrink-0 select-none">
+                      {{ cand.firstName.charAt(0) }}{{ cand.lastName.charAt(0) }}
+                    </div>
+                    
+                    <div class="min-w-0 flex flex-col gap-0.5">
+                      <span class="text-sm font-bold text-foreground truncate group-hover:text-primary transition-colors duration-200">
+                        {{ cand.firstName }} {{ cand.lastName }}
+                      </span>
+                      <span class="text-[11px] text-muted-foreground truncate leading-none">{{ cand.email }}</span>
+                      @if (cand.phone) {
+                        <span class="text-[10px] text-muted-foreground/80 mt-1 leading-none flex items-center gap-1.5 select-none">
+                          <svg class="w-3 h-3 text-muted-foreground" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.622a10.114 10.114 0 0 0 11.628 11.628c.307 0 .583-.186.685-.478l1.17-3.3c.096-.27-.043-.564-.306-.684l-3.3-1.5c-.23-.105-.5-.045-.668.146l-1.25 1.388a15.012 15.012 0 0 1-6.19-6.19L5.4 7.25c.19-.168.25-.438.146-.668l-1.5-3.3C3.926 3.018 3.63 2.88 3.36 2.977l-3.3 1.17a.69.69 0 0 0-.478.685Z"/></svg>
+                          {{ cand.phone }}
+                        </span>
+                      }
+                    </div>
+                  </div>
+
+                  <!-- Professional Role Subtext -->
+                  <div class="text-xs text-foreground font-semibold leading-none pt-1">
+                    {{ getCandidateRole(cand) }}
+                  </div>
+
+                  <!-- Experience Row -->
+                  <div class="text-[11px] text-muted-foreground font-medium leading-none flex items-center gap-1.5 select-none">
+                    <svg class="w-3.5 h-3.5 text-muted-foreground" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 14.15v4.25c0 .9-.73 1.63-1.63 1.63H5.38c-.9 0-1.63-.72-1.63-1.62v-4.25m16.5 0a2.18 2.18 0 0 0 .07-.54V8c0-.9-.73-1.63-1.63-1.63h-2.25m-12.75 9.38c-.06-.17-.07-.36-.07-.53V8c0-.9.73-1.63 1.63-1.63h2.25m3.75 3c0-.9.73-1.63 1.63-1.63h3.75c.9 0 1.63.73 1.63 1.63v4.5m-7 0H21m-18 0h3.75M9 6.38V4.5c0-.9.73-1.63 1.63-1.63h2.75c.9 0 1.62.73 1.62 1.63v1.88"/></svg>
+                    {{ getCandidateExperience(cand) }}
+                  </div>
+
+                  <!-- Skills Tags -->
+                  <div class="flex flex-wrap gap-1.5 select-none pt-1">
+                    @for (skill of cand.skills.slice(0, 3); track skill) {
+                      <span class="px-2 py-0.5 bg-secondary text-muted-foreground border border-border rounded-[8px] text-[10px] font-bold">
+                        {{ skill }}
+                      </span>
+                    }
+                  </div>
+
+                  <!-- Match Score -->
+                  <div class="flex items-center justify-between pt-3 border-t border-border mt-auto select-none">
+                    <span class="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">AI Match</span>
+                    <span class="text-[10px] font-bold text-emerald-600 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full">
+                      {{ getCandidateMatchScore(cand) }}% Match
+                    </span>
+                  </div>
+
+                  <!-- Stage/Status -->
+                  <div class="flex items-center justify-between text-[10px] select-none pt-1">
+                    <span class="text-muted-foreground font-medium">Stage:</span>
+                    <span class="font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20">
+                      {{ getCandidateStage(cand) }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+
+          <!-- Pagination Controls -->
+          @if (!loading() && getFilteredCandidates().length > 0) {
+            <div class="flex items-center justify-between bg-card border border-border rounded-[20px] p-4 mt-6 shadow-level1 select-none">
+              <button 
+                [disabled]="pageIndex() === 1" 
+                (click)="prevPage()" 
+                class="btn-secondary py-1.5 px-4 text-xs font-semibold disabled:opacity-50 cursor-pointer"
+              >
+                Previous Page
+              </button>
+              <span class="text-xs text-muted-foreground font-medium">Page {{ pageIndex() }}</span>
+              <button 
+                [disabled]="candidates().length < 30" 
+                (click)="nextPage()" 
+                class="btn-secondary py-1.5 px-4 text-xs font-semibold disabled:opacity-50 cursor-pointer"
+              >
+                Next Page
+              </button>
+            </div>
+          }
+        }
+      </div>
+    }
+  }
+
+  @if (selectedCandidate() !== null) {
+    <!-- ================= STATE 2: CRM CANDIDATE PROFILE WORKSPACE ================= -->
+    <!-- Sticky CRM Header Bar -->
+    <div class="flex items-center justify-between shrink-0 pb-4 border-b border-border">
+      <div class="flex items-center gap-3">
+        <button 
+          (click)="closeDetails()" 
+          class="btn-secondary py-1.5 px-3 flex items-center justify-center gap-1.5 text-xs font-semibold"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/>
+          </svg>
+          Back to Directory
+        </button>
+        <div class="h-4 w-px bg-border"></div>
+        <div class="flex items-center gap-2">
+          <span class="text-sm font-bold text-foreground">
+            {{ selectedCandidate()?.firstName }} {{ selectedCandidate()?.lastName }}
+          </span>
+          @if (selectedApplication()?.stage) {
+            <span class="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 bg-primary/10 border border-primary/20 text-primary rounded-full">
+              {{ selectedApplication()?.stage }}
+            </span>
+          }
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <span class="text-xs text-muted-foreground hidden sm:inline select-none">
+          Candidate ID: {{ selectedCandidate()?.id?.slice(0,8) }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Main CRM Split Workspace -->
+    <div class="flex flex-col lg:flex-row gap-6 mt-6">
+      
+      <!-- LEFT COLUMN: Profile card -->
+      <div class="w-full lg:w-80 shrink-0 flex flex-col gap-4">
+        
+        <!-- Profile Identity Card -->
+        <div class="bg-card border border-border rounded-[20px] p-6 flex flex-col items-center text-center shadow-level1">
+          <!-- Avatar Badge -->
+          <div class="w-16 h-16 rounded-full bg-primary/10 text-primary border border-primary/20 flex items-center justify-center font-bold text-xl mb-4 select-none">
+            {{ selectedCandidate()?.firstName?.charAt(0) }}{{ selectedCandidate()?.lastName?.charAt(0) }}
+          </div>
+          <h3 class="text-base font-bold text-foreground leading-none">
+            {{ selectedCandidate()?.firstName }} {{ selectedCandidate()?.lastName }}
+          </h3>
+          <span class="text-xs font-semibold text-muted-foreground mt-2 bg-secondary px-2.5 py-0.5 rounded-full border border-border">
+            {{ parsedResumeData()?.CurrentTitle || 'Software Professional' }}
+          </span>
+          
+          <div class="flex flex-col gap-2.5 mt-5 w-full border-t border-border pt-4 text-xs text-muted-foreground items-start">
+            <span class="flex items-center gap-2.5 break-all text-left">
+              <svg class="w-3.5 h-3.5 text-muted-foreground shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"/></svg>
+              {{ selectedCandidate()?.email }}
+            </span>
+            @if (selectedCandidate()?.phone) {
+              <span class="flex items-center gap-2.5">
+                <svg class="w-3.5 h-3.5 text-muted-foreground shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.622a10.114 10.114 0 0 0 11.628 11.628c.307 0 .583-.186.685-.478l1.17-3.3c.096-.27-.043-.564-.306-.684l-3.3-1.5c-.23-.105-.5-.045-.668.146l-1.25 1.388a15.012 15.012 0 0 1-6.19-6.19L5.4 7.25c.19-.168.25-.438.146-.668l-1.5-3.3C3.926 3.018 3.63 2.88 3.36 2.977l-3.3 1.17a.69.69 0 0 0-.478.685Z"/></svg>
+                {{ selectedCandidate()?.phone }}
+              </span>
+            }
+            <span class="flex items-center gap-2.5">
+              <svg class="w-3.5 h-3.5 text-muted-foreground shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z"/></svg>
+              Registered: {{ selectedCandidate()?.createdDate | date:'mediumDate' }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Application Switcher Card -->
+        @if (candidateApplications().length > 0) {
+          <div class="bg-card border border-border rounded-[20px] p-6 flex flex-col gap-3 shadow-level1">
+            <label class="block text-xs font-bold text-muted-foreground uppercase tracking-wider">Active Application</label>
+            <div class="relative">
+              <select 
+                [value]="selectedApplication()?.id"
+                (change)="onApplicationChange($any($event.target).value)"
+                class="input-field appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2371717a%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.1rem] bg-[right_0.6rem_center] bg-no-repeat pr-8 text-xs py-2"
+              >
+                @for (app of candidateApplications(); track app.id) {
+                  <option [value]="app.id">{{ app.jobTitle }} ({{ app.stage }})</option>
+                }
+              </select>
+            </div>
+          </div>
+        }
+
+        <!-- AI Match quick panel -->
+        @if (selectedApplication() !== null) {
+          <div class="bg-card border border-border rounded-[20px] p-6 flex flex-col gap-4 shadow-level1">
+            <div class="flex items-center gap-2 text-[10px] font-bold text-primary uppercase tracking-wider select-none">
+              <svg class="w-3.5 h-3.5 text-primary" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 21l-.813-5.096L3.096 15 8 14.187 9 9l.813 5.187L15 15l-5.187.904ZM18 9l-.513-3.213L14.27 5.27 17.5 4.5l.5-3.213.513 3.213L21.73 5.27 18.5 6.012 18 9ZM12 3l-.25-1.5L10.25 1 11.5.75l.25-1.5.25 1.5 1.5.25-1.25.5L12 3Z"/></svg>
+              AI Matching Diagnostics
+            </div>
+            
+            <div class="flex items-center gap-3.5">
+              <div 
+                [class]="getScoreColorClass(selectedApplication()?.aimatchScore || 0)"
+                class="w-12 h-12 rounded-full border-2 flex items-center justify-center font-bold font-display text-sm shrink-0 select-none shadow-xs"
+              >
+                {{ selectedApplication()?.aimatchScore }}%
+              </div>
+              <div class="flex flex-col min-w-0">
+                <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400 truncate leading-snug uppercase tracking-wide">
+                  {{ selectedApplication()?.airecommendation || 'Recommended' }}
+                </span>
+                <span class="text-[10px] text-muted-foreground truncate leading-tight mt-0.5">
+                  Role: <strong>{{ selectedApplication()?.jobTitle }}</strong>
+                </span>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- Skills Inventory Card -->
+        <div class="bg-card border border-border rounded-[20px] p-6 space-y-4 shadow-level1">
+          <h4 class="text-xs font-bold text-foreground uppercase tracking-wider select-none">Skills Inventory</h4>
+          
+          <div class="flex flex-wrap gap-1.5">
+            @for (skill of selectedCandidate()?.skills; track skill) {
+              <span class="text-[10px] font-semibold px-2 py-0.5 bg-secondary text-muted-foreground rounded-md border border-border select-none">
+                {{ skill }}
+              </span>
+            }
+            @if (selectedCandidate()?.skills?.length === 0) {
+              <span class="text-xs text-muted-foreground/80 italic">No skills extracted</span>
+            }
+          </div>
+        </div>
+
+        <!-- Education Card -->
+        <div class="bg-card border border-border rounded-[20px] p-6 space-y-2.5 shadow-level1">
+          <h4 class="text-xs font-bold text-foreground uppercase tracking-wider select-none">Education Fit</h4>
+          <p class="text-xs text-muted-foreground leading-normal font-medium">
+            {{ selectedCandidate()?.education || 'No Education details extracted' }}
+          </p>
+        </div>
+
+      </div>
+
+      <!-- RIGHT COLUMN: Detailed Tabs Sheet -->
+      <div class="flex-1 bg-card border border-border rounded-[20px] shadow-level1 flex flex-col overflow-hidden">
+        
+        <!-- Tabs Nav Header -->
+        <div class="flex overflow-x-auto border-b border-border shrink-0 bg-secondary/15 select-none">
+          <button 
+            (click)="activeTab.set('overview')"
+            [class.border-primary]="activeTab() === 'overview'"
+            [class.text-primary]="activeTab() === 'overview'"
+            class="px-5 py-3.5 border-b-2 border-transparent text-xs font-bold text-muted-foreground hover:text-foreground transition-all cursor-pointer shrink-0"
+          >
+            Overview
+          </button>
+          <button 
+            (click)="activeTab.set('resume')"
+            [class.border-primary]="activeTab() === 'resume'"
+            [class.text-primary]="activeTab() === 'resume'"
+            class="px-5 py-3.5 border-b-2 border-transparent text-xs font-bold text-muted-foreground hover:text-foreground transition-all cursor-pointer shrink-0"
+          >
+            Extracted Resume
+          </button>
+          <button 
+            (click)="activeTab.set('timeline')"
+            [class.border-primary]="activeTab() === 'timeline'"
+            [class.text-primary]="activeTab() === 'timeline'"
+            class="px-5 py-3.5 border-b-2 border-transparent text-xs font-bold text-muted-foreground hover:text-foreground transition-all cursor-pointer shrink-0"
+          >
+            Timeline Logs
+          </button>
+          @if (canManageNotes()) {
+            <button 
+              (click)="activeTab.set('notes')"
+              [class.border-primary]="activeTab() === 'notes'"
+              [class.text-primary]="activeTab() === 'notes'"
+              class="px-5 py-3.5 border-b-2 border-transparent text-xs font-bold text-muted-foreground hover:text-foreground transition-all cursor-pointer shrink-0 flex items-center gap-1.5"
+            >
+              Recruiter Notes
+              <span class="bg-secondary border border-border px-1.5 py-0.2 rounded-md text-[9px] font-bold">
+                {{ notes().length }}
+              </span>
+            </button>
+          }
+          <button 
+            (click)="activeTab.set('interviews')"
+            [class.border-primary]="activeTab() === 'interviews'"
+            [class.text-primary]="activeTab() === 'interviews'"
+            class="px-5 py-3.5 border-b-2 border-transparent text-xs font-bold text-muted-foreground hover:text-foreground transition-all cursor-pointer shrink-0 flex items-center gap-1.5"
+          >
+            Interviews
+            @if (interviews().length > 0) {
+              <span class="bg-primary/10 text-primary border border-primary/20 px-1.5 py-0.2 rounded-md text-[9px] font-bold">
+                {{ interviews().length }}
+              </span>
+            }
+          </button>
+          <button 
+            (click)="activeTab.set('documents')"
+            [class.border-primary]="activeTab() === 'documents'"
+            [class.text-primary]="activeTab() === 'documents'"
+            class="px-5 py-3.5 border-b-2 border-transparent text-xs font-bold text-muted-foreground hover:text-foreground transition-all cursor-pointer shrink-0"
+          >
+            Documents
+          </button>
+        </div>
+
+        <!-- Scrollable Tab Content Container -->
+        <div class="flex-1 p-6">
+
+          <!-- ================= TAB 1: OVERVIEW ================= -->
+          @if (activeTab() === 'overview') {
+            <div class="space-y-6">
+              @if (selectedApplication() !== null) {
+                <!-- AI Diagnostics Panel -->
+                <div class="space-y-4">
+                  <div class="space-y-1.5">
+                    <h5 class="text-xs font-bold text-foreground uppercase tracking-wider select-none">AI Fit Analysis Summary</h5>
+                    <p class="text-xs text-muted-foreground leading-relaxed bg-secondary border border-border p-4 rounded-[14px]">
+                      {{ selectedApplication()?.aisummary || 'AI parsing is analyzing this candidate profile...' }}
+                    </p>
+                  </div>
+
+                  <!-- Strengths / Growth Areas grid -->
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-secondary/40 border border-border p-4 rounded-[14px] space-y-2.5">
+                      <span class="text-[10px] font-bold text-emerald-600 uppercase tracking-wider block select-none">
+                        Key Strengths
+                      </span>
+                      <ul class="text-xs text-muted-foreground list-disc pl-4 space-y-1.5">
+                        @for (s of selectedApplication()?.strengths || ['Demonstrates strong framework fundamentals', 'Clearly structured resume details']; track s) {
+                          <li>{{ s }}</li>
+                        }
+                      </ul>
+                    </div>
+
+                    <div class="bg-secondary/40 border border-border p-4 rounded-[14px] space-y-2.5">
+                      <span class="text-[10px] font-bold text-amber-600 uppercase tracking-wider block select-none">
+                        Growth Areas / Missing Skills
+                      </span>
+                      <ul class="text-xs text-muted-foreground list-disc pl-4 space-y-1.5">
+                        @for (w of (selectedApplication()?.weaknesses?.length ? selectedApplication()?.weaknesses : selectedApplication()?.missingSkills) || ['No cloud architecture records found', 'Minimal system design exposure noted']; track w) {
+                          <li>{{ w }}</li>
+                        }
+                      </ul>
+                    </div>
+                  </div>
+
+                  <!-- AI Interview Questions Suggestion -->
+                  <div class="border border-border bg-secondary/20 p-4 rounded-[14px] space-y-3">
+                    <span class="text-[10px] font-bold text-primary uppercase tracking-wider block select-none">
+                      AI Recommended Interview Copilot Questions
+                    </span>
+                    <ul class="text-xs text-muted-foreground list-decimal pl-4 space-y-2">
+                      @for (q of selectedApplication()?.aiQuestions || [
+                        'Your resume mentions experience with framework optimization. Can you walk us through a specific project where you solved a performance bottleneck?',
+                        'How do you approach managing architectural debt when delivering features on tight deadlines?'
+                      ]; track q) {
+                        <li>{{ q }}</li>
+                      }
+                    </ul>
+                  </div>
+                </div>
+              } @else {
+                <div class="text-center py-8 text-xs text-muted-foreground">
+                  <p>No job application associated. Connect this candidate to a position in the uploader to see AI evaluations.</p>
+                </div>
+              }
+
+              <!-- Sourcing & Talent Pool Selector -->
+              <div class="glass-panel p-6 border border-border/50 bg-secondary/5 rounded-[12px] mt-6 space-y-4">
+                <h5 class="text-xs font-bold text-foreground uppercase tracking-wider select-none">Talent Sourcing Group</h5>
+                <div class="flex items-center gap-4">
+                  <span class="text-xs text-muted-foreground">Current Pool / Source: <strong>{{ selectedCandidate()?.source || 'Organic' }}</strong></span>
+                  <select #poolSelect class="input-field text-xs py-1.5 px-3 rounded bg-card border-border max-w-[200px]" style="background-color: transparent; border: 1px solid rgba(255,255,255,0.1); color: inherit;">
+                    <option value="TalentPool: Backend Developers">Backend Developers</option>
+                    <option value="TalentPool: Frontend Developers">Frontend Developers</option>
+                    <option value="TalentPool: Cloud DevOps Engineers">Cloud DevOps Engineers</option>
+                    <option value="TalentPool: Engineering Managers">Engineering Managers</option>
+                  </select>
+                  <button (click)="assignTalentPool(poolSelect.value)" class="btn-primary py-1.5 px-4 text-xs font-bold rounded cursor-pointer">
+                    Move Pool
+                  </button>
+                </div>
+              </div>
+
+              <!-- Duplicate Candidate Detection -->
+              <div class="glass-panel p-6 border border-border/50 bg-secondary/5 rounded-[12px] mt-6 space-y-4">
+                <h5 class="text-xs font-bold text-foreground uppercase tracking-wider flex items-center gap-2 select-none">
+                  <span class="text-amber-500">⚠</span> Duplicate Applicant Detection
+                </h5>
+                @if (loadingDuplicates()) {
+                  <p class="text-xs text-muted-foreground animate-pulse">Scanning matching profiles...</p>
+                } @else if (duplicates().length === 0) {
+                  <p class="text-xs text-emerald-500 font-medium">✓ No duplicated profiles detected in database.</p>
+                } @else {
+                  <div class="space-y-3">
+                    <p class="text-xs text-rose-500 font-bold">{{ duplicates().length }} duplicate profiles match email/phone:</p>
+                    @for (dup of duplicates(); track dup.id) {
+                      <div class="p-3 border border-red-500/20 bg-red-500/5 rounded flex items-center justify-between">
+                        <div>
+                          <span class="text-xs font-bold text-foreground">{{ dup.firstName }} {{ dup.lastName }}</span>
+                          <span class="text-[10px] text-muted-foreground ml-3">({{ dup.email }} | {{ dup.phone || 'No phone' }})</span>
+                        </div>
+                        <button (click)="viewCandidateDetails(dup.id)" class="text-[10px] font-bold text-primary hover:underline cursor-pointer bg-transparent border-none">
+                          View Profile
+                        </button>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            </div>
+          } @else if (activeTab() === 'resume') {
+            <!-- ================= TAB 2: EXTRANET RESUME ================= -->
+            <div class="space-y-5">
+              @if (parsedResumeData() !== null) {
+                <!-- Manual Review Required Banner -->
+                @if (parsedResumeData()?.NeedsReview || parsedResumeData()?.needsReview) {
+                  <div class="bg-destructive/10 border border-destructive/25 text-destructive rounded-[14px] p-4 text-xs space-y-2">
+                    <div class="flex items-center gap-2 font-semibold">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                      Manual Review Flagged
+                    </div>
+                    <ul class="list-disc pl-4 space-y-1 text-muted-foreground">
+                      @for (reason of parsedResumeData()?.ReviewReasons || parsedResumeData()?.reviewReasons || []; track reason) {
+                        <li>{{ reason }}</li>
+                      }
+                    </ul>
+                  </div>
+                }
+
+                <!-- Parser Confidence Summary Details -->
+                <div class="bg-card border border-border rounded-[14px] p-5 space-y-4">
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-foreground uppercase tracking-wider">Parsing Confidence Summary</span>
+                    <span class="text-xs font-bold text-primary select-none px-2 py-0.5 rounded-full bg-primary/10">
+                      Overall: {{ ((parsedResumeData()?.ConfidenceScore || parsedResumeData()?.confidenceScore || 0) * 100) | number:'1.0-0' }}%
+                    </span>
+                  </div>
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                    @if (parsedResumeData()?.ConfidenceScores || parsedResumeData()?.confidenceScores; as scores) {
+                      <div>
+                        <div class="flex justify-between text-[11px] text-muted-foreground mb-1">
+                          <span>Candidate Name</span>
+                          <span>{{ scores.Name || scores.name || 0 }}%</span>
+                        </div>
+                        <div class="w-full bg-secondary/30 h-1.5 rounded-full overflow-hidden">
+                          <div class="bg-primary h-full rounded-full" [style.width.%]="scores.Name || scores.name || 0"></div>
+                        </div>
+                      </div>
+                      <div>
+                        <div class="flex justify-between text-[11px] text-muted-foreground mb-1">
+                          <span>Email Address</span>
+                          <span>{{ scores.Email || scores.email || 0 }}%</span>
+                        </div>
+                        <div class="w-full bg-secondary/30 h-1.5 rounded-full overflow-hidden">
+                          <div class="bg-primary h-full rounded-full" [style.width.%]="scores.Email || scores.email || 0"></div>
+                        </div>
+                      </div>
+                      <div>
+                        <div class="flex justify-between text-[11px] text-muted-foreground mb-1">
+                          <span>Phone Number</span>
+                          <span>{{ scores.Phone || scores.phone || 0 }}%</span>
+                        </div>
+                        <div class="w-full bg-secondary/30 h-1.5 rounded-full overflow-hidden">
+                          <div class="bg-primary h-full rounded-full" [style.width.%]="scores.Phone || scores.phone || 0"></div>
+                        </div>
+                      </div>
+                      <div>
+                        <div class="flex justify-between text-[11px] text-muted-foreground mb-1">
+                          <span>Skills Extraction</span>
+                          <span>{{ scores.Skills || scores.skills || 0 }}%</span>
+                        </div>
+                        <div class="w-full bg-secondary/30 h-1.5 rounded-full overflow-hidden">
+                          <div class="bg-primary h-full rounded-full" [style.width.%]="scores.Skills || scores.skills || 0"></div>
+                        </div>
+                      </div>
+                      <div>
+                        <div class="flex justify-between text-[11px] text-muted-foreground mb-1">
+                          <span>Current Company</span>
+                          <span>{{ scores.CurrentCompany || scores.currentCompany || 0 }}%</span>
+                        </div>
+                        <div class="w-full bg-secondary/30 h-1.5 rounded-full overflow-hidden">
+                          <div class="bg-primary h-full rounded-full" [style.width.%]="scores.CurrentCompany || scores.currentCompany || 0"></div>
+                        </div>
+                      </div>
+                      <div>
+                        <div class="flex justify-between text-[11px] text-muted-foreground mb-1">
+                          <span>Current Role</span>
+                          <span>{{ scores.CurrentRole || scores.currentRole || 0 }}%</span>
+                        </div>
+                        <div class="w-full bg-secondary/30 h-1.5 rounded-full overflow-hidden">
+                          <div class="bg-primary h-full rounded-full" [style.width.%]="scores.CurrentRole || scores.currentRole || 0"></div>
+                        </div>
+                      </div>
+                      <div>
+                        <div class="flex justify-between text-[11px] text-muted-foreground mb-1">
+                          <span>Experience Mapping</span>
+                          <span>{{ scores.Experience || scores.experience || 0 }}%</span>
+                        </div>
+                        <div class="w-full bg-secondary/30 h-1.5 rounded-full overflow-hidden">
+                          <div class="bg-primary h-full rounded-full" [style.width.%]="scores.Experience || scores.experience || 0"></div>
+                        </div>
+                      </div>
+                      <div>
+                        <div class="flex justify-between text-[11px] text-muted-foreground mb-1">
+                          <span>Education History</span>
+                          <span>{{ scores.Education || scores.education || 0 }}%</span>
+                        </div>
+                        <div class="w-full bg-secondary/30 h-1.5 rounded-full overflow-hidden">
+                          <div class="bg-primary h-full rounded-full" [style.width.%]="scores.Education || scores.education || 0"></div>
+                        </div>
+                      </div>
+                      <div>
+                        <div class="flex justify-between text-[11px] text-muted-foreground mb-1">
+                          <span>Projects</span>
+                          <span>{{ scores.Projects || scores.projects || 0 }}%</span>
+                        </div>
+                        <div class="w-full bg-secondary/30 h-1.5 rounded-full overflow-hidden">
+                          <div class="bg-primary h-full rounded-full" [style.width.%]="scores.Projects || scores.projects || 0"></div>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                  <div class="text-[10px] text-muted-foreground flex justify-between border-t border-border pt-2 select-none">
+                    <span>Parser Engine: {{ parsedResumeData()?.ParserVersion || parsedResumeData()?.parserVersion || 'v2.0.0' }}</span>
+                    <span>Timestamp: {{ parsedResumeData()?.Timestamp || parsedResumeData()?.timestamp | date:'short' }}</span>
+                  </div>
+                </div>
+
+                <!-- Personal Info & Social URLs -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-card border border-border rounded-[14px] p-5">
+                  <div class="space-y-3">
+                    <span class="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block select-none">Personal Details</span>
+                    <div class="text-xs space-y-2">
+                      <div>
+                        <span class="text-muted-foreground block">Full Name:</span>
+                        <span class="text-foreground font-medium">{{ parsedResumeData()?.Name || parsedResumeData()?.name || 'N/A' }}</span>
+                      </div>
+                      <div>
+                        <span class="text-muted-foreground block">Email Address:</span>
+                        <span class="text-foreground font-medium">{{ parsedResumeData()?.Email || parsedResumeData()?.email || 'N/A' }}</span>
+                      </div>
+                      <div>
+                        <span class="text-muted-foreground block">Phone Number:</span>
+                        <span class="text-foreground font-medium">{{ parsedResumeData()?.Phone || parsedResumeData()?.phone || 'N/A' }}</span>
+                      </div>
+                      <div>
+                        <span class="text-muted-foreground block">Current Location:</span>
+                        <span class="text-foreground font-medium">{{ parsedResumeData()?.Location || parsedResumeData()?.location || 'N/A' }}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="space-y-3">
+                    <span class="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block select-none">Online Profiles</span>
+                    <div class="text-xs space-y-2.5">
+                      <div>
+                        <span class="text-muted-foreground block mb-0.5">LinkedIn Profile:</span>
+                        @if (parsedResumeData()?.LinkedInUrl || parsedResumeData()?.linkedInUrl; as url) {
+                          <a [href]="url" target="_blank" class="text-primary hover:underline font-medium inline-flex items-center gap-1">
+                            {{ url }}
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                          </a>
+                        } @else {
+                          <span class="text-muted-foreground italic">Not Found</span>
+                        }
+                      </div>
+                      <div>
+                        <span class="text-muted-foreground block mb-0.5">GitHub Repository:</span>
+                        @if (parsedResumeData()?.GitHubUrl || parsedResumeData()?.gitHubUrl; as url) {
+                          <a [href]="url" target="_blank" class="text-primary hover:underline font-medium inline-flex items-center gap-1">
+                            {{ url }}
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                          </a>
+                        } @else {
+                          <span class="text-muted-foreground italic">Not Found</span>
+                        }
+                      </div>
+                      <div>
+                        <span class="text-muted-foreground block mb-0.5">Portfolio Website:</span>
+                        @if (parsedResumeData()?.PortfolioUrl || parsedResumeData()?.portfolioUrl; as url) {
+                          <a [href]="url" target="_blank" class="text-primary hover:underline font-medium inline-flex items-center gap-1">
+                            {{ url }}
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                          </a>
+                        } @else {
+                          <span class="text-muted-foreground italic">Not Found</span>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Professional Summary -->
+                @if (parsedResumeData()?.Summary || parsedResumeData()?.summary) {
+                  <div class="bg-card border border-border rounded-[14px] p-5 space-y-2">
+                    <span class="text-[10px] font-bold text-muted-foreground uppercase tracking-wider select-none block">Professional Summary</span>
+                    <p class="text-xs text-foreground leading-relaxed">
+                      {{ parsedResumeData()?.Summary || parsedResumeData()?.summary }}
+                    </p>
+                  </div>
+                }
+
+                <!-- Work Experience Timeline -->
+                <div class="bg-card border border-border rounded-[14px] p-5 space-y-4">
+                  <div class="flex items-center justify-between border-b border-border pb-3">
+                    <span class="text-[10px] font-bold text-muted-foreground uppercase tracking-wider select-none">Work History & Experience</span>
+                    <div class="flex gap-2">
+                      <span class="text-[10px] bg-secondary/60 text-secondary-foreground font-semibold px-2 py-0.5 rounded-md">
+                        Total: {{ parsedResumeData()?.YearsOfExperience || parsedResumeData()?.yearsOfExperience || 'N/A' }}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div class="space-y-6 relative pl-4 border-l border-border/80">
+                    @for (exp of parsedResumeData()?.WorkExperiences || parsedResumeData()?.workExperiences || []; track exp.CompanyName) {
+                      <div class="relative space-y-1.5">
+                        <!-- Timeline Indicator Dot -->
+                        <div class="absolute -left-[21px] top-1.5 w-2.5 h-2.5 rounded-full border-2 border-card" 
+                             [ngClass]="exp.IsCurrent || exp.isCurrent ? 'bg-primary' : 'bg-muted-foreground'"></div>
+                        
+                        <div class="flex flex-wrap items-start justify-between gap-1 select-none">
+                          <div class="text-xs font-semibold text-foreground">
+                            {{ exp.JobTitle || exp.jobTitle || 'N/A' }} 
+                            <span class="text-muted-foreground font-normal">at</span> 
+                            {{ exp.CompanyName || exp.companyName || 'N/A' }}
+                            @if (exp.IsCurrent || exp.isCurrent) {
+                              <span class="ml-2 bg-primary/10 text-primary text-[9px] font-bold px-1.5 py-0.5 rounded-full">Current</span>
+                            }
+                          </div>
+                          <div class="text-[10px] text-muted-foreground font-medium">
+                            {{ exp.StartDate || exp.startDate || 'N/A' }} – {{ exp.EndDate || exp.endDate || 'N/A' }}
+                            @if (exp.Duration || exp.duration) {
+                              <span class="ml-1 text-muted-foreground/60">({{ exp.Duration || exp.duration }})</span>
+                            }
+                          </div>
+                        </div>
+                        
+                        @if (exp.Responsibilities || exp.responsibilities) {
+                          <p class="text-xs text-muted-foreground leading-relaxed whitespace-pre-line pl-1">
+                            {{ exp.Responsibilities || exp.responsibilities }}
+                          </p>
+                        }
+                      </div>
+                    } @empty {
+                      <div class="text-xs text-muted-foreground italic py-2">No work experiences parsed.</div>
+                    }
+                  </div>
+                </div>
+
+                <!-- Categorized Skills -->
+                <div class="bg-card border border-border rounded-[14px] p-5 space-y-4">
+                  <span class="text-[10px] font-bold text-muted-foreground uppercase tracking-wider select-none block">Categorized Skills Profile</span>
+                  
+                  @if (parsedResumeData()?.SkillsCategory || parsedResumeData()?.skillsCategory; as categories) {
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                      @if ((categories.Frontend || categories.frontend)?.length) {
+                        <div class="space-y-1.5">
+                          <span class="text-[10px] font-semibold text-primary/80 uppercase tracking-wider block">Frontend UI</span>
+                          <div class="flex flex-wrap gap-1">
+                            @for (skill of categories.Frontend || categories.frontend; track skill) {
+                              <span class="bg-secondary/40 text-secondary-foreground text-[10px] px-2 py-0.5 rounded-full border border-border/55">{{ skill }}</span>
+                            }
+                          </div>
+                        </div>
+                      }
+                      @if ((categories.Backend || categories.backend)?.length) {
+                        <div class="space-y-1.5">
+                          <span class="text-[10px] font-semibold text-primary/80 uppercase tracking-wider block">Backend Services</span>
+                          <div class="flex flex-wrap gap-1">
+                            @for (skill of categories.Backend || categories.backend; track skill) {
+                              <span class="bg-secondary/40 text-secondary-foreground text-[10px] px-2 py-0.5 rounded-full border border-border/55">{{ skill }}</span>
+                            }
+                          </div>
+                        </div>
+                      }
+                      @if ((categories.Cloud || categories.cloud)?.length) {
+                        <div class="space-y-1.5">
+                          <span class="text-[10px] font-semibold text-primary/80 uppercase tracking-wider block">Cloud & DevOps</span>
+                          <div class="flex flex-wrap gap-1">
+                            @for (skill of categories.Cloud || categories.cloud; track skill) {
+                              <span class="bg-secondary/40 text-secondary-foreground text-[10px] px-2 py-0.5 rounded-full border border-border/55">{{ skill }}</span>
+                            }
+                          </div>
+                        </div>
+                      }
+                      @if ((categories.Database || categories.database)?.length) {
+                        <div class="space-y-1.5">
+                          <span class="text-[10px] font-semibold text-primary/80 uppercase tracking-wider block">Databases & Caching</span>
+                          <div class="flex flex-wrap gap-1">
+                            @for (skill of categories.Database || categories.database; track skill) {
+                              <span class="bg-secondary/40 text-secondary-foreground text-[10px] px-2 py-0.5 rounded-full border border-border/55">{{ skill }}</span>
+                            }
+                          </div>
+                        </div>
+                      }
+                      @if ((categories.Data || categories.data)?.length) {
+                        <div class="space-y-1.5">
+                          <span class="text-[10px] font-semibold text-primary/80 uppercase tracking-wider block">Data Engineering & Analytics</span>
+                          <div class="flex flex-wrap gap-1">
+                            @for (skill of categories.Data || categories.data; track skill) {
+                              <span class="bg-secondary/40 text-secondary-foreground text-[10px] px-2 py-0.5 rounded-full border border-border/55">{{ skill }}</span>
+                            }
+                          </div>
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+
+                <!-- Education Background Details -->
+                <div class="bg-card border border-border rounded-[14px] p-5 space-y-4">
+                  <span class="text-[10px] font-bold text-muted-foreground uppercase tracking-wider select-none block">Education History</span>
+                  
+                  <div class="grid grid-cols-1 gap-4">
+                    @for (edu of parsedResumeData()?.Educations || parsedResumeData()?.educations || []; track edu.Degree) {
+                      <div class="border border-border/60 bg-secondary/10 p-4 rounded-[12px] text-xs space-y-2">
+                        <div class="flex flex-wrap justify-between items-start gap-1 select-none">
+                          <div>
+                            <strong class="text-foreground text-[13px]">{{ edu.Degree || edu.degree }}</strong>
+                            @if (edu.Specialization || edu.specialization) {
+                              <span class="text-muted-foreground font-normal"> in {{ edu.Specialization || edu.specialization }}</span>
+                            }
+                          </div>
+                          @if (edu.GraduationYear || edu.graduationYear) {
+                            <span class="text-[11px] font-medium text-muted-foreground bg-secondary/50 px-2 py-0.5 rounded-md">
+                              Graduated: {{ edu.GraduationYear || edu.graduationYear }}
+                            </span>
+                          }
+                        </div>
+                        
+                        <div class="text-muted-foreground text-[11px] space-y-1">
+                          @if (edu.College || edu.college) {
+                            <div><span class="font-medium text-foreground/80">College:</span> {{ edu.College || edu.college }}</div>
+                          }
+                          @if (edu.University || edu.university) {
+                            <div><span class="font-medium text-foreground/80">University:</span> {{ edu.University || edu.university }}</div>
+                          }
+                          <div class="flex gap-4 pt-1 select-none">
+                            @if (edu.CGPA || edu.cgpa) {
+                              <span class="bg-primary/5 text-primary text-[10px] px-2 py-0.5 rounded-md border border-primary/10">CGPA: {{ edu.CGPA || edu.cgpa }}</span>
+                            }
+                            @if (edu.Percentage || edu.percentage) {
+                              <span class="bg-primary/5 text-primary text-[10px] px-2 py-0.5 rounded-md border border-primary/10">Percentage: {{ edu.Percentage || edu.percentage }}</span>
+                            }
+                          </div>
+                        </div>
+                      </div>
+                    } @empty {
+                      <div class="text-xs text-muted-foreground italic">No education records parsed.</div>
+                    }
+                  </div>
+                </div>
+
+                <!-- Projects & Certifications -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <!-- Projects -->
+                  <div class="bg-card border border-border rounded-[14px] p-5 space-y-4">
+                    <span class="text-[10px] font-bold text-muted-foreground uppercase tracking-wider select-none block">Extracted Projects</span>
+                    <div class="space-y-4">
+                      @for (proj of parsedResumeData()?.Projects || parsedResumeData()?.projects || []; track proj.ProjectName) {
+                        <div class="space-y-1.5">
+                          <div class="text-xs font-semibold text-foreground flex justify-between items-center select-none">
+                            <span>{{ proj.ProjectName || proj.projectName }}</span>
+                            @if (proj.Role || proj.role) {
+                              <span class="text-[9px] bg-secondary text-secondary-foreground px-1.5 py-0.5 rounded font-normal">{{ proj.Role || proj.role }}</span>
+                            }
+                          </div>
+                          @if (proj.ProjectDescription || proj.projectDescription) {
+                            <p class="text-[11px] text-muted-foreground leading-relaxed">{{ proj.ProjectDescription || proj.projectDescription }}</p>
+                          }
+                          @if (proj.TechnologiesUsed || proj.technologiesUsed; as techs) {
+                            <div class="flex flex-wrap gap-1 pt-1 select-none">
+                              @for (tech of techs; track tech) {
+                                <span class="text-[9px] bg-primary/5 text-primary px-1.5 py-0.2 rounded border border-primary/10">{{ tech }}</span>
+                              }
+                            </div>
+                          }
+                        </div>
+                      } @empty {
+                        <div class="text-xs text-muted-foreground italic">No project details parsed.</div>
+                      }
+                    </div>
+                  </div>
+
+                  <!-- Certifications -->
+                  <div class="bg-card border border-border rounded-[14px] p-5 space-y-4">
+                    <span class="text-[10px] font-bold text-muted-foreground uppercase tracking-wider select-none block">Professional Certifications</span>
+                    <div class="space-y-2 select-none">
+                      @for (cert of parsedResumeData()?.Certifications || parsedResumeData()?.certifications || []; track cert) {
+                        <div class="flex items-center gap-2 text-xs text-foreground bg-secondary/20 p-2.5 rounded-[10px] border border-border/50">
+                          <svg class="w-4 h-4 text-primary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                          <span class="font-medium">{{ cert }}</span>
+                        </div>
+                      } @empty {
+                        <div class="text-xs text-muted-foreground italic">No certifications parsed.</div>
+                      }
+                    </div>
+                  </div>
+                </div>
+              } @else {
+                <div class="text-center py-8 text-xs text-muted-foreground bg-secondary/15 rounded-[14px] border border-dashed border-border">
+                  <p>No structured CV text available. Full PDF resume parsed results are shown in the Overview tab.</p>
+                </div>
+              }
+            </div>
+          } @else if (activeTab() === 'timeline') {
+            <!-- ================= TAB 3: TIMELINE LOGS ================= -->
+            <div class="relative pl-6 space-y-6">
+              <div class="absolute left-2.5 top-2 bottom-2 w-0.5 bg-border"></div>
+              
+              @if (loadingTimeline()) {
+                <div class="flex justify-center py-6">
+                  <span class="animate-spin border-2 border-primary/30 border-t-primary rounded-full w-5 h-5"></span>
+                </div>
+              } @else {
+                @for (log of timeline(); track log.id) {
+                  <div class="relative flex flex-col gap-1.5">
+                    <!-- Dot Icon Indicator -->
+                    <div class="absolute -left-[23px] top-1.5 w-3 h-3 rounded-full bg-primary border-2 border-card shadow-xs"></div>
+                    
+                    <div class="flex items-center justify-between text-[11px] text-muted-foreground select-none">
+                      <span class="font-bold text-foreground">{{ log.activityType }}</span>
+                      <span>{{ log.timestamp | date:'short' }}</span>
+                    </div>
+                    <p class="text-xs text-muted-foreground/90 bg-secondary/20 border border-border p-3 rounded-[14px]">
+                      {{ log.description }} 
+                      <span class="text-[10px] text-muted-foreground/60 italic ml-1">— {{ log.performedBy }}</span>
+                    </p>
+                  </div>
+                }
+                
+                @if (timeline().length === 0) {
+                  <div class="text-center py-8 text-xs text-muted-foreground">
+                    <p>No activity logs recorded. Actions like stage changes are logged chronologically here.</p>
+                  </div>
+                }
+              }
+            </div>
+          } @else if (activeTab() === 'notes') {
+            <!-- ================= TAB 4: RECRUITER NOTES ================= -->
+            <div class="space-y-5">
+              <!-- Note Submission Box -->
+              <div class="flex flex-col gap-3 bg-secondary/20 border border-border p-4 rounded-[20px]">
+                <label class="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block select-none">Log New Recruiter Note</label>
+                <textarea 
+                  [value]="noteText()"
+                  (input)="noteText.set($any($event.target).value)"
+                  rows="3" 
+                  placeholder="Type note or interview scorecard summary here..." 
+                  class="input-field text-xs bg-card"
+                ></textarea>
+                <div class="flex justify-end">
+                  <button 
+                    (click)="addNote()" 
+                    [disabled]="!noteText().trim()"
+                    class="btn-primary py-1.5 px-3 text-xs font-semibold"
+                  >
+                    Submit Note
+                  </button>
+                </div>
+              </div>
+
+              <!-- Notes Timeline List -->
+              <div class="space-y-4">
+                @for (note of notes(); track note.id) {
+                  <div class="bg-card border border-border rounded-[20px] p-5 space-y-2.5 shadow-level1 animate-fade-in-up">
+                    <div class="flex justify-between items-center text-[10px] text-muted-foreground select-none">
+                      <span class="font-bold text-primary">{{ note.author }}</span>
+                      <div class="flex items-center gap-2">
+                        <span>{{ note.date | date:'medium' }}</span>
+                        @if (note.id && canDeleteNotes()) {
+                          <button (click)="deleteNote(note.id)" class="text-destructive hover:text-red-500 hover:scale-105 p-0.5 rounded transition-all cursor-pointer">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.34 9m-4.72 0-.34-9m9.02-2.51 1.07-3.29M3 6h18m-2.17 0-.75 14.5A2.25 2.25 0 0 1 15.82 22.8H8.18a2.25 2.25 0 0 1-2.26-2.3L5.17 6M10.5 6V4.5a1.5 1.5 0 0 1 1.5-1.5h3a1.5 1.5 0 0 1 1.5 1.5V6"/></svg>
+                          </button>
+                        }
+                      </div>
+                    </div>
+                    <p class="text-xs text-foreground/90 leading-relaxed whitespace-pre-wrap">
+                      {{ note.text }}
+                    </p>
+                  </div>
+                }
+
+                @if (notes().length === 0) {
+                  <div class="text-center py-8 text-xs text-muted-foreground">
+                    <p>No notes logged yet. Use the area above to add recruiter notes.</p>
+                  </div>
+                }
+              </div>
+            </div>
+          } @else if (activeTab() === 'interviews') {
+            <!-- ================= TAB 5: INTERVIEWS ================= -->
+            <div class="space-y-4">
+              @for (interview of interviews(); track interview.id) {
+                <div class="bg-card border border-border rounded-[20px] p-5 space-y-4 shadow-level1">
+                  <!-- Interview Header -->
+                  <div class="flex items-start justify-between gap-2 border-b border-border pb-3">
+                    <div class="space-y-1">
+                      <span class="text-xs font-bold text-foreground">
+                        {{ interview.title || 'Technical Panel Interview' }} with {{ interview.interviewerName }}
+                      </span>
+                      <div class="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                        <span>📅</span> {{ interview.scheduledTime | date:'medium' }} ({{ interview.durationMinutes }} mins)
+                      </div>
+                    </div>
+                    
+                    <span class="text-[9px] font-bold uppercase tracking-wider px-2.5 py-0.5 bg-primary/10 border border-primary/20 text-primary rounded-full select-none">
+                      Scheduled
+                    </span>
+                  </div>
+
+                  <!-- Interview Info Details -->
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-muted-foreground">
+                    <div class="space-y-1.5">
+                      <span class="block text-[10px] font-bold uppercase tracking-wider select-none">Meeting Link</span>
+                      @if (interview.meetingLink) {
+                        <a [href]="interview.meetingLink" target="_blank" class="text-primary hover:underline font-semibold flex items-center gap-1">
+                          🌐 Join Google Meet / Zoom
+                        </a>
+                      } @else {
+                        <span>No link set</span>
+                      }
+                    </div>
+                    <div class="space-y-1.5">
+                      <span class="block text-[10px] font-bold uppercase tracking-wider select-none">Interview Notes</span>
+                      <span class="block text-foreground/80 italic leading-snug">{{ interview.notes || 'Discuss core technology stack.' }}</span>
+                    </div>
+                  </div>
+
+                  <!-- Interview Feedbacks / Scorecards -->
+                  <div class="border-t border-border pt-4 mt-3 space-y-3">
+                    <div class="flex items-center justify-between">
+                      <span class="text-[10px] font-bold uppercase tracking-wider select-none text-foreground">Scorecards & Evaluations</span>
+                      <button (click)="openFeedbackForm(interview.id)" class="text-[10px] font-bold text-primary hover:underline bg-transparent border-none cursor-pointer">
+                        + Submit Scorecard
+                      </button>
+                    </div>
+                    @if (interview.feedbacks && interview.feedbacks.length > 0) {
+                      <div class="space-y-3">
+                        @for (fb of interview.feedbacks; track fb.id) {
+                          <div class="p-4 rounded-[14px] bg-secondary/20 border border-border/50 space-y-2">
+                            <div class="flex items-center justify-between">
+                              <span class="text-xs font-bold text-foreground">{{ fb.interviewerName }}</span>
+                              <span class="text-[10px] px-2 py-0.5 rounded-full font-bold"
+                                [ngClass]="{
+                                  'bg-emerald-500/10 text-emerald-600': fb.recommendation >= 3,
+                                  'bg-amber-500/10 text-amber-600': fb.recommendation === 2,
+                                  'bg-rose-500/10 text-rose-600': fb.recommendation < 2
+                                }">
+                                {{ getRecommendationLabel(fb.recommendation) }}
+                              </span>
+                            </div>
+                            <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 text-[10px] text-muted-foreground bg-card/40 p-2.5 rounded-[8px]">
+                              <div>Comm: <span class="font-bold text-foreground">{{ fb.communicationScore }}/5</span></div>
+                              <div>Solving: <span class="font-bold text-foreground">{{ fb.problemSolvingScore }}/5</span></div>
+                              <div>Coding: <span class="font-bold text-foreground">{{ fb.codingScore }}/5</span></div>
+                              <div>Design: <span class="font-bold text-foreground">{{ fb.systemDesignScore }}/5</span></div>
+                              <div>Culture: <span class="font-bold text-foreground">{{ fb.cultureFitScore }}/5</span></div>
+                            </div>
+                            @if (fb.feedbackText) {
+                              <p class="text-xs italic text-foreground/80 leading-normal">{{ fb.feedbackText }}</p>
+                            }
+                          </div>
+                        }
+                      </div>
+                    } @else {
+                      <p class="text-xs text-muted-foreground italic">No evaluations logged for this interview step.</p>
+                    }
+                  </div>
+                </div>
+              }
+
+              @if (interviews().length === 0) {
+                <div class="text-center py-10 text-xs text-muted-foreground bg-secondary/15 border border-dashed border-border rounded-[20px]">
+                  <svg class="w-8 h-8 text-muted-foreground/45 mx-auto mb-2" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"/>
+                  </svg>
+                  <p>No interviews scheduled for this application yet.</p>
+                </div>
+              }
+            </div>
+          } @else if (activeTab() === 'documents') {
+            <!-- ================= TAB 6: DOCUMENTS ================= -->
+            <div class="space-y-3">
+              @if (selectedCandidate()?.resumePath) {
+                <div (click)="downloadCandidateResume(selectedCandidate()!)" class="bg-card border border-border hover:border-primary/45 rounded-[20px] p-4 flex items-center justify-between shadow-level1 transition-all duration-200 cursor-pointer">
+                  <div class="flex items-center gap-3">
+                    <span class="text-red-500 bg-red-500/10 p-2 rounded-[14px]">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></svg>
+                    </span>
+                    <div class="flex flex-col gap-0.5">
+                      <span class="text-xs font-bold text-foreground">{{ getResumeFileName(selectedCandidate()?.resumePath) }}</span>
+                      <span class="text-[9px] text-muted-foreground">PDF Document • Extracted Resume File</span>
+                    </div>
+                  </div>
+                  
+                  <span class="text-[10px] text-muted-foreground font-semibold bg-secondary border border-border px-2 py-0.5 rounded-[8px] flex items-center gap-1">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                    Download
+                  </span>
+                </div>
+              } @else {
+                <div class="text-center py-8 text-xs text-muted-foreground bg-secondary/15 rounded-[20px] border border-dashed border-border">
+                  <p>No resume file found for this candidate.</p>
+                </div>
+              }
+            </div>
+          }
+
+        </div>
+
+      </div>
+
+      <!-- Scorecard Feedback Form Modal Overlay -->
+      @if (showFeedbackForm()) {
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
+          <div class="bg-card border border-border rounded-[24px] max-w-lg w-full p-6 shadow-2xl space-y-5 animate-scale-in max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between border-b border-border pb-3">
+              <h3 class="text-base font-bold text-foreground">Submit Interview Scorecard</h3>
+              <button (click)="closeFeedbackForm()" class="text-muted-foreground hover:text-foreground bg-transparent border-none cursor-pointer text-lg font-bold">
+                &times;
+              </button>
+            </div>
+
+            <div class="space-y-4">
+              <!-- Skill Ratings sliders -->
+              <div class="space-y-3">
+                <span class="block text-xs font-bold text-muted-foreground uppercase tracking-wider select-none">Skill Ratings (1 - 5)</span>
+                
+                <div class="space-y-2.5">
+                  <div class="flex items-center justify-between gap-4">
+                    <label class="text-xs text-foreground font-medium">Communication</label>
+                    <div class="flex items-center gap-3">
+                      <input type="range" min="1" max="5" [ngModel]="communicationScore()" (ngModelChange)="communicationScore.set($event)" class="w-32 accent-primary">
+                      <span class="text-xs font-bold w-4 text-right">{{ communicationScore() }}</span>
+                    </div>
+                  </div>
+
+                  <div class="flex items-center justify-between gap-4">
+                    <label class="text-xs text-foreground font-medium">Problem Solving</label>
+                    <div class="flex items-center gap-3">
+                      <input type="range" min="1" max="5" [ngModel]="problemSolvingScore()" (ngModelChange)="problemSolvingScore.set($event)" class="w-32 accent-primary">
+                      <span class="text-xs font-bold w-4 text-right">{{ problemSolvingScore() }}</span>
+                    </div>
+                  </div>
+
+                  <div class="flex items-center justify-between gap-4">
+                    <label class="text-xs text-foreground font-medium">Coding & Tech Skills</label>
+                    <div class="flex items-center gap-3">
+                      <input type="range" min="1" max="5" [ngModel]="codingScore()" (ngModelChange)="codingScore.set($event)" class="w-32 accent-primary">
+                      <span class="text-xs font-bold w-4 text-right">{{ codingScore() }}</span>
+                    </div>
+                  </div>
+
+                  <div class="flex items-center justify-between gap-4">
+                    <label class="text-xs text-foreground font-medium">System Design</label>
+                    <div class="flex items-center gap-3">
+                      <input type="range" min="1" max="5" [ngModel]="systemDesignScore()" (ngModelChange)="systemDesignScore.set($event)" class="w-32 accent-primary">
+                      <span class="text-xs font-bold w-4 text-right">{{ systemDesignScore() }}</span>
+                    </div>
+                  </div>
+
+                  <div class="flex items-center justify-between gap-4">
+                    <label class="text-xs text-foreground font-medium">Culture Fit</label>
+                    <div class="flex items-center gap-3">
+                      <input type="range" min="1" max="5" [ngModel]="cultureFitScore()" (ngModelChange)="cultureFitScore.set($event)" class="w-32 accent-primary">
+                      <span class="text-xs font-bold w-4 text-right">{{ cultureFitScore() }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Recommendation select -->
+              <div class="space-y-1.5">
+                <label class="block text-xs font-bold text-muted-foreground uppercase tracking-wider select-none">Hiring Recommendation</label>
+                <select [ngModel]="recommendation()" (ngModelChange)="recommendation.set($event)" class="input-field text-xs py-2 bg-background border-border w-full" style="background-color: transparent; border: 1px solid rgba(255,255,255,0.1); color: inherit;">
+                  <option value="0">Strong No Hire</option>
+                  <option value="1">No Hire</option>
+                  <option value="2">Neutral</option>
+                  <option value="3">Hire</option>
+                  <option value="4">Strong Hire</option>
+                </select>
+              </div>
+
+              <!-- Feedback text -->
+              <div class="space-y-1.5">
+                <label class="block text-xs font-bold text-muted-foreground uppercase tracking-wider select-none">Written Evaluation</label>
+                <textarea 
+                  [ngModel]="feedbackText()" 
+                  (ngModelChange)="feedbackText.set($event)"
+                  placeholder="Provide detailed feedback on candidate strengths, weaknesses, and rationale for recommendation..."
+                  class="input-field text-xs py-2 bg-background border-border w-full h-24 resize-none"
+                  style="background-color: transparent; border: 1px solid rgba(255,255,255,0.1); color: inherit;"
+                ></textarea>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-end gap-3 pt-3 border-t border-border">
+              <button (click)="closeFeedbackForm()" class="px-4 py-2 text-xs font-bold text-muted-foreground hover:text-foreground bg-transparent border border-border rounded-[12px] cursor-pointer">
+                Cancel
+              </button>
+              <button (click)="submitFeedback()" class="btn-primary px-5 py-2 text-xs font-bold rounded-[12px] cursor-pointer">
+                Submit Scorecard
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+
+    </div>
+  }
+</div>

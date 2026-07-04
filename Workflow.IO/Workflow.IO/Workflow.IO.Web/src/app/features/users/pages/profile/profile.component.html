@@ -1,0 +1,249 @@
+<section class="page">
+  <h1>Profile</h1>
+  
+  @if (loading()) {
+    <p>Loading…</p>
+  } @else {
+    <div class="profile-grid">
+      <!-- LEFT COLUMN -->
+      <div class="sidebar-col">
+        <!-- Overview Card -->
+        <div class="card overview-card">
+          <div class="avatar-upload-section">
+            <div class="avatar-container" (click)="fileInput.click()" [class.has-avatar]="auth.userAvatar()">
+              @if (auth.userAvatar(); as avatar) {
+                <img [src]="avatar" class="uploaded-avatar" alt="Avatar" />
+                <div class="avatar-overlay">
+                  <span class="material-symbols-outlined">photo_camera</span>
+                  <span class="overlay-text">Change Photo</span>
+                </div>
+              } @else {
+                <div class="avatar-initials-container">
+                  <span class="avatar-initials">{{ userInitials(auth.currentUser()) }}</span>
+                  <div class="avatar-overlay">
+                    <span class="material-symbols-outlined">photo_camera</span>
+                    <span class="overlay-text">Add Photo</span>
+                  </div>
+                </div>
+              }
+            </div>
+            <input
+              #fileInput
+              type="file"
+              (change)="onFileSelected($event)"
+              accept="image/png, image/jpeg, image/jpg"
+              style="display: none;"
+            />
+            @if (auth.userAvatar()) {
+              <button type="button" class="remove-avatar-btn" (click)="removeAvatar()">
+                <span class="material-symbols-outlined" style="font-size: 1rem;">delete</span>
+                Remove Photo
+              </button>
+            }
+            <p class="file-hint">Max size 2MB (PNG/JPG)</p>
+          </div>
+          
+          <h2 class="user-name">{{ auth.displayName() }}</h2>
+          <span class="user-email">{{ auth.currentUser()?.email }}</span>
+          <span class="role-badge">{{ auth.currentUser()?.role }}</span>
+
+          <!-- Gauge Indicator -->
+          <div class="gauge-section">
+            <div class="gauge-label">
+              <span>Profile Completion</span>
+              <span>{{ profileCompletion() }}%</span>
+            </div>
+            <div class="gauge-track">
+              <div class="gauge-fill" [style.width.%]="profileCompletion()"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Org Settings Card -->
+        <div class="card org-card">
+          <h3>
+            <span class="material-symbols-outlined">corporate_fare</span>
+            Organization
+          </h3>
+          <div class="info-list">
+            <div class="info-item">
+              <span class="info-label">Name</span>
+              <span class="info-value">{{ auth.activeOrganization()?.name || 'Workflow.io' }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Subdomain</span>
+              <span class="info-value">{{ auth.activeOrganization()?.subdomain || 'workflow' }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Subscription</span>
+              <span class="info-value" style="text-transform: uppercase;">{{ auth.activeOrganization()?.subscriptionTier || 'Free' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Role Helper Card -->
+        <div class="card role-help-card">
+          <h3>
+            <span class="material-symbols-outlined">verified_user</span>
+            Permissions Help
+          </h3>
+          <div class="info-list">
+            <p style="font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 0.25rem;">
+              Your privileges as a <strong>{{ auth.currentUser()?.role }}</strong>:
+            </p>
+            @if (auth.currentUser()?.role === 'Admin') {
+              <div class="privilege-item">
+                <span class="material-symbols-outlined">check_circle</span>
+                <span>Full workspace management & billing control</span>
+              </div>
+              <div class="privilege-item">
+                <span class="material-symbols-outlined">check_circle</span>
+                <span>Create, edit, delete any task/project</span>
+              </div>
+              <div class="privilege-item">
+                <span class="material-symbols-outlined">check_circle</span>
+                <span>Invite and manage organization users</span>
+              </div>
+            } @else if (auth.currentUser()?.role === 'User' || auth.currentUser()?.role === 'Member') {
+              <div class="privilege-item">
+                <span class="material-symbols-outlined">check_circle</span>
+                <span>Create and manage your projects & tasks</span>
+              </div>
+              <div class="privilege-item">
+                <span class="material-symbols-outlined">check_circle</span>
+                <span>Collaborate with team boards</span>
+              </div>
+              <div class="privilege-item">
+                <span class="material-symbols-outlined">check_circle</span>
+                <span>Join and view organization teams</span>
+              </div>
+            } @else {
+              <div class="privilege-item">
+                <span class="material-symbols-outlined">check_circle</span>
+                <span>View project roadmap and assign boards</span>
+              </div>
+              <div class="privilege-item">
+                <span class="material-symbols-outlined">check_circle</span>
+                <span>Add comments to tasks assigned to you</span>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT COLUMN -->
+      <div class="main-col">
+        <!-- Details Card -->
+        <div class="card">
+          <h2 class="section-title">Account Details</h2>
+          <form [formGroup]="profileForm" (ngSubmit)="saveProfile()">
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Email</label>
+                <input type="email" formControlName="email" readonly />
+              </div>
+              <div class="form-group">
+                <label>First Name</label>
+                <input type="text" formControlName="firstName" />
+              </div>
+              <div class="form-group">
+                <label>Last Name</label>
+                <input type="text" formControlName="lastName" />
+              </div>
+            </div>
+            
+            <div class="form-actions">
+              @if (profileSaved()) {
+                <p class="success">Profile details updated successfully.</p>
+              }
+              <button type="submit" class="btn-submit" [disabled]="savingProfile() || profileForm.invalid">
+                Save Details
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Teams Card -->
+        <div class="card">
+          <h2 class="section-title">My Teams</h2>
+          @if (myTeams().length === 0) {
+            <p style="font-size: 0.875rem; color: var(--text-muted);">You are not a member of any teams yet.</p>
+          } @else {
+            <div class="teams-grid">
+              @for (team of myTeams(); track team.teamId) {
+                <div class="team-item-card">
+                  <div class="team-avatar">
+                    {{ team.name.charAt(0).toUpperCase() }}
+                  </div>
+                  <div class="team-details">
+                    <span class="team-name">{{ team.name }}</span>
+                    <span class="team-meta">{{ team.members?.length || 0 }} members</span>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Password Change Card -->
+        <div class="card">
+          <h2 class="section-title">Change Password</h2>
+          <form [formGroup]="passwordForm" (ngSubmit)="changePassword()">
+            <input type="text" name="username" [value]="auth.currentUser()?.email || ''" autocomplete="username" style="display: none;" />
+            <div class="form-group">
+              <label>Current Password</label>
+              <input type="password" formControlName="currentPassword" autocomplete="current-password" />
+            </div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>New Password</label>
+                <input type="password" formControlName="newPassword" autocomplete="new-password" />
+              </div>
+              <div class="form-group">
+                <label>Confirm New Password</label>
+                <input type="password" formControlName="confirmPassword" autocomplete="new-password" />
+              </div>
+            </div>
+            
+            <div class="form-actions">
+              @if (passwordSaved()) {
+                <p class="success">Password changed successfully.</p>
+              }
+              <button type="submit" class="btn-submit" [disabled]="savingPassword() || passwordForm.invalid">
+                Change Password
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Activity Contributions Card -->
+        <div class="card">
+          <h2 class="section-title">Recent Contributions</h2>
+          @if (loadingContributions()) {
+            <p style="font-size: 0.875rem; color: var(--text-muted);">Loading activities...</p>
+          } @else if (contributions().length === 0) {
+            <p style="font-size: 0.875rem; color: var(--text-muted);">No recent actions found.</p>
+          } @else {
+            <div class="timeline">
+              @for (act of contributions(); track act.activityRecordId) {
+                <div class="timeline-item">
+                  <div class="timeline-marker"></div>
+                  <div class="timeline-time">{{ act.createdAt | date:'medium' }}</div>
+                  <p class="timeline-desc">
+                    <strong>{{ act.eventType }}</strong> — {{ act.description || act.entityType }}
+                  </p>
+                </div>
+              }
+            </div>
+          }
+        </div>
+
+        @if (error()) {
+          <div class="card" style="border-color: rgba(239, 68, 68, 0.2); background-color: rgba(239, 68, 68, 0.02);">
+            <p class="error" style="margin: 0;">{{ error() }}</p>
+          </div>
+        }
+      </div>
+    </div>
+  }
+</section>

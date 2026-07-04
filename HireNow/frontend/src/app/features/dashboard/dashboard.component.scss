@@ -1,0 +1,40 @@
+/* ================= DASHBOARD COMPONENT FLAT STYLES ================= */
+
+/* Timeline trace connector */
+.timeline-item {
+  position: relative;
+  
+  &:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: 14px;
+    top: 24px;
+    bottom: -16px;
+    width: 2px;
+    background-color: var(--border);
+  }
+}
+
+/* Custom scrollbars inside lists */
+.overflow-y-auto {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+
+  &::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 9999px;
+    
+    &:hover {
+      background: var(--muted-foreground);
+    }
+  }
+}

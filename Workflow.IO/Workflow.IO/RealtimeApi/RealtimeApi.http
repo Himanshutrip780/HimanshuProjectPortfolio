@@ -1,0 +1,6 @@
+@RealtimeApi_HostAddress = http://localhost:5330
+
+GET {{RealtimeApi_HostAddress}}/health
+Accept: application/json
+
+###

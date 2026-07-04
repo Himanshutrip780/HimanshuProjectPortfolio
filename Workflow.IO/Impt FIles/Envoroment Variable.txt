@@ -1,0 +1,101 @@
+1. UserApi
+text
+
+
+ConnectionStrings__DefaultConnection=Host=aws-1-ap-southeast-1.pooler.supabase.com;Port=5432;Database=postgres;Username=postgres.wexyndwyxdmfiapsywwz;Password=YOUR_DB_PASSWORD;SSL Mode=Require;Trust Server Certificate=true
+Database__ApplyMigrationsOnStartup=true
+Jwt__SecurityKey=5dcd557b5e47a0030009e38392461d6e
+Jwt__Issuer=ZenTrack
+Jwt__Audience=ZenTrackUsers
+2. ProjectApi
+text
+
+
+ConnectionStrings__DefaultConnection=Host=aws-1-ap-southeast-1.pooler.supabase.com;Port=5432;Database=postgres;Username=postgres.wexyndwyxdmfiapsywwz;Password=YOUR_DB_PASSWORD;SSL Mode=Require;Trust Server Certificate=true
+Database__ApplyMigrationsOnStartup=true
+Jwt__SecurityKey=5dcd557b5e47a0030009e38392461d6e
+Jwt__Issuer=ZenTrack
+Jwt__Audience=ZenTrackUsers
+3. TaskApi
+text
+
+
+ConnectionStrings__DefaultConnection=Host=aws-1-ap-southeast-1.pooler.supabase.com;Port=5432;Database=postgres;Username=postgres.wexyndwyxdmfiapsywwz;Password=YOUR_DB_PASSWORD;SSL Mode=Require;Trust Server Certificate=true
+Database__ApplyMigrationsOnStartup=true
+Jwt__SecurityKey=5dcd557b5e47a0030009e38392461d6e
+Jwt__Issuer=ZenTrack
+Jwt__Audience=ZenTrackUsers
+Services__ProjectApi=https://projectapi-v1.onrender.com/
+4. CommentApi
+text
+
+
+ConnectionStrings__DefaultConnection=Host=aws-1-ap-southeast-1.pooler.supabase.com;Port=5432;Database=postgres;Username=postgres.wexyndwyxdmfiapsywwz;Password=YOUR_DB_PASSWORD;SSL Mode=Require;Trust Server Certificate=true
+Database__ApplyMigrationsOnStartup=true
+Jwt__SecurityKey=5dcd557b5e47a0030009e38392461d6e
+Jwt__Issuer=ZenTrack
+Jwt__Audience=ZenTrackUsers
+Services__TaskApi=https://taskapi-v1-hu8x.onrender.com/
+5. FileApi
+text
+
+
+ConnectionStrings__DefaultConnection=Host=aws-1-ap-southeast-1.pooler.supabase.com;Port=5432;Database=postgres;Username=postgres.wexyndwyxdmfiapsywwz;Password=YOUR_DB_PASSWORD;SSL Mode=Require;Trust Server Certificate=true
+Database__ApplyMigrationsOnStartup=true
+Jwt__SecurityKey=5dcd557b5e47a0030009e38392461d6e
+Jwt__Issuer=ZenTrack
+Jwt__Audience=ZenTrackUsers
+Services__TaskApi=https://taskapi-v1-hu8x.onrender.com/
+6. AnalyticsApi
+text
+
+
+ConnectionStrings__DefaultConnection=Host=aws-1-ap-southeast-1.pooler.supabase.com;Port=5432;Database=postgres;Username=postgres.wexyndwyxdmfiapsywwz;Password=YOUR_DB_PASSWORD;SSL Mode=Require;Trust Server Certificate=true
+Database__ApplyMigrationsOnStartup=true
+Jwt__SecurityKey=5dcd557b5e47a0030009e38392461d6e
+Jwt__Issuer=ZenTrack
+Jwt__Audience=ZenTrackUsers
+Services__ProjectApi=https://projectapi-v1.onrender.com/
+7. NotificationApi
+text
+
+
+ConnectionStrings__DefaultConnection=Host=aws-1-ap-southeast-1.pooler.supabase.com;Port=5432;Database=postgres;Username=postgres.wexyndwyxdmfiapsywwz;Password=YOUR_DB_PASSWORD;SSL Mode=Require;Trust Server Certificate=true
+Database__ApplyMigrationsOnStartup=true
+Jwt__SecurityKey=5dcd557b5e47a0030009e38392461d6e
+Jwt__Issuer=ZenTrack
+Jwt__Audience=ZenTrackUsers
+8. ActivityApi
+text
+
+
+ConnectionStrings__DefaultConnection=Host=aws-1-ap-southeast-1.pooler.supabase.com;Port=5432;Database=postgres;Username=postgres.wexyndwyxdmfiapsywwz;Password=YOUR_DB_PASSWORD;SSL Mode=Require;Trust Server Certificate=true
+Database__ApplyMigrationsOnStartup=true
+Jwt__SecurityKey=5dcd557b5e47a0030009e38392461d6e
+Jwt__Issuer=ZenTrack
+Jwt__Audience=ZenTrackUsers
+9. RealtimeApi (Does not require a database connection string)
+text
+
+
+Jwt__SecurityKey=5dcd557b5e47a0030009e38392461d6e
+Jwt__Issuer=ZenTrack
+Jwt__Audience=ZenTrackUsers
+Services__ProjectApi=https://projectapi-v1.onrender.com/
+Services__TaskApi=https://taskapi-v1-hu8x.onrender.com/
+10. GatewayApi (Does not require a database connection string)
+text
+
+
+Jwt__SecurityKey=5dcd557b5e47a0030009e38392461d6e
+Jwt__Issuer=ZenTrack
+Jwt__Audience=ZenTrackUsers
+ReverseProxy__Clusters__users__Destinations__destination1__Address=https://userapi-v1.onrender.com/
+ReverseProxy__Clusters__projects__Destinations__destination1__Address=https://projectapi-v1.onrender.com/
+ReverseProxy__Clusters__tasks__Destinations__destination1__Address=https://taskapi-v1-hu8x.onrender.com/
+ReverseProxy__Clusters__comments__Destinations__destination1__Address=https://commentapi-v1.onrender.com/
+ReverseProxy__Clusters__files__Destinations__destination1__Address=https://fileapi-v1.onrender.com/
+ReverseProxy__Clusters__notifications__Destinations__destination1__Address=https://notificationapi-v1.onrender.com/
+ReverseProxy__Clusters__activities__Destinations__destination1__Address=https://activityapi-v1.onrender.com/
+ReverseProxy__Clusters__analytics__Destinations__destination1__Address=https://analyticsapi-v1.onrender.com/
+ReverseProxy__Clusters__realtime__Destinations__destination1__Address=https://realtimeapi-v1.onrender.com/

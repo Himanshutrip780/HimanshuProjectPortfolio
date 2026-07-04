@@ -1,0 +1,143 @@
+
+    <div class="page-container">
+      <header class="page-header">
+        <div class="header-left">
+          <h1>Tasks Overview</h1>
+          <p class="subtitle">Manage and track all tasks across your workspace.</p>
+        </div>
+        <div class="header-right">
+          <span class="badge-total">{{ filteredTasks().length }} Tasks</span>
+        </div>
+      </header>
+
+      <section class="panel filter-bar">
+        <div class="filter-group">
+          <div class="search-box">
+            <span class="material-symbols-outlined">search</span>
+            <input [formControl]="searchControl" type="text" placeholder="Filter by title or issue key..." />
+          </div>
+
+          <div class="select-wrapper">
+            <select [formControl]="statusFilter">
+              <option value="">All Statuses</option>
+              <option [value]="TaskStatus.Todo">Todo</option>
+              <option [value]="TaskStatus.InProgress">In Progress</option>
+              <option [value]="TaskStatus.Review">Review</option>
+              <option [value]="TaskStatus.Done">Done</option>
+              <option [value]="TaskStatus.Blocked">Blocked</option>
+            </select>
+          </div>
+
+          <div class="select-wrapper">
+            <select [formControl]="priorityFilter">
+              <option value="">All Priorities</option>
+              <option [value]="TaskPriority.Low">Low</option>
+              <option [value]="TaskPriority.Medium">Medium</option>
+              <option [value]="TaskPriority.High">High</option>
+              <option [value]="TaskPriority.Critical">Critical</option>
+            </select>
+          </div>
+
+          <div class="select-wrapper">
+            <select [formControl]="projectFilter">
+              <option value="">All Projects</option>
+              @for (proj of projects(); track proj.projectId) {
+                <option [value]="proj.projectId">{{ proj.name }}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <div class="sort-group">
+          <span class="sort-label">Sort:</span>
+          <select [formControl]="sortByControl">
+            <option value="recent">Recently Created</option>
+            <option value="priority">Priority (High to Low)</option>
+            <option value="status">Status</option>
+            <option value="dueDate">Due Date</option>
+          </select>
+        </div>
+      </section>
+
+      @if (loading()) {
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p>Loading tasks...</p>
+        </div>
+      } @else if (error()) {
+        <div class="error-state">
+          <span class="material-symbols-outlined text-danger">error</span>
+          <p>{{ error() }}</p>
+        </div>
+      } @else if (filteredTasks().length === 0) {
+        <div class="empty-state">
+          <span class="material-symbols-outlined">task</span>
+          <p>No tasks found matching the criteria.</p>
+        </div>
+      } @else {
+        <div class="table-container">
+          <table class="tasks-table">
+            <thead>
+              <tr>
+                <th>Key</th>
+                <th>Project</th>
+                <th>Title</th>
+                <th>Status</th>
+                <th>Priority</th>
+                <th>Assignee</th>
+                <th>Due Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (task of filteredTasks(); track task.taskId) {
+                <tr [routerLink]="['/tasks', task.taskId]" class="task-row">
+                  <td class="task-key">
+                    <span class="key-tag">{{ task.issueKey }}</span>
+                  </td>
+                  <td class="project-cell">
+                    <span class="project-tag" [style.border-left-color]="getProjectColor(getProjectName(task.projectId))">
+                      {{ getProjectName(task.projectId) }}
+                    </span>
+                  </td>
+                  <td class="task-title-cell">
+                    <span class="task-title">{{ task.title }}</span>
+                  </td>
+                  <td>
+                    <span class="status-badge" [class]="getStatusClass(task.status)">
+                      {{ getStatusLabel(task.status) }}
+                    </span>
+                  </td>
+                  <td>
+                    <span class="priority-badge" [class]="getPriorityClass(task.priority)">
+                      <span class="material-symbols-outlined priority-icon">
+                        {{ getPriorityIcon(task.priority) }}
+                      </span>
+                      {{ getPriorityLabel(task.priority) }}
+                    </span>
+                  </td>
+                  <td>
+                    <div class="assignee-cell">
+                      @if (task.assigneeId && usersMap()[task.assigneeId.toLowerCase()]?.avatarUrl; as avatar) {
+                        <img [src]="avatar" class="avatar" alt="Assignee" />
+                      } @else if (task.assigneeId) {
+                        <div class="avatar-placeholder" [style.background-color]="getUserBgColor(task.assigneeId)">
+                          {{ getUserInitials(task.assigneeId) }}
+                        </div>
+                      } @else {
+                        <span class="unassigned">Unassigned</span>
+                      }
+                    </div>
+                  </td>
+                  <td>
+                    <span class="due-date" [class.overdue]="task.isOverdue">
+                      {{ formatDueDate(task.dueDate) }}
+                    </span>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  

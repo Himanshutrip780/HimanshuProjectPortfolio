@@ -1,0 +1,1310 @@
+{
+  "UserDbContext": [
+    {
+      "TableName": "Users",
+      "EntityName": "User",
+      "Properties": [
+        {
+          "Name": "UserId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "FirstName",
+          "Type": "String"
+        },
+        {
+          "Name": "LastName",
+          "Type": "String"
+        },
+        {
+          "Name": "AvatarUrl",
+          "Type": "String"
+        },
+        {
+          "Name": "Status",
+          "Type": "UserStatus"
+        },
+        {
+          "Name": "CreatedAt",
+          "Type": "DateTime"
+        },
+        {
+          "Name": "UpdatedAt",
+          "Type": "DateTime"
+        },
+        {
+          "Name": "IsDeleted",
+          "Type": "Boolean"
+        }
+      ]
+    }
+  ],
+  "ProjectDbContext": [
+    {
+      "TableName": "Projects",
+      "EntityName": "Project",
+      "Properties": [
+        {
+          "Name": "ProjectId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "Name",
+          "Type": "String"
+        },
+        {
+          "Name": "Description",
+          "Type": "String"
+        },
+        {
+          "Name": "OwnerId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "Key",
+          "Type": "String"
+        },
+        {
+          "Name": "ProjectType",
+          "Type": "ProjectType"
+        },
+        {
+          "Name": "Status",
+          "Type": "ProjectStatus"
+        },
+        {
+          "Name": "CreatedAt",
+          "Type": "DateTime"
+        },
+        {
+          "Name": "UpdatedAt",
+          "Type": "DateTime"
+        },
+        {
+          "Name": "Members",
+          "Type": "ICollection\u00601"
+        }
+      ]
+    },
+    {
+      "TableName": "ProjectMembers",
+      "EntityName": "ProjectMember",
+      "Properties": [
+        {
+          "Name": "ProjectMemberId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "ProjectId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "UserId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "Role",
+          "Type": "ProjectRole"
+        },
+        {
+          "Name": "JoinedAt",
+          "Type": "DateTime"
+        },
+        {
+          "Name": "Project",
+          "Type": "Project"
+        }
+      ]
+    },
+    {
+      "TableName": "Clients",
+      "EntityName": "Client",
+      "Properties": [
+        {
+          "Name": "ClientId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "Name",
+          "Type": "String"
+        },
+        {
+          "Name": "Industry",
+          "Type": "String"
+        },
+        {
+          "Name": "ContactPerson",
+          "Type": "String"
+        },
+        {
+          "Name": "Email",
+          "Type": "String"
+        },
+        {
+          "Name": "Keywords",
+          "Type": "String"
+        },
+        {
+          "Name": "CreatedAt",
+          "Type": "DateTime"
+        },
+        {
+          "Name": "UpdatedAt",
+          "Type": "DateTime"
+        }
+      ]
+    }
+  ],
+  "TaskDbContext": [
+    {
+      "TableName": "Tasks",
+      "EntityName": "TaskItem",
+      "Properties": [
+        {
+          "Name": "TaskId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "ProjectId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "IssueNumber",
+          "Type": "Int32"
+        },
+        {
+          "Name": "IssueKey",
+          "Type": "String"
+        },
+        {
+          "Name": "IssueType",
+          "Type": "IssueType"
+        },
+        {
+          "Name": "Title",
+          "Type": "String"
+        },
+        {
+          "Name": "Description",
+          "Type": "String"
+        },
+        {
+          "Name": "Status",
+          "Type": "TaskStatus"
+        },
+        {
+          "Name": "Priority",
+          "Type": "TaskPriority"
+        },
+        {
+          "Name": "Resolution",
+          "Type": "Nullable\u00601"
+        },
+        {
+          "Name": "AssigneeId",
+          "Type": "Nullable\u00601"
+        },
+        {
+          "Name": "ReporterId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "SprintId",
+          "Type": "Nullable\u00601"
+        },
+        {
+          "Name": "EpicId",
+          "Type": "Nullable\u00601"
+        },
+        {
+          "Name": "ParentTaskId",
+          "Type": "Nullable\u00601"
+        },
+        {
+          "Name": "ComponentId",
+          "Type": "Nullable\u00601"
+        },
+        {
+          "Name": "FixVersionId",
+          "Type": "Nullable\u00601"
+        },
+        {
+          "Name": "TeamId",
+          "Type": "Nullable\u00601"
+        },
+        {
+          "Name": "StoryPoints",
+          "Type": "Nullable\u00601"
+        },
+        {
+          "Name": "OriginalEstimateMinutes",
+          "Type": "Nullable\u00601"
+        },
+        {
+          "Name": "RemainingEstimateMinutes",
+          "Type": "Nullable\u00601"
+        },
+        {
+          "Name": "BacklogRank",
+          "Type": "Decimal"
+        },
+        {
+          "Name": "DueDate",
+          "Type": "Nullable\u00601"
+        },
+        {
+          "Name": "CreatedAt",
+          "Type": "DateTime"
+        },
+        {
+          "Name": "UpdatedAt",
+          "Type": "DateTime"
+        },
+        {
+          "Name": "FeDeveloper",
+          "Type": "String"
+        },
+        {
+          "Name": "BeDeveloper",
+          "Type": "String"
+        },
+        {
+          "Name": "QaEngineer",
+          "Type": "String"
+        },
+        {
+          "Name": "InitialEta",
+          "Type": "Nullable\u00601"
+        },
+        {
+          "Name": "LatestEta",
+          "Type": "Nullable\u00601"
+        },
+        {
+          "Name": "IsOverdue",
+          "Type": "Boolean"
+        }
+      ]
+    },
+    {
+      "TableName": "TaskLabels",
+      "EntityName": "TaskLabel",
+      "Properties": [
+        {
+          "Name": "TaskLabelId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "TaskId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "Name",
+          "Type": "String"
+        },
+        {
+          "Name": "Color",
+          "Type": "String"
+        },
+        {
+          "Name": "CreatedAt",
+          "Type": "DateTime"
+        }
+      ]
+    },
+    {
+      "TableName": "SubTasks",
+      "EntityName": "SubTask",
+      "Properties": [
+        {
+          "Name": "SubTaskId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "TaskId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "Title",
+          "Type": "String"
+        },
+        {
+          "Name": "IsCompleted",
+          "Type": "Boolean"
+        },
+        {
+          "Name": "CreatedAt",
+          "Type": "DateTime"
+        },
+        {
+          "Name": "UpdatedAt",
+          "Type": "DateTime"
+        }
+      ]
+    },
+    {
+      "TableName": "Boards",
+      "EntityName": "Board",
+      "Properties": [
+        {
+          "Name": "BoardId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "ProjectId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "Name",
+          "Type": "String"
+        },
+        {
+          "Name": "CreatedAt",
+          "Type": "DateTime"
+        },
+        {
+          "Name": "UpdatedAt",
+          "Type": "DateTime"
+        }
+      ]
+    },
+    {
+      "TableName": "BoardColumns",
+      "EntityName": "BoardColumn",
+      "Properties": [
+        {
+          "Name": "BoardColumnId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "BoardId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "Name",
+          "Type": "String"
+        },
+        {
+          "Name": "Status",
+          "Type": "TaskStatus"
+        },
+        {
+          "Name": "SortOrder",
+          "Type": "Int32"
+        }
+      ]
+    },
+    {
+      "TableName": "Sprints",
+      "EntityName": "Sprint",
+      "Properties": [
+        {
+          "Name": "SprintId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "ProjectId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "Name",
+          "Type": "String"
+        },
+        {
+          "Name": "StartDate",
+          "Type": "DateTime"
+        },
+        {
+          "Name": "EndDate",
+          "Type": "DateTime"
+        },
+        {
+          "Name": "Status",
+          "Type": "SprintStatus"
+        },
+        {
+          "Name": "CreatedAt",
+          "Type": "DateTime"
+        },
+        {
+          "Name": "UpdatedAt",
+          "Type": "DateTime"
+        }
+      ]
+    },
+    {
+      "TableName": "Epics",
+      "EntityName": "Epic",
+      "Properties": [
+        {
+          "Name": "EpicId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "ProjectId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "Name",
+          "Type": "String"
+        },
+        {
+          "Name": "Description",
+          "Type": "String"
+        },
+        {
+          "Name": "CreatedAt",
+          "Type": "DateTime"
+        },
+        {
+          "Name": "UpdatedAt",
+          "Type": "DateTime"
+        }
+      ]
+    },
+    {
+      "TableName": "TaskWatchers",
+      "EntityName": "TaskWatcher",
+      "Properties": [
+        {
+          "Name": "TaskWatcherId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "TaskId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "UserId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "CreatedAt",
+          "Type": "DateTime"
+        }
+      ]
+    },
+    {
+      "TableName": "OutboxMessages",
+      "EntityName": "OutboxMessage",
+      "Properties": [
+        {
+          "Name": "OutboxMessageId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "EventId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "EventType",
+          "Type": "String"
+        },
+        {
+          "Name": "PayloadJson",
+          "Type": "String"
+        },
+        {
+          "Name": "CreatedAt",
+          "Type": "DateTime"
+        },
+        {
+          "Name": "PublishedAt",
+          "Type": "Nullable\u00601"
+        },
+        {
+          "Name": "RetryCount",
+          "Type": "Int32"
+        },
+        {
+          "Name": "LastError",
+          "Type": "String"
+        }
+      ]
+    },
+    {
+      "TableName": "ProjectIssueCounters",
+      "EntityName": "ProjectIssueCounter",
+      "Properties": [
+        {
+          "Name": "ProjectId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "ProjectKey",
+          "Type": "String"
+        },
+        {
+          "Name": "LastIssueNumber",
+          "Type": "Int32"
+        }
+      ]
+    },
+    {
+      "TableName": "Components",
+      "EntityName": "Component",
+      "Properties": [
+        {
+          "Name": "ComponentId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "ProjectId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "Name",
+          "Type": "String"
+        },
+        {
+          "Name": "Description",
+          "Type": "String"
+        },
+        {
+          "Name": "CreatedAt",
+          "Type": "DateTime"
+        }
+      ]
+    },
+    {
+      "TableName": "ReleaseVersions",
+      "EntityName": "ReleaseVersion",
+      "Properties": [
+        {
+          "Name": "ReleaseVersionId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "ProjectId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "Name",
+          "Type": "String"
+        },
+        {
+          "Name": "Description",
+          "Type": "String"
+        },
+        {
+          "Name": "IsReleased",
+          "Type": "Boolean"
+        },
+        {
+          "Name": "ReleaseDate",
+          "Type": "Nullable\u00601"
+        },
+        {
+          "Name": "CreatedAt",
+          "Type": "DateTime"
+        }
+      ]
+    },
+    {
+      "TableName": "TaskLinks",
+      "EntityName": "TaskLink",
+      "Properties": [
+        {
+          "Name": "TaskLinkId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "SourceTaskId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "TargetTaskId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "LinkType",
+          "Type": "TaskLinkType"
+        },
+        {
+          "Name": "CreatedById",
+          "Type": "Guid"
+        },
+        {
+          "Name": "CreatedAt",
+          "Type": "DateTime"
+        }
+      ]
+    },
+    {
+      "TableName": "WorkLogs",
+      "EntityName": "WorkLog",
+      "Properties": [
+        {
+          "Name": "WorkLogId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "TaskId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "UserId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "TimeSpentMinutes",
+          "Type": "Int32"
+        },
+        {
+          "Name": "Comment",
+          "Type": "String"
+        },
+        {
+          "Name": "StartedAt",
+          "Type": "DateTime"
+        },
+        {
+          "Name": "CreatedAt",
+          "Type": "DateTime"
+        }
+      ]
+    },
+    {
+      "TableName": "SavedFilters",
+      "EntityName": "SavedFilter",
+      "Properties": [
+        {
+          "Name": "SavedFilterId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "UserId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "ProjectId",
+          "Type": "Nullable\u00601"
+        },
+        {
+          "Name": "Name",
+          "Type": "String"
+        },
+        {
+          "Name": "JqlQuery",
+          "Type": "String"
+        },
+        {
+          "Name": "CreatedAt",
+          "Type": "DateTime"
+        }
+      ]
+    },
+    {
+      "TableName": "CalendarDays",
+      "EntityName": "CalendarDay",
+      "Properties": [
+        {
+          "Name": "Date",
+          "Type": "DateTime"
+        },
+        {
+          "Name": "IsWorkingDay",
+          "Type": "Boolean"
+        }
+      ]
+    },
+    {
+      "TableName": "DailyUpdateStates",
+      "EntityName": "DailyUpdateState",
+      "Properties": [
+        {
+          "Name": "ProjectId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "LastSentAt",
+          "Type": "Nullable\u00601"
+        },
+        {
+          "Name": "IsTriggeredToday",
+          "Type": "Boolean"
+        },
+        {
+          "Name": "ExtraRecipients",
+          "Type": "String"
+        }
+      ]
+    },
+    {
+      "TableName": "Teams",
+      "EntityName": "Team",
+      "Properties": [
+        {
+          "Name": "TeamId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "Name",
+          "Type": "String"
+        },
+        {
+          "Name": "AvatarUrl",
+          "Type": "String"
+        },
+        {
+          "Name": "LeadId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "Visibility",
+          "Type": "String"
+        },
+        {
+          "Name": "Description",
+          "Type": "String"
+        },
+        {
+          "Name": "IsArchived",
+          "Type": "Boolean"
+        },
+        {
+          "Name": "CreatedAt",
+          "Type": "DateTime"
+        },
+        {
+          "Name": "UpdatedAt",
+          "Type": "DateTime"
+        },
+        {
+          "Name": "Members",
+          "Type": "ICollection\u00601"
+        }
+      ]
+    },
+    {
+      "TableName": "TeamMembers",
+      "EntityName": "TeamMember",
+      "Properties": [
+        {
+          "Name": "TeamMemberId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "TeamId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "UserId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "Role",
+          "Type": "String"
+        },
+        {
+          "Name": "JoinedAt",
+          "Type": "DateTime"
+        },
+        {
+          "Name": "Team",
+          "Type": "Team"
+        }
+      ]
+    }
+  ],
+  "CommentDbContext": [
+    {
+      "TableName": "Comments",
+      "EntityName": "Comment",
+      "Properties": [
+        {
+          "Name": "CommentId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "TaskId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "AuthorId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "ParentCommentId",
+          "Type": "Nullable\u00601"
+        },
+        {
+          "Name": "Body",
+          "Type": "String"
+        },
+        {
+          "Name": "IsDeleted",
+          "Type": "Boolean"
+        },
+        {
+          "Name": "CreatedAt",
+          "Type": "DateTime"
+        },
+        {
+          "Name": "UpdatedAt",
+          "Type": "DateTime"
+        }
+      ]
+    },
+    {
+      "TableName": "CommentMentions",
+      "EntityName": "CommentMention",
+      "Properties": [
+        {
+          "Name": "CommentMentionId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "CommentId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "MentionedUserId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "CreatedAt",
+          "Type": "DateTime"
+        }
+      ]
+    },
+    {
+      "TableName": "OutboxMessages",
+      "EntityName": "OutboxMessage",
+      "Properties": [
+        {
+          "Name": "OutboxMessageId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "EventId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "EventType",
+          "Type": "String"
+        },
+        {
+          "Name": "PayloadJson",
+          "Type": "String"
+        },
+        {
+          "Name": "CreatedAt",
+          "Type": "DateTime"
+        },
+        {
+          "Name": "PublishedAt",
+          "Type": "Nullable\u00601"
+        },
+        {
+          "Name": "RetryCount",
+          "Type": "Int32"
+        },
+        {
+          "Name": "LastError",
+          "Type": "String"
+        }
+      ]
+    }
+  ],
+  "FileDbContext": [
+    {
+      "TableName": "FileAttachments",
+      "EntityName": "FileAttachment",
+      "Properties": [
+        {
+          "Name": "FileAttachmentId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "TaskId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "UploadedById",
+          "Type": "Guid"
+        },
+        {
+          "Name": "OriginalFileName",
+          "Type": "String"
+        },
+        {
+          "Name": "StoredFileName",
+          "Type": "String"
+        },
+        {
+          "Name": "ContentType",
+          "Type": "String"
+        },
+        {
+          "Name": "SizeInBytes",
+          "Type": "Int64"
+        },
+        {
+          "Name": "StoragePath",
+          "Type": "String"
+        },
+        {
+          "Name": "IsDeleted",
+          "Type": "Boolean"
+        },
+        {
+          "Name": "CreatedAt",
+          "Type": "DateTime"
+        },
+        {
+          "Name": "UpdatedAt",
+          "Type": "DateTime"
+        }
+      ]
+    },
+    {
+      "TableName": "OutboxMessages",
+      "EntityName": "OutboxMessage",
+      "Properties": [
+        {
+          "Name": "OutboxMessageId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "EventId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "EventType",
+          "Type": "String"
+        },
+        {
+          "Name": "PayloadJson",
+          "Type": "String"
+        },
+        {
+          "Name": "CreatedAt",
+          "Type": "DateTime"
+        },
+        {
+          "Name": "PublishedAt",
+          "Type": "Nullable\u00601"
+        },
+        {
+          "Name": "RetryCount",
+          "Type": "Int32"
+        },
+        {
+          "Name": "LastError",
+          "Type": "String"
+        }
+      ]
+    }
+  ],
+  "NotificationDbContext": [
+    {
+      "TableName": "Notifications",
+      "EntityName": "Notification",
+      "Properties": [
+        {
+          "Name": "NotificationId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "RecipientId",
+          "Type": "Nullable\u00601"
+        },
+        {
+          "Name": "EventType",
+          "Type": "String"
+        },
+        {
+          "Name": "EntityType",
+          "Type": "String"
+        },
+        {
+          "Name": "EntityId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "Message",
+          "Type": "String"
+        },
+        {
+          "Name": "IsRead",
+          "Type": "Boolean"
+        },
+        {
+          "Name": "CreatedAt",
+          "Type": "DateTime"
+        }
+      ]
+    },
+    {
+      "TableName": "ProcessedEvents",
+      "EntityName": "ProcessedIntegrationEvent",
+      "Properties": [
+        {
+          "Name": "EventId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "EventType",
+          "Type": "String"
+        },
+        {
+          "Name": "ProcessedAt",
+          "Type": "DateTime"
+        }
+      ]
+    }
+  ],
+  "ActivityDbContext": [
+    {
+      "TableName": "Activities",
+      "EntityName": "ActivityRecord",
+      "Properties": [
+        {
+          "Name": "ActivityRecordId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "EventType",
+          "Type": "String"
+        },
+        {
+          "Name": "EntityType",
+          "Type": "String"
+        },
+        {
+          "Name": "EntityId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "ActorId",
+          "Type": "Nullable\u00601"
+        },
+        {
+          "Name": "Description",
+          "Type": "String"
+        },
+        {
+          "Name": "PayloadJson",
+          "Type": "String"
+        },
+        {
+          "Name": "CreatedAt",
+          "Type": "DateTime"
+        }
+      ]
+    },
+    {
+      "TableName": "ProcessedEvents",
+      "EntityName": "ProcessedIntegrationEvent",
+      "Properties": [
+        {
+          "Name": "EventId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "EventType",
+          "Type": "String"
+        },
+        {
+          "Name": "ProcessedAt",
+          "Type": "DateTime"
+        }
+      ]
+    }
+  ],
+  "AnalyticsDbContext": [
+    {
+      "TableName": "AnalyticsEvents",
+      "EntityName": "AnalyticsEvent",
+      "Properties": [
+        {
+          "Name": "AnalyticsEventId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "EventType",
+          "Type": "String"
+        },
+        {
+          "Name": "EntityType",
+          "Type": "String"
+        },
+        {
+          "Name": "EntityId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "ProjectId",
+          "Type": "Nullable\u00601"
+        },
+        {
+          "Name": "ActorId",
+          "Type": "Nullable\u00601"
+        },
+        {
+          "Name": "RecipientId",
+          "Type": "Nullable\u00601"
+        },
+        {
+          "Name": "Description",
+          "Type": "String"
+        },
+        {
+          "Name": "PayloadJson",
+          "Type": "String"
+        },
+        {
+          "Name": "OccurredAt",
+          "Type": "DateTime"
+        }
+      ]
+    },
+    {
+      "TableName": "TaskAnalyticsItems",
+      "EntityName": "TaskAnalyticsItem",
+      "Properties": [
+        {
+          "Name": "TaskId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "ProjectId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "Status",
+          "Type": "String"
+        },
+        {
+          "Name": "Priority",
+          "Type": "String"
+        },
+        {
+          "Name": "AssigneeId",
+          "Type": "Nullable\u00601"
+        },
+        {
+          "Name": "SprintId",
+          "Type": "Nullable\u00601"
+        },
+        {
+          "Name": "EpicId",
+          "Type": "Nullable\u00601"
+        },
+        {
+          "Name": "StoryPoints",
+          "Type": "Nullable\u00601"
+        },
+        {
+          "Name": "DueDate",
+          "Type": "Nullable\u00601"
+        },
+        {
+          "Name": "IsDeleted",
+          "Type": "Boolean"
+        },
+        {
+          "Name": "CreatedAt",
+          "Type": "DateTime"
+        },
+        {
+          "Name": "UpdatedAt",
+          "Type": "DateTime"
+        }
+      ]
+    },
+    {
+      "TableName": "ProcessedEvents",
+      "EntityName": "ProcessedIntegrationEvent",
+      "Properties": [
+        {
+          "Name": "EventId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "EventType",
+          "Type": "String"
+        },
+        {
+          "Name": "ProcessedAt",
+          "Type": "DateTime"
+        }
+      ]
+    }
+  ],
+  "AuthDbContext": [
+    {
+      "TableName": "UserAccounts",
+      "EntityName": "UserAccount",
+      "Properties": [
+        {
+          "Name": "Id",
+          "Type": "Guid"
+        },
+        {
+          "Name": "Email",
+          "Type": "String"
+        },
+        {
+          "Name": "PasswordHash",
+          "Type": "String"
+        },
+        {
+          "Name": "Role",
+          "Type": "UserRole"
+        },
+        {
+          "Name": "IsActive",
+          "Type": "Boolean"
+        },
+        {
+          "Name": "CreatedAt",
+          "Type": "DateTime"
+        },
+        {
+          "Name": "UpdatedAt",
+          "Type": "DateTime"
+        }
+      ]
+    },
+    {
+      "TableName": "RefreshTokens",
+      "EntityName": "RefreshToken",
+      "Properties": [
+        {
+          "Name": "RefreshTokenId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "UserAccountId",
+          "Type": "Guid"
+        },
+        {
+          "Name": "TokenHash",
+          "Type": "String"
+        },
+        {
+          "Name": "ExpiresAt",
+          "Type": "DateTime"
+        },
+        {
+          "Name": "CreatedAt",
+          "Type": "DateTime"
+        },
+        {
+          "Name": "RevokedAt",
+          "Type": "Nullable\u00601"
+        },
+        {
+          "Name": "IsRevoked",
+          "Type": "Boolean"
+        },
+        {
+          "Name": "IsExpired",
+          "Type": "Boolean"
+        }
+      ]
+    }
+  ]
+}

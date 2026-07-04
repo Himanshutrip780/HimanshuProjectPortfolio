@@ -1,0 +1,293 @@
+<div class="flex flex-col gap-6 w-full animate-fade-in pb-8">
+  
+  <!-- Page Header & Actions Bar -->
+  <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-6 shrink-0">
+    <div class="flex flex-col gap-1">
+      <h2 class="text-2xl font-bold tracking-tight text-foreground">Interview Calendar</h2>
+      <p class="text-xs text-muted-foreground">Book live review calls and capture structured interviewer feedback</p>
+    </div>
+    <button 
+      (click)="toggleScheduleForm()" 
+      class="btn-primary py-2.5 px-4 text-xs font-semibold shrink-0" 
+      *ngIf="canManageInterviews() && !showScheduleForm() && selectedInterview() === null"
+    >
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z"/></svg>
+      Schedule Interview
+    </button>
+  </div>
+
+  <div class="flex gap-6 relative">
+    
+    <!-- Left Panel: Calendar Board -->
+    <div class="flex-1 flex flex-col gap-6 transition-all duration-300" [class.mr-[480px]]="showScheduleForm() || selectedInterview() !== null">
+      @if (loading()) {
+        <div class="flex flex-col items-center justify-center flex-1 gap-3 text-muted-foreground min-h-[300px] bg-card border border-border rounded-[20px]">
+          <span class="animate-spin border-4 border-primary/20 border-t-primary rounded-full w-8 h-8"></span>
+          <p class="text-xs">Loading interview schedule...</p>
+        </div>
+      } @else {
+        <div class="bg-card border border-border rounded-[20px] p-6 shadow-level1">
+          <full-calendar [options]="calendarOptions()"></full-calendar>
+        </div>
+      }
+    </div>
+
+    <!-- Right Panel 1: Schedule Form Drawer -->
+    @if (showScheduleForm()) {
+      <div class="fixed top-0 right-0 w-full sm:w-[460px] h-full border-l border-border bg-card shadow-level2 flex flex-col z-40 animate-fade-in">
+        <div class="h-16 border-b border-border flex items-center justify-between px-6 shrink-0 bg-secondary/20">
+          <h4 class="text-sm font-bold tracking-tight">Schedule Interview</h4>
+          <button (click)="toggleScheduleForm()" class="p-1 rounded-[8px] hover:bg-secondary text-muted-foreground hover:text-foreground cursor-pointer transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+
+        <form [formGroup]="scheduleForm" (ngSubmit)="onSchedule()" class="flex-1 overflow-y-auto p-6 space-y-4 scrollbar-thin">
+          
+          <div class="space-y-1.5">
+            <label class="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Job Application</label>
+            <select formControlName="applicationId" class="input-field appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2371717a%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.1rem] bg-[right_0.6rem_center] bg-no-repeat pr-8">
+              <option value="" disabled selected>-- Select candidate application --</option>
+              @for (app of applications(); track app.id) {
+                <option [value]="app.id">
+                  {{ app.candidateName }} - {{ app.jobTitle }}
+                </option>
+              }
+            </select>
+          </div>
+
+          <div class="space-y-1.5">
+            <label class="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Interviewer</label>
+            <select formControlName="interviewerId" class="input-field appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2371717a%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.1rem] bg-[right_0.6rem_center] bg-no-repeat pr-8">
+              @for (int of interviewers; track int.id) {
+                <option [value]="int.id">{{ int.name }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div class="space-y-1.5">
+              <label class="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Date & Time</label>
+              <input type="datetime-local" formControlName="scheduledTime" class="input-field">
+            </div>
+
+            <div class="space-y-1.5">
+              <label class="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Duration (Minutes)</label>
+              <input type="number" formControlName="durationMinutes" class="input-field">
+            </div>
+          </div>
+
+          <div class="space-y-1.5">
+            <label class="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Meeting Link</label>
+            <input type="text" formControlName="meetingLink" placeholder="https://meet.google.com/..." class="input-field">
+          </div>
+
+          <div class="space-y-1.5">
+            <label class="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Preparation Notes</label>
+            <textarea formControlName="notes" rows="4" placeholder="Key topics to evaluate..." class="input-field"></textarea>
+          </div>
+
+          <div class="flex justify-end gap-3 border-t border-border pt-4 mt-6 shrink-0">
+            <button type="button" (click)="toggleScheduleForm()" class="btn-secondary py-2 px-4">Cancel</button>
+            <button type="submit" [disabled]="submitting() || scheduleForm.invalid" class="btn-primary py-2 px-4">
+              @if (submitting()) { Book Slot... } @else { Book Slot }
+            </button>
+          </div>
+        </form>
+      </div>
+    }
+
+    <!-- Right Panel 2: Interview Details & Feedback Drawer -->
+    @if (selectedInterview() !== null) {
+      <div class="fixed top-0 right-0 w-full sm:w-[460px] h-full border-l border-border bg-card shadow-level2 flex flex-col z-40 animate-fade-in">
+        <div class="h-16 border-b border-border flex items-center justify-between px-6 shrink-0 bg-secondary/20">
+          <div class="flex flex-col">
+            <h4 class="text-sm font-bold tracking-tight">Interview Workspace</h4>
+            <span class="text-[10px] text-muted-foreground mt-0.5">Capture Ratings & Verdicts</span>
+          </div>
+          <button (click)="closeDetails()" class="p-1 rounded-[8px] hover:bg-secondary text-muted-foreground hover:text-foreground cursor-pointer transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-6 space-y-5 scrollbar-thin">
+          <!-- Details Card -->
+          <div class="bg-card border border-border rounded-[20px] p-5 space-y-3.5 shadow-level1">
+            <h3 class="text-base font-bold text-foreground leading-none">{{ selectedInterview()?.candidateName }}</h3>
+            <span class="text-xs text-muted-foreground block">Role: <strong>{{ selectedInterview()?.jobTitle }}</strong></span>
+            
+            <div class="space-y-2 pt-3 border-t border-border text-xs text-muted-foreground">
+              <span class="flex items-center gap-2">
+                <svg class="w-3.5 h-3.5 text-muted-foreground shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"/></svg>
+                Interviewer: <strong class="text-foreground ml-0.5">{{ selectedInterview()?.interviewerName }}</strong>
+              </span>
+              <span class="flex items-center gap-2">
+                <svg class="w-3.5 h-3.5 text-muted-foreground shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                Time: <span class="text-foreground ml-0.5">{{ selectedInterview()?.scheduledTime | date:'medium' }} ({{ selectedInterview()?.durationMinutes }} min)</span>
+              </span>
+              <span class="flex items-center gap-2">
+                <svg class="w-3.5 h-3.5 text-muted-foreground shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m15.75 10.5 4.72-4.72a.75.75 0 0 1 1.28.53v11.38a.75.75 0 0 1-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25h-9A2.25 2.25 0 0 0 2.25 7.5v9a2.25 2.25 0 0 0 2.25 2.25Z"/></svg>
+                Link: <a [href]="selectedInterview()?.meetingLink" target="_blank" class="text-primary hover:underline font-bold ml-0.5">Join call</a>
+              </span>
+            </div>
+
+            @if (selectedInterview()?.notes) {
+              <div class="pt-3 border-t border-border space-y-1">
+                <span class="text-[9px] font-bold text-muted-foreground uppercase tracking-wider block">Prep Notes:</span>
+                <p class="text-xs text-muted-foreground leading-normal">{{ selectedInterview()?.notes }}</p>
+              </div>
+            }
+
+            <!-- Action Buttons for Scheduled/Rescheduled Interview -->
+            @if (canManageInterviews() && (selectedInterview()?.status === 0 || selectedInterview()?.status === 4) && !showRescheduleForm()) {
+              <div class="flex gap-2 pt-3 border-t border-border">
+                <button type="button" (click)="enableReschedule()" class="btn-secondary flex-1 py-1.5 text-xs font-semibold">
+                  Reschedule
+                </button>
+                <button type="button" (click)="onCancelInterview()" class="btn-secondary text-destructive hover:bg-destructive/5 hover:border-destructive/30 flex-1 py-1.5 text-xs font-semibold">
+                  Cancel
+                </button>
+              </div>
+            }
+
+            <!-- Reschedule Inline Form -->
+            @if (showRescheduleForm()) {
+              <div class="space-y-3 pt-3 border-t border-border animate-fade-in-up text-xs">
+                <h4 class="text-[10px] font-bold text-foreground uppercase tracking-wider">Reschedule Interview</h4>
+                <div class="grid grid-cols-1 gap-3">
+                  <div class="space-y-1">
+                    <label class="text-[9px] font-bold text-muted-foreground uppercase">New Date & Time</label>
+                    <input type="datetime-local" [(ngModel)]="newScheduledTime" class="input-field text-xs py-1.5 px-3">
+                  </div>
+                  <div class="space-y-1">
+                    <label class="text-[9px] font-bold text-muted-foreground uppercase">Duration (Minutes)</label>
+                    <input type="number" [(ngModel)]="newDurationMinutes" class="input-field text-xs py-1.5 px-3">
+                  </div>
+                </div>
+                <div class="flex gap-2 pt-1">
+                  <button type="button" (click)="onRescheduleInterview()" class="btn-primary flex-1 py-1.5 text-xs font-semibold">
+                    Confirm
+                  </button>
+                  <button type="button" (click)="disableReschedule()" class="btn-secondary flex-1 py-1.5 text-xs font-semibold">
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+
+          <!-- Render Feedback Form (if pending status=0) -->
+          @if (selectedInterview()?.status === 0) {
+            <div class="bg-card border border-border rounded-[20px] p-5 space-y-4 shadow-level1">
+              <div>
+                <h4 class="text-xs font-bold text-foreground uppercase tracking-wider">Submit Scorecard Feedback</h4>
+                <p class="text-[11px] text-muted-foreground mt-1">Evaluate the candidate across skills (1 = Poor, 5 = Excellent):</p>
+              </div>
+              
+              <form [formGroup]="feedbackForm" (ngSubmit)="onSubmitFeedback()" class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                  <div class="space-y-1.5">
+                    <label class="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Communication</label>
+                    <select formControlName="communicationScore" class="input-field appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2371717a%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.1rem] bg-[right_0.6rem_center] bg-no-repeat pr-8">
+                      <option [value]="1">1 - Poor</option>
+                      <option [value]="2">2 - Fair</option>
+                      <option [value]="3">3 - Good</option>
+                      <option [value]="4">4 - Very Good</option>
+                      <option [value]="5">5 - Excellent</option>
+                    </select>
+                  </div>
+                  
+                  <div class="space-y-1.5">
+                    <label class="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Problem Solving</label>
+                    <select formControlName="problemSolvingScore" class="input-field appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2371717a%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.1rem] bg-[right_0.6rem_center] bg-no-repeat pr-8">
+                      <option [value]="1">1 - Poor</option>
+                      <option [value]="2">2 - Fair</option>
+                      <option [value]="3">3 - Good</option>
+                      <option [value]="4">4 - Very Good</option>
+                      <option [value]="5">5 - Excellent</option>
+                    </select>
+                  </div>
+
+                  <div class="space-y-1.5">
+                    <label class="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Coding Skill</label>
+                    <select formControlName="codingScore" class="input-field appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2371717a%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.1rem] bg-[right_0.6rem_center] bg-no-repeat pr-8">
+                      <option [value]="1">1 - Poor</option>
+                      <option [value]="2">2 - Fair</option>
+                      <option [value]="3">3 - Good</option>
+                      <option [value]="4">4 - Very Good</option>
+                      <option [value]="5">5 - Excellent</option>
+                    </select>
+                  </div>
+
+                  <div class="space-y-1.5">
+                    <label class="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">System Design</label>
+                    <select formControlName="systemDesignScore" class="input-field appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2371717a%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.1rem] bg-[right_0.6rem_center] bg-no-repeat pr-8">
+                      <option [value]="1">1 - Poor</option>
+                      <option [value]="2">2 - Fair</option>
+                      <option [value]="3">3 - Good</option>
+                      <option [value]="4">4 - Very Good</option>
+                      <option [value]="5">5 - Excellent</option>
+                    </select>
+                  </div>
+
+                  <div class="space-y-1.5">
+                    <label class="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Culture Fit</label>
+                    <select formControlName="cultureFitScore" class="input-field appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2371717a%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.1rem] bg-[right_0.6rem_center] bg-no-repeat pr-8">
+                      <option [value]="1">1 - Poor</option>
+                      <option [value]="2">2 - Fair</option>
+                      <option [value]="3">3 - Good</option>
+                      <option [value]="4">4 - Very Good</option>
+                      <option [value]="5">5 - Excellent</option>
+                    </select>
+                  </div>
+
+                  <div class="space-y-1.5">
+                    <label class="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Overall Verdict</label>
+                    <select formControlName="recommendation" class="input-field font-semibold text-primary appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%237c3aed%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.1rem] bg-[right_0.6rem_center] bg-no-repeat pr-8">
+                      <option [value]="0">Strong Hire</option>
+                      <option [value]="1">Hire</option>
+                      <option [value]="2">No Hire</option>
+                      <option [value]="3">Strong No Hire</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="space-y-1.5">
+                  <label class="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Comments</label>
+                  <textarea formControlName="feedbackText" rows="3" placeholder="Provide detailed comments on skills..." class="input-field"></textarea>
+                </div>
+
+                <button type="submit" [disabled]="submittingFeedback() || feedbackForm.invalid" class="btn-primary w-full py-2.5 mt-2 flex items-center justify-center gap-2">
+                  @if (submittingFeedback()) { Submitting... } @else { Save Scorecard }
+                </button>
+              </form>
+            </div>
+          } @else {
+            <!-- Display Submitted Feedback -->
+            @for (fb of selectedInterview()?.feedbacks; track fb.id) {
+              <div class="bg-card border border-border rounded-[20px] p-5 space-y-3 shadow-level1">
+                <div class="flex justify-between items-center pb-2 border-b border-border">
+                  <h5 class="text-xs font-bold text-foreground">Feedback by: {{ fb.interviewerName }}</h5>
+                  <span class="text-[9px] font-bold px-2 py-0.5 bg-primary/10 text-primary border border-primary/20 rounded uppercase tracking-wider">
+                    {{ getRecommendationLabel(fb.recommendation) }}
+                  </span>
+                </div>
+                <div class="grid grid-cols-2 gap-2 text-[10px] text-muted-foreground font-semibold">
+                  <span>Comm: <strong class="text-foreground">{{ fb.communicationScore }}/5</strong></span>
+                  <span>Problem Solve: <strong class="text-foreground">{{ fb.problemSolvingScore }}/5</strong></span>
+                  <span>Coding: <strong class="text-foreground">{{ fb.codingScore }}/5</strong></span>
+                  <span>System Design: <strong class="text-foreground">{{ fb.systemDesignScore }}/5</strong></span>
+                  <span>Culture Fit: <strong class="text-foreground">{{ fb.cultureFitScore }}/5</strong></span>
+                </div>
+                <p class="text-xs text-muted-foreground bg-secondary p-3 rounded-[14px] border-l-2 border-primary italic leading-relaxed mt-3">
+                  "{{ fb.feedbackText }}"
+                </p>
+              </div>
+            }
+          }
+        </div>
+      </div>
+    }
+
+  </div>
+</div>

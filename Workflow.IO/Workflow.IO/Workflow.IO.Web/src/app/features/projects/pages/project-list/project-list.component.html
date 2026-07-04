@@ -1,0 +1,546 @@
+
+    <section class="page-container">
+      <!-- Welcome Header -->
+      <header class="page-header">
+        <div class="header-left">
+          <h1>{{ getGreeting() }}, {{ auth.displayName() || 'Explorer' }}! 👋</h1>
+          <p class="subtitle">Here's what's happening with your projects today.</p>
+        </div>
+        <div class="header-actions">
+          <button type="button" class="btn btn-primary" (click)="showCreateModal.set(true)">
+            <span class="material-symbols-outlined btn-icon">add</span>
+            New Project
+          </button>
+          <button type="button" class="btn btn-secondary" (click)="showImportModal.set(true)">
+            <span class="material-symbols-outlined btn-icon">upload_file</span>
+            Import Project
+          </button>
+        </div>
+      </header>
+
+      <!-- Stats Grid -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon-wrapper folder-icon">
+            <span class="material-symbols-outlined">folder</span>
+          </div>
+          <div class="stat-details">
+            <span class="stat-label">Total Projects</span>
+            <span class="stat-value">{{ projects().length }}</span>
+            <span class="stat-trend" [class]="trends().totalProjects.class">
+              <span class="material-symbols-outlined">{{ trends().totalProjects.icon }}</span>
+              {{ trends().totalProjects.value }} <span class="trend-text">vs last month</span>
+            </span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon-wrapper active-icon">
+            <span class="material-symbols-outlined">trending_up</span>
+          </div>
+          <div class="stat-details">
+            <span class="stat-label">Active Projects</span>
+            <span class="stat-value">{{ getActiveProjectsCount() }}</span>
+            <span class="stat-trend" [class]="trends().activeProjects.class">
+              <span class="material-symbols-outlined">{{ trends().activeProjects.icon }}</span>
+              {{ trends().activeProjects.value }} <span class="trend-text">vs last month</span>
+            </span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon-wrapper completed-icon">
+            <span class="material-symbols-outlined">check_circle</span>
+          </div>
+          <div class="stat-details">
+            <span class="stat-label">Completed</span>
+            <span class="stat-value">{{ getCompletedProjectsCount() }}</span>
+            <span class="stat-trend" [class]="trends().completedProjects.class">
+              <span class="material-symbols-outlined">{{ trends().completedProjects.icon }}</span>
+              {{ trends().completedProjects.value }} <span class="trend-text">vs last month</span>
+            </span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon-wrapper tasks-icon">
+            <span class="material-symbols-outlined">schedule</span>
+          </div>
+          <div class="stat-details">
+            <span class="stat-label">Total Tasks</span>
+            <span class="stat-value">{{ getTotalTasksCount() }}</span>
+            <span class="stat-trend" [class]="trends().totalTasks.class">
+              <span class="material-symbols-outlined">{{ trends().totalTasks.icon }}</span>
+              {{ trends().totalTasks.value }} <span class="trend-text">vs last month</span>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Columns Grid -->
+      <div class="dashboard-columns">
+        <!-- Left Column: Toolbar + Project Cards Grid -->
+        <div class="projects-main">
+          <!-- Toolbar -->
+          <div class="toolbar">
+            <div class="toolbar-left">
+              <span class="toolbar-title">All Projects</span>
+              <span class="toolbar-badge">{{ projects().length }}</span>
+            </div>
+            
+            <div class="toolbar-right">
+              <div class="search-box">
+                <span class="material-symbols-outlined">search</span>
+                <input
+                  type="text"
+                  placeholder="Search projects..."
+                  [formControl]="searchText"
+                />
+              </div>
+
+              <div class="filter-dropdown">
+                <select [formControl]="statusFilterControl" class="select-toolbar" title="Filter by Status">
+                  <option value="">All Statuses</option>
+                  <option value="Active">Active</option>
+                  <option value="Completed">Completed</option>
+                  <option value="Archived">Archived</option>
+                </select>
+              </div>
+
+              <div class="filter-dropdown">
+                <select [formControl]="typeFilterControl" class="select-toolbar" title="Filter by Type">
+                  <option value="">All Templates</option>
+                  <option [value]="ProjectType.Scrum">Scrum</option>
+                  <option [value]="ProjectType.Kanban">Kanban</option>
+                </select>
+              </div>
+
+              <div class="sort-dropdown">
+                <select [formControl]="sortByControl" class="select-toolbar" title="Sort Projects">
+                  <option value="recent">Sort: Recent</option>
+                  <option value="name">Sort: Name (A-Z)</option>
+                  <option value="progress">Sort: Progress</option>
+                </select>
+              </div>
+
+              <div class="view-toggles">
+                <button type="button" class="btn-toggle" [class.active]="viewMode() === 'grid'" (click)="viewMode.set('grid')" title="Grid View">
+                  <span class="material-symbols-outlined">grid_view</span>
+                </button>
+                <button type="button" class="btn-toggle" [class.active]="viewMode() === 'list'" (click)="viewMode.set('list')" title="List View">
+                  <span class="material-symbols-outlined">format_list_bulleted</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Loading States / Empty States -->
+          @if (loading()) {
+            <div class="loading-state">
+              <div class="spinner"></div>
+              <p>Loading projects...</p>
+            </div>
+          } @else if (error()) {
+            <div class="error-state">
+              <span class="material-symbols-outlined">error</span>
+              <p>{{ error() }}</p>
+            </div>
+          } @else if (filteredProjects().length === 0) {
+            <div class="empty-state">
+              <span class="material-symbols-outlined">folder_open</span>
+              <p>No projects found. Create one to get started!</p>
+            </div>
+          } @else {
+            <div [class.projects-grid]="viewMode() === 'grid'" [class.projects-list-layout]="viewMode() === 'list'">
+              @for (project of pagedProjects(); track project.projectId) {
+                <div class="project-card" [class.list-card]="viewMode() === 'list'" [routerLink]="['/projects', project.projectId, 'tasks']">
+                  <div class="project-card-header">
+                    <div class="project-avatar" [style.background-image]="'linear-gradient(135deg, ' + getProjectColor(project.name) + ')'">
+                      {{ project.key.slice(0, 2) }}
+                    </div>
+                    <div class="project-title-area">
+                      <h3>{{ project.name }}</h3>
+                      <span class="project-meta-text">{{ project.key }} • {{ projectTypeLabel(project.projectType) }}</span>
+                    </div>
+                    <button type="button" class="btn-card-menu" (click)="$event.stopPropagation()" title="Options">
+                      <span class="material-symbols-outlined">more_vert</span>
+                    </button>
+                  </div>
+
+                  <p class="project-description">{{ project.description || 'No description provided for this project.' }}</p>
+
+                  <!-- Progress Bar -->
+                  <div class="project-progress-container">
+                    <div class="progress-bar-wrapper">
+                      <div class="progress-fill" [style.width.%]="getProjectProgress(project.projectId)"></div>
+                    </div>
+                    <span class="progress-percent-text">{{ getProjectProgress(project.projectId) }}%</span>
+                  </div>
+
+                  <div class="project-card-footer">
+                    <div class="members-avatars">
+                      @for (member of (projectMembersMap()[project.projectId] || []).slice(0, 3); track member.projectMemberId) {
+                        @if (getUserAvatarUrl(member.userId); as avatar) {
+                          <img class="avatar-circle" [src]="avatar" [title]="getUserDisplayName(member.userId)" alt="Avatar" />
+                        } @else {
+                          <div class="avatar-circle" [style.background-color]="getUserBgColor(member.userId)" [title]="getUserDisplayName(member.userId)">
+                            {{ getUserInitials(member.userId) }}
+                          </div>
+                        }
+                      }
+                      @if ((projectMembersMap()[project.projectId] || []).length > 3) {
+                        <div class="avatar-excess">+{{ (projectMembersMap()[project.projectId] || []).length - 3 }}</div>
+                      }
+                    </div>
+
+                    <div class="footer-stats">
+                      <div class="stat-item tasks-fraction" title="Tasks done">
+                        <span class="material-symbols-outlined">task_alt</span>
+                        {{ getProjectTasksFraction(project.projectId) }}
+                      </div>
+                      <div class="stat-item due-date" title="Due Date">
+                        <span class="material-symbols-outlined">calendar_today</span>
+                        {{ getProjectDueDate(project.projectId) }}
+                      </div>
+                      <span class="status-badge" [class]="getProjectStatusClass(project)">
+                        {{ getProjectStatusLabel(project) }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+
+            <app-pagination 
+              [totalItems]="filteredProjects().length" 
+              [pageSize]="pageSize()" 
+              [currentPage]="currentPage()"
+              (pageChange)="onPageChange($event)"
+              (pageSizeChange)="onPageSizeChange($event)"
+            ></app-pagination>
+          }
+        </div>
+
+        <!-- Right Column: Sidebar Widgets -->
+        <aside class="dashboard-sidebar">
+          <!-- Quick Open -->
+          <div class="sidebar-widget">
+            <div class="widget-header">
+              <span class="material-symbols-outlined purple-text">search</span>
+              <h3>Quick Open</h3>
+            </div>
+            <form (ngSubmit)="openByKey()" class="quick-open-form">
+              <div class="quick-open-group">
+                <input
+                  type="text"
+                  placeholder="Enter project key..."
+                  [formControl]="keyLookup"
+                />
+                <button type="submit" class="btn-arrow" [disabled]="keyLookup.invalid">
+                  <span class="material-symbols-outlined">arrow_forward</span>
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Recent Activity -->
+          <div class="sidebar-widget">
+            <div class="widget-header">
+              <span class="material-symbols-outlined purple-text">bolt</span>
+              <h3>Recent Activity</h3>
+              <a href="#" class="view-all-link" (click)="$event.preventDefault()">View all</a>
+            </div>
+            <div class="activity-list">
+              @for (act of recentActivities(); track act.activityRecordId) {
+                <div class="activity-item">
+                  @if (getUserAvatarUrl(act.actorId); as avatar) {
+                    <img class="activity-avatar" [src]="avatar" alt="Avatar" />
+                  } @else {
+                    <div class="activity-avatar" [style.background-color]="getUserBgColor(act.actorId)">
+                      {{ getUserInitials(act.actorId || '') }}
+                    </div>
+                  }
+                  <div class="activity-details">
+                    <p class="activity-text"><strong>{{ getUserDisplayName(act.actorId) }}</strong> {{ act.description }}</p>
+                    <span class="activity-meta">{{ act.projectName }} • {{ formatTimeAgo(act.createdAt) }}</span>
+                  </div>
+                </div>
+              } @empty {
+                <p class="no-activity-text" style="font-size: 0.75rem; color: var(--text-secondary); text-align: center; padding: 1rem 0;">No recent activity.</p>
+              }
+            </div>
+          </div>
+
+          <!-- Projects by Status -->
+          <div class="sidebar-widget">
+            <div class="widget-header">
+              <span class="material-symbols-outlined purple-text">pie_chart</span>
+              <h3>Projects by Status</h3>
+            </div>
+            <div class="chart-wrapper">
+              <div class="donut-chart-container">
+                <svg width="84" height="84" viewBox="0 0 36 36" class="donut-svg">
+                  <circle cx="18" cy="18" r="15.915" fill="none" stroke="var(--border-color)" stroke-width="3"></circle>
+                  
+                  @if (projectsStatusStats().onTrack > 0) {
+                    <circle cx="18" cy="18" r="15.915" fill="none" stroke="#10b981" stroke-width="3" 
+                            [attr.stroke-dasharray]="projectsStatusStats().onTrackPercent + ' ' + (100 - projectsStatusStats().onTrackPercent)" 
+                            stroke-dashoffset="100"></circle>
+                  }
+                  
+                  @if (projectsStatusStats().atRisk > 0) {
+                    <circle cx="18" cy="18" r="15.915" fill="none" stroke="#f59e0b" stroke-width="3" 
+                            [attr.stroke-dasharray]="projectsStatusStats().atRiskPercent + ' ' + (100 - projectsStatusStats().atRiskPercent)" 
+                            [attr.stroke-dashoffset]="100 - projectsStatusStats().onTrackPercent"></circle>
+                  }
+                  
+                  @if (projectsStatusStats().behind > 0) {
+                    <circle cx="18" cy="18" r="15.915" fill="none" stroke="#ef4444" stroke-width="3" 
+                            [attr.stroke-dasharray]="projectsStatusStats().behindPercent + ' ' + (100 - projectsStatusStats().behindPercent)" 
+                            [attr.stroke-dashoffset]="100 - projectsStatusStats().onTrackPercent - projectsStatusStats().atRiskPercent"></circle>
+                  }
+                  
+                  @if (projectsStatusStats().completed > 0) {
+                    <circle cx="18" cy="18" r="15.915" fill="none" stroke="#6366f1" stroke-width="3" 
+                            [attr.stroke-dasharray]="projectsStatusStats().completedPercent + ' ' + (100 - projectsStatusStats().completedPercent)" 
+                            [attr.stroke-dashoffset]="100 - projectsStatusStats().onTrackPercent - projectsStatusStats().atRiskPercent - projectsStatusStats().behindPercent"></circle>
+                  }
+                </svg>
+              </div>
+              <div class="chart-legend">
+                <div class="legend-item">
+                  <span class="legend-dot bg-green"></span>
+                  <span class="legend-label">On Track</span>
+                  <span class="legend-count">{{ projectsStatusStats().onTrack }} ({{ projectsStatusStats().onTrackPercent }}%)</span>
+                </div>
+                <div class="legend-item">
+                  <span class="legend-dot bg-orange"></span>
+                  <span class="legend-label">At Risk</span>
+                  <span class="legend-count">{{ projectsStatusStats().atRisk }} ({{ projectsStatusStats().atRiskPercent }}%)</span>
+                </div>
+                <div class="legend-item">
+                  <span class="legend-dot bg-red"></span>
+                  <span class="legend-label">Behind</span>
+                  <span class="legend-count">{{ projectsStatusStats().behind }} ({{ projectsStatusStats().behindPercent }}%)</span>
+                </div>
+                <div class="legend-item">
+                  <span class="legend-dot bg-purple"></span>
+                  <span class="legend-label">Completed</span>
+                  <span class="legend-count">{{ projectsStatusStats().completed }} ({{ projectsStatusStats().completedPercent }}%)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </div>
+
+      <!-- Create Project Modal -->
+      @if (showCreateModal()) {
+        <div class="modal-backdrop" (click)="closeCreateModal()">
+          <div class="modal-content" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+              <h2>Create New Project</h2>
+              <button type="button" class="btn-close-modal" (click)="closeCreateModal()" aria-label="Close modal">
+                <span class="material-symbols-outlined">close</span>
+              </button>
+            </div>
+            <form [formGroup]="createForm" (ngSubmit)="createProject()" class="modal-form">
+              <div class="form-group">
+                <label for="modal-name">Project Name</label>
+                <input id="modal-name" type="text" placeholder="Enter project name..." formControlName="name" />
+              </div>
+
+              <div class="form-group">
+                <label for="modal-key">Project Key</label>
+                <input id="modal-key" type="text" placeholder="Enter project key (optional)..." formControlName="key" />
+              </div>
+
+              <div class="form-group">
+                <label for="modal-type">Template</label>
+                <select id="modal-type" formControlName="projectType">
+                  <option [value]="ProjectType.Scrum">Scrum (Sprints & Backlog)</option>
+                  <option [value]="ProjectType.Kanban">Kanban (Continuous Flow)</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="modal-desc">Description</label>
+                <textarea id="modal-desc" rows="4" placeholder="Brief summary of the goals, targets, or stakeholders..." formControlName="description"></textarea>
+              </div>
+
+              <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" (click)="closeCreateModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary" [disabled]="creating()">
+                  @if (creating()) {
+                    <span class="spinner-sm"></span> Creating...
+                  } @else {
+                    Create Project
+                  }
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      }
+
+      <!-- Import Project Modal -->
+      @if (showImportModal()) {
+        <div class="modal-backdrop" (click)="closeImportModal()">
+          <div class="modal-content import-modal" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+              <h2>Import Project</h2>
+              <button type="button" class="btn-close-modal" (click)="closeImportModal()" aria-label="Close modal">
+                <span class="material-symbols-outlined">close</span>
+              </button>
+            </div>
+            
+            <div class="template-downloads">
+              <span class="template-label">Download Empty Templates (Clean):</span>
+              <div class="template-links">
+                <a href="/workflow.io_import_template_empty.xlsx" download class="btn-template-download excel-link">
+                  <span class="material-symbols-outlined">table_chart</span> Empty Excel (.xlsx)
+                </a>
+                <a href="/workflow.io_import_template_empty.csv" download class="btn-template-download csv-link">
+                  <span class="material-symbols-outlined">article</span> Empty CSV (.csv)
+                </a>
+              </div>
+              
+              <span class="template-label" style="margin-top: 0.5rem; display: block;">Download Templates with Sample Data:</span>
+              <div class="template-links">
+                <a href="/workflow.io_import_template.xlsx" download class="btn-template-download excel-link sample">
+                  <span class="material-symbols-outlined">table_chart</span> Excel with Samples
+                </a>
+                <a href="/workflow.io_import_template.csv" download class="btn-template-download csv-link sample">
+                  <span class="material-symbols-outlined">article</span> CSV with Samples
+                </a>
+              </div>
+            </div>
+
+            <!-- Help Specifications Toggle -->
+            <div class="specs-toggle-container">
+              <button type="button" class="btn-specs-toggle" (click)="showSpecs.set(!showSpecs())">
+                <span class="material-symbols-outlined font-icon">{{ showSpecs() ? 'keyboard_arrow_up' : 'keyboard_arrow_down' }}</span>
+                {{ showSpecs() ? 'Hide' : 'Show' }} Template Field Requirements & Instructions
+              </button>
+            </div>
+
+            @if (showSpecs()) {
+              <div class="specs-panel-container">
+                <table class="specs-table">
+                  <thead>
+                    <tr>
+                      <th>Column Header</th>
+                      <th>Required?</th>
+                      <th>Type / Format</th>
+                      <th>Accepted Values / Notes</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><strong>Title</strong></td>
+                      <td><span class="badge badge-req">Yes</span></td>
+                      <td>Text (Max 200)</td>
+                      <td>Summary of the task</td>
+                    </tr>
+                    <tr>
+                      <td><strong>Description</strong></td>
+                      <td><span class="badge badge-opt">No</span></td>
+                      <td>Text</td>
+                      <td>Details, HTML/Markdown supported</td>
+                    </tr>
+                    <tr>
+                      <td><strong>Priority</strong></td>
+                      <td><span class="badge badge-req">Yes</span></td>
+                      <td>Selection</td>
+                      <td><code>Low</code>, <code>Medium</code>, <code>High</code>, <code>Critical</code></td>
+                    </tr>
+                    <tr>
+                      <td><strong>IssueType</strong></td>
+                      <td><span class="badge badge-req">Yes</span></td>
+                      <td>Selection</td>
+                      <td><code>Story</code>, <code>Task</code>, <code>Bug</code>, <code>SubTask</code></td>
+                    </tr>
+                    <tr>
+                      <td><strong>StoryPoints</strong></td>
+                      <td><span class="badge badge-opt">No</span></td>
+                      <td>Integer</td>
+                      <td>Whole number estimate (e.g. 1, 2, 3, 5, 8)</td>
+                    </tr>
+                    <tr>
+                      <td><strong>DueDate</strong></td>
+                      <td><span class="badge badge-opt">No</span></td>
+                      <td>Date</td>
+                      <td>Format: <code>YYYY-MM-DD</code> (e.g. 2026-06-15)</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            }
+
+            <div 
+              class="drag-drop-zone"
+              [class.drag-over]="isDragging()"
+              [class.file-loaded]="loadedFileName()"
+              (dragover)="$event.preventDefault(); isDragging.set(true)"
+              (dragleave)="isDragging.set(false)"
+              (drop)="$event.preventDefault(); isDragging.set(false); onFileDropped($event)"
+              (click)="triggerFileInput()"
+            >
+              <input
+                #fileInput
+                type="file"
+                accept=".json,.csv,.xlsx"
+                style="display: none;"
+                (change)="onFileSelected($event)"
+              />
+              @if (loadedFileName()) {
+                <span class="material-symbols-outlined upload-icon success">check_circle</span>
+                <div class="upload-text success-text">File loaded: <strong>{{ loadedFileName() }}</strong></div>
+                <div class="upload-subtext">{{ importedTasks().length }} tasks parsed successfully.</div>
+                <button type="button" class="btn btn-secondary btn-change-file" (click)="$event.stopPropagation(); clearLoadedFile()">
+                  Change File
+                </button>
+              } @else {
+                <span class="material-symbols-outlined upload-icon">cloud_upload</span>
+                <div class="upload-text">Drag & drop your project file here, or <span class="browse-link">browse</span></div>
+                <div class="upload-subtext">Supports Workflow.IO JSON export, Excel (.xlsx), or CSV templates</div>
+              }
+            </div>
+
+            <form [formGroup]="importForm" (ngSubmit)="confirmImport()" class="modal-form">
+              <div class="form-group">
+                <label for="import-name">Project Name</label>
+                <input id="import-name" type="text" placeholder="Enter project name..." formControlName="name" />
+              </div>
+
+              <div class="form-group">
+                <label for="import-key">Project Key (Prefix)</label>
+                <input id="import-key" type="text" placeholder="Enter project key (optional)..." formControlName="key" />
+              </div>
+
+              <div class="form-group">
+                <label for="import-type">Template</label>
+                <select id="import-type" formControlName="projectType">
+                  <option [value]="ProjectType.Scrum">Scrum (Sprints & Backlog)</option>
+                  <option [value]="ProjectType.Kanban">Kanban (Continuous Flow)</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="import-desc">Description</label>
+                <textarea id="import-desc" rows="3" placeholder="Brief summary of the imported project..." formControlName="description"></textarea>
+              </div>
+
+              <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" (click)="closeImportModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary" [disabled]="creating() || !loadedFileName() || importForm.invalid">
+                  @if (creating()) {
+                    <span class="spinner-sm"></span> Importing...
+                  } @else {
+                    Import Project
+                  }
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      }
+    </section>
+  

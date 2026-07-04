@@ -1,0 +1,267 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: workflow.io-postgres
+    environment:
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: workflow.io-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  userapi:
+    build:
+      context: .
+      dockerfile: UserApi/Dockerfile
+    environment:
+      ASPNETCORE_URLS: "http://+:8080"
+      Jwt__SecurityKey: ${JWT_SECURITY_KEY:?Set JWT_SECURITY_KEY in .env}
+      Jwt__Issuer: "https://workflow.io.local"
+      Jwt__Audience: "workflow.io-api"
+      Database__ApplyMigrationsOnStartup: "true"
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=workflow_io;Username=postgres;Password=${POSTGRES_PASSWORD:-postgres}"
+    depends_on:
+      - postgres
+    ports:
+      - "5240:8080"
+
+  projectapi:
+    build:
+      context: .
+      dockerfile: ProjectApi/Dockerfile
+    environment:
+      ASPNETCORE_URLS: "http://+:8080"
+      Jwt__SecurityKey: ${JWT_SECURITY_KEY}
+      Jwt__Issuer: "https://workflow.io.local"
+      Jwt__Audience: "workflow.io-api"
+      Database__ApplyMigrationsOnStartup: "true"
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=workflow_io;Username=postgres;Password=${POSTGRES_PASSWORD:-postgres}"
+    depends_on:
+      - postgres
+    ports:
+      - "5250:8080"
+
+  taskapi:
+    build:
+      context: .
+      dockerfile: TaskApi/Dockerfile
+    environment:
+      ASPNETCORE_URLS: "http://+:8080"
+      Jwt__SecurityKey: ${JWT_SECURITY_KEY}
+      Jwt__Issuer: "https://workflow.io.local"
+      Jwt__Audience: "workflow.io-api"
+      Database__ApplyMigrationsOnStartup: "true"
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=workflow_io;Username=postgres;Password=${POSTGRES_PASSWORD:-postgres}"
+      Services__ProjectApi: "http://projectapi:8080/"
+      Services__UserApi: "http://userapi:8080/"
+      Services__ActivityApi: "http://activityapi:8080/"
+      RabbitMq__HostName: "rabbitmq"
+      RabbitMq__Port: "5672"
+      RabbitMq__UserName: ${RABBITMQ_USER:-guest}
+      RabbitMq__Password: ${RABBITMQ_PASSWORD:-guest}
+      RabbitMq__ExchangeName: "workflow.io.events"
+    depends_on:
+      - postgres
+      - projectapi
+      - rabbitmq
+    ports:
+      - "5260:8080"
+
+  commentapi:
+    build:
+      context: .
+      dockerfile: CommentApi/Dockerfile
+    environment:
+      ASPNETCORE_URLS: "http://+:8080"
+      Jwt__SecurityKey: ${JWT_SECURITY_KEY}
+      Jwt__Issuer: "https://workflow.io.local"
+      Jwt__Audience: "workflow.io-api"
+      Database__ApplyMigrationsOnStartup: "true"
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=workflow_io;Username=postgres;Password=${POSTGRES_PASSWORD:-postgres}"
+      Services__TaskApi: "http://taskapi:8080/"
+      RabbitMq__HostName: "rabbitmq"
+      RabbitMq__Port: "5672"
+      RabbitMq__UserName: ${RABBITMQ_USER:-guest}
+      RabbitMq__Password: ${RABBITMQ_PASSWORD:-guest}
+      RabbitMq__ExchangeName: "workflow.io.events"
+    depends_on:
+      - postgres
+      - taskapi
+      - rabbitmq
+    ports:
+      - "5280:8080"
+
+  notificationapi:
+    build:
+      context: .
+      dockerfile: NotificationApi/Dockerfile
+    environment:
+      ASPNETCORE_URLS: "http://+:8080"
+      Jwt__SecurityKey: ${JWT_SECURITY_KEY}
+      Jwt__Issuer: "https://workflow.io.local"
+      Jwt__Audience: "workflow.io-api"
+      Database__ApplyMigrationsOnStartup: "true"
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=workflow_io;Username=postgres;Password=${POSTGRES_PASSWORD:-postgres}"
+      RabbitMq__HostName: "rabbitmq"
+      RabbitMq__Port: "5672"
+      RabbitMq__UserName: ${RABBITMQ_USER:-guest}
+      RabbitMq__Password: ${RABBITMQ_PASSWORD:-guest}
+      RabbitMq__ExchangeName: "workflow.io.events"
+    depends_on:
+      - postgres
+      - rabbitmq
+    ports:
+      - "5290:8080"
+
+  activityapi:
+    build:
+      context: .
+      dockerfile: ActivityApi/Dockerfile
+    environment:
+      ASPNETCORE_URLS: "http://+:8080"
+      Jwt__SecurityKey: ${JWT_SECURITY_KEY}
+      Jwt__Issuer: "https://workflow.io.local"
+      Jwt__Audience: "workflow.io-api"
+      Database__ApplyMigrationsOnStartup: "true"
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=workflow_io;Username=postgres;Password=${POSTGRES_PASSWORD:-postgres}"
+      RabbitMq__HostName: "rabbitmq"
+      RabbitMq__Port: "5672"
+      RabbitMq__UserName: ${RABBITMQ_USER:-guest}
+      RabbitMq__Password: ${RABBITMQ_PASSWORD:-guest}
+      RabbitMq__ExchangeName: "workflow.io.events"
+    depends_on:
+      - postgres
+      - rabbitmq
+    ports:
+      - "5300:8080"
+
+  fileapi:
+    build:
+      context: .
+      dockerfile: FileApi/Dockerfile
+    environment:
+      ASPNETCORE_URLS: "http://+:8080"
+      Jwt__SecurityKey: ${JWT_SECURITY_KEY}
+      Jwt__Issuer: "https://workflow.io.local"
+      Jwt__Audience: "workflow.io-api"
+      Database__ApplyMigrationsOnStartup: "true"
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=workflow_io;Username=postgres;Password=${POSTGRES_PASSWORD:-postgres}"
+      Services__TaskApi: "http://taskapi:8080/"
+      Storage__RootPath: "/app/uploads"
+      RabbitMq__HostName: "rabbitmq"
+      RabbitMq__Port: "5672"
+      RabbitMq__UserName: ${RABBITMQ_USER:-guest}
+      RabbitMq__Password: ${RABBITMQ_PASSWORD:-guest}
+      RabbitMq__ExchangeName: "workflow.io.events"
+    depends_on:
+      - postgres
+      - taskapi
+      - rabbitmq
+    ports:
+      - "5310:8080"
+    volumes:
+      - file-uploads:/app/uploads
+
+  analyticsapi:
+    build:
+      context: .
+      dockerfile: AnalyticsApi/Dockerfile
+    environment:
+      ASPNETCORE_URLS: "http://+:8080"
+      Jwt__SecurityKey: ${JWT_SECURITY_KEY}
+      Jwt__Issuer: "https://workflow.io.local"
+      Jwt__Audience: "workflow.io-api"
+      Database__ApplyMigrationsOnStartup: "true"
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=workflow_io;Username=postgres;Password=${POSTGRES_PASSWORD:-postgres}"
+      Services__ProjectApi: "http://projectapi:8080/"
+      RabbitMq__HostName: "rabbitmq"
+      RabbitMq__Port: "5672"
+      RabbitMq__UserName: ${RABBITMQ_USER:-guest}
+      RabbitMq__Password: ${RABBITMQ_PASSWORD:-guest}
+      RabbitMq__ExchangeName: "workflow.io.events"
+    depends_on:
+      - postgres
+      - rabbitmq
+      - projectapi
+    ports:
+      - "5320:8080"
+
+  realtimeapi:
+    build:
+      context: .
+      dockerfile: RealtimeApi/Dockerfile
+    environment:
+      ASPNETCORE_URLS: "http://+:8080"
+      Jwt__SecurityKey: ${JWT_SECURITY_KEY}
+      Jwt__Issuer: "https://workflow.io.local"
+      Jwt__Audience: "workflow.io-api"
+      RabbitMq__HostName: "rabbitmq"
+      RabbitMq__Port: "5672"
+      RabbitMq__UserName: ${RABBITMQ_USER:-guest}
+      RabbitMq__Password: ${RABBITMQ_PASSWORD:-guest}
+      RabbitMq__ExchangeName: "workflow.io.events"
+      Services__ProjectApi: "http://projectapi:8080/"
+      Services__TaskApi: "http://taskapi:8080/"
+    depends_on:
+      - rabbitmq
+      - projectapi
+      - taskapi
+    ports:
+      - "5330:8080"
+
+  gatewayapi:
+    build:
+      context: .
+      dockerfile: GatewayApi/Dockerfile
+    environment:
+      ASPNETCORE_URLS: "http://+:8080"
+      Jwt__SecurityKey: ${JWT_SECURITY_KEY}
+      Jwt__Issuer: "https://workflow.io.local"
+      Jwt__Audience: "workflow.io-api"
+      ReverseProxy__Clusters__users__Destinations__destination1__Address: "http://userapi:8080/"
+      ReverseProxy__Clusters__projects__Destinations__destination1__Address: "http://projectapi:8080/"
+      ReverseProxy__Clusters__tasks__Destinations__destination1__Address: "http://taskapi:8080/"
+      ReverseProxy__Clusters__comments__Destinations__destination1__Address: "http://commentapi:8080/"
+      ReverseProxy__Clusters__files__Destinations__destination1__Address: "http://fileapi:8080/"
+      ReverseProxy__Clusters__notifications__Destinations__destination1__Address: "http://notificationapi:8080/"
+      ReverseProxy__Clusters__activities__Destinations__destination1__Address: "http://activityapi:8080/"
+      ReverseProxy__Clusters__analytics__Destinations__destination1__Address: "http://analyticsapi:8080/"
+      ReverseProxy__Clusters__realtime__Destinations__destination1__Address: "http://realtimeapi:8080/"
+    depends_on:
+      - userapi
+      - projectapi
+      - taskapi
+      - commentapi
+      - fileapi
+      - notificationapi
+      - activityapi
+      - analyticsapi
+      - realtimeapi
+    ports:
+      - "5270:8080"
+
+  frontend:
+    build:
+      context: ./Workflow.IO.Web
+      dockerfile: Dockerfile
+    ports:
+      - "4200:80"
+    depends_on:
+      - gatewayapi
+
+volumes:
+  postgres-data:
+  file-uploads:
+

@@ -1,0 +1,619 @@
+
+    <div class="team-profile-container">
+      <!-- Back Navigation Header -->
+      <header class="profile-nav-header">
+        <button class="btn btn-secondary btn-back" (click)="goBack()">
+          <span class="material-symbols-outlined font-icon">arrow_back</span>
+          Back to Teams
+        </button>
+      </header>
+
+      @if (loading()) {
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p>Loading team profile...</p>
+        </div>
+      } @else if (error()) {
+        <div class="error-state">
+          <span class="material-symbols-outlined text-danger">error</span>
+          <p>{{ error() }}</p>
+        </div>
+      } @else if (team()) {
+        @if (team(); as t) {
+        <!-- Profile Banner -->
+        <section class="profile-banner panel" [class.archived]="t.isArchived">
+          <div class="banner-main">
+            <!-- Avatar -->
+            @if (t.avatarUrl) {
+              <img [src]="t.avatarUrl" alt="{{ t.name }} Avatar" class="banner-avatar" />
+            } @else {
+              <div class="banner-avatar-fallback" [ngStyle]="{'background': getGradient(t.name)}">
+                {{ t.name.slice(0, 2).toUpperCase() }}
+              </div>
+            }
+
+            <div class="banner-info">
+              <div class="title-row">
+                <h1>{{ t.name }}</h1>
+                <div class="badge-group">
+                  <span class="badge" [class]="t.visibility === 'Public' ? 'badge-success' : 'badge-warning'">
+                    {{ t.visibility }}
+                  </span>
+                  @if (t.isArchived) {
+                    <span class="badge badge-danger">Archived</span>
+                  }
+                </div>
+              </div>
+              <p class="desc">{{ t.description || 'No description provided.' }}</p>
+              <div class="meta-row">
+                <span class="meta-item">
+                  <span class="material-symbols-outlined">shield_person</span>
+                  Lead: <strong>{{ getUserName(t.leadId) }}</strong>
+                </span>
+                <span class="meta-item">
+                  <span class="material-symbols-outlined">group</span>
+                  Members: <strong>{{ t.members.length }}</strong>
+                </span>
+                <span class="meta-item">
+                  <span class="material-symbols-outlined">calendar_today</span>
+                  Created: <strong>{{ t.createdAt | date:'mediumDate' }}</strong>
+                </span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Navigation Tabs -->
+        <nav class="tabs-nav">
+          <button [class.active]="activeTab() === 'dashboard'" (click)="activeTab.set('dashboard')">
+            <span class="material-symbols-outlined font-icon">dashboard</span> Dashboard
+          </button>
+          <button [class.active]="activeTab() === 'members'" (click)="activeTab.set('members')">
+            <span class="material-symbols-outlined font-icon">groups</span> Members ({{ t.members.length }})
+          </button>
+          <button [class.active]="activeTab() === 'issues'" (click)="activeTab.set('issues')">
+            <span class="material-symbols-outlined font-icon">list_alt</span> Issues ({{ teamIssues().length }})
+          </button>
+          <button [class.active]="activeTab() === 'boards'" (click)="activeTab.set('boards')">
+            <span class="material-symbols-outlined font-icon">dashboard_customize</span> Boards & Projects
+          </button>
+          @if (isLead()) {
+            <button [class.active]="activeTab() === 'settings'" (click)="activeTab.set('settings')">
+              <span class="material-symbols-outlined font-icon">settings</span> Settings
+            </button>
+          }
+        </nav>
+
+        <!-- Tab Content -->
+        <main class="tab-content">
+          <!-- 1. Dashboard Tab -->
+          @if (activeTab() === 'dashboard') {
+            <div class="dashboard-grid">
+              <!-- Metrics Cards -->
+              <div class="metrics-cards-row">
+                <div class="metric-card">
+                  <span class="metric-label">Total Issues</span>
+                  <span class="metric-value">{{ analytics()?.totalIssuesCount ?? 0 }}</span>
+                  <span class="material-symbols-outlined metric-icon">tag</span>
+                </div>
+                <div class="metric-card">
+                  <span class="metric-label">Completed Issues</span>
+                  <span class="metric-value text-success">{{ analytics()?.completedIssuesCount ?? 0 }}</span>
+                  <span class="material-symbols-outlined metric-icon text-success">task_alt</span>
+                </div>
+                <div class="metric-card">
+                  <span class="metric-label">Sprint Completion</span>
+                  <span class="metric-value text-info">{{ analytics()?.sprintCompletionRate ?? 0 }}%</span>
+                  <span class="material-symbols-outlined metric-icon text-info">rocket_launch</span>
+                </div>
+                <div class="metric-card">
+                  <span class="metric-label">Velocity</span>
+                  <span class="metric-value text-primary">{{ analytics()?.velocity ?? 0 }}</span>
+                  <p class="metric-subtitle">Average done per sprint</p>
+                  <span class="material-symbols-outlined metric-icon text-primary">speed</span>
+                </div>
+                <div class="metric-card">
+                  <span class="metric-label">Throughput</span>
+                  <span class="metric-value">{{ analytics()?.throughput ?? 0 }}</span>
+                  <p class="metric-subtitle">Completed tasks / week</p>
+                  <span class="material-symbols-outlined metric-icon">trending_up</span>
+                </div>
+              </div>
+
+              <!-- Charts Section -->
+              <div class="charts-row">
+                <div class="chart-panel panel">
+                  <h3>Issue Status Distribution</h3>
+                  <div class="status-distribution-list">
+                    @for (dist of analytics()?.statusDistribution; track dist.statusName) {
+                      <div class="status-dist-item">
+                        <div class="dist-header">
+                          <span class="dist-label">{{ dist.statusName }}</span>
+                          <span class="dist-count">{{ dist.count }} ({{ dist.percentage }}%)</span>
+                        </div>
+                        <div class="progress-track">
+                          <div
+                            class="progress-fill"
+                            [style.width.%]="dist.percentage"
+                            [ngClass]="getStatusColorClass(dist.statusName)"
+                          ></div>
+                        </div>
+                      </div>
+                    } @empty {
+                      <p class="subtitle text-center py-4">No issue status data available.</p>
+                    }
+                  </div>
+                </div>
+
+                <div class="chart-panel panel info-panel">
+                  <h3>Team Planning Status</h3>
+                  <div class="planning-info-list">
+                    <div class="planning-item">
+                      <span class="material-symbols-outlined text-info">directions_run</span>
+                      <div>
+                        <h4>Active Sprints</h4>
+                        <p class="subtitle">{{ activeSprintsCount() }} sprints currently running</p>
+                      </div>
+                    </div>
+                    <div class="planning-item">
+                      <span class="material-symbols-outlined text-success">folder_open</span>
+                      <div>
+                        <h4>Linked Projects</h4>
+                        <p class="subtitle">{{ teamBoards().length }} projects currently linked</p>
+                      </div>
+                    </div>
+                    <div class="planning-item">
+                      <span class="material-symbols-outlined">incomplete_circle</span>
+                      <div>
+                        <h4>Backlog Issues</h4>
+                        <p class="subtitle">{{ backlogCount() }} issues in team backlog</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+
+          <!-- 2. Members Tab -->
+          @if (activeTab() === 'members') {
+            <div class="members-tab-container panel">
+              <div class="tab-header">
+                <h3>Team Roster</h3>
+                <div class="roster-actions">
+                  @if (!isUserMember()) {
+                    <button class="btn btn-secondary" (click)="joinTeam()" [disabled]="busy()">
+                      Join Team
+                    </button>
+                  } @else if (!isLead()) {
+                    <button class="btn btn-secondary text-danger" (click)="leaveTeam()" [disabled]="busy()">
+                      Leave Team
+                    </button>
+                  }
+                  <button class="btn btn-primary" (click)="openInviteModal()">
+                    <span class="material-symbols-outlined font-icon">person_add</span>
+                    Invite Member
+                  </button>
+                </div>
+              </div>
+
+              <div class="table-container">
+                <table class="roster-table">
+                  <thead>
+                    <tr>
+                      <th>Member</th>
+                      <th>Email</th>
+                      <th>Role</th>
+                      <th>Joined Date</th>
+                      <th class="actions-header">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (m of t.members; track m.userId) {
+                      <tr class="member-row" (click)="openMemberDetailModal(m)">
+                        <td>
+                          <div class="member-cell-info">
+                            @if (getUserAvatar(m.userId); as avatar) {
+                              <img [src]="avatar" class="roster-avatar" />
+                            } @else {
+                              <div class="roster-avatar-fallback" [ngStyle]="{'background': getGradient(getUserName(m.userId))}">
+                                {{ getUserInitials(m.userId) }}
+                              </div>
+                            }
+                            <div>
+                              <span class="member-name">{{ getUserName(m.userId) }}</span>
+                              @if (m.userId === currentUserId()) {
+                                <span class="badge badge-info ms-2">You</span>
+                              }
+                            </div>
+                          </div>
+                        </td>
+                        <td>{{ getUserEmail(m.userId) }}</td>
+                        <td>
+                          <span class="badge" [class]="m.role === 'Lead' ? 'badge-success' : 'badge-info'">
+                            {{ m.role }}
+                          </span>
+                        </td>
+                        <td>{{ m.joinedAt | date:'mediumDate' }}</td>
+                        <td class="actions-cell" (click)="$event.stopPropagation()">
+                          @if (isLead() && m.userId !== t.leadId) {
+                            <div class="row-actions">
+                              <select [ngModel]="m.role" (ngModelChange)="changeMemberRole(m.userId, $event)">
+                                <option value="Member">Member</option>
+                                <option value="Lead">Lead</option>
+                              </select>
+                              <button class="btn-icon text-danger" title="Remove member" (click)="removeMember(m.userId)">
+                                <span class="material-symbols-outlined">delete</span>
+                              </button>
+                            </div>
+                          } @else {
+                            <span class="text-muted font-size-sm">No actions</span>
+                          }
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          }
+
+          <!-- 3. Issues Tab -->
+          @if (activeTab() === 'issues') {
+            <div class="issues-tab-container panel">
+              <div class="tab-header">
+                <h3>Assigned Issues</h3>
+              </div>
+
+              <div class="table-container">
+                <table class="issues-table">
+                  <thead>
+                    <tr>
+                      <th>Key</th>
+                      <th>Type</th>
+                      <th>Priority</th>
+                      <th>Summary</th>
+                      <th>Status</th>
+                      <th>Assignee</th>
+                      <th>Due Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (task of teamIssues(); track task.taskId) {
+                      <tr>
+                        <td>
+                          <a [routerLink]="['/tasks', task.taskId]" class="issue-key-link">
+                            {{ task.issueKey }}
+                          </a>
+                        </td>
+                        <td>
+                          <span class="type-badge" [class]="getIssueTypeClass(task.issueType)">
+                            {{ getIssueTypeName(task.issueType) }}
+                          </span>
+                        </td>
+                        <td>
+                          <span class="priority-badge" [class]="getPriorityClass(task.priority)">
+                            {{ getPriorityName(task.priority) }}
+                          </span>
+                        </td>
+                        <td class="task-summary-cell">
+                          <a [routerLink]="['/tasks', task.taskId]" class="task-title-link">
+                            {{ task.title }}
+                          </a>
+                        </td>
+                        <td>
+                          <span class="status-pill" [class]="getStatusClass(task.status)">
+                            {{ getStatusName(task.status) }}
+                          </span>
+                        </td>
+                        <td>
+                          @if (task.assigneeId) {
+                            <div class="assignee-cell">
+                              @if (getUserAvatar(task.assigneeId); as avatar) {
+                                <img [src]="avatar" class="mini-avatar" />
+                              } @else {
+                                <div class="mini-avatar-fallback" [ngStyle]="{'background': getGradient(getUserName(task.assigneeId))}">
+                                  {{ getUserInitials(task.assigneeId) }}
+                                </div>
+                              }
+                              <span>{{ getUserName(task.assigneeId) }}</span>
+                            </div>
+                          } @else {
+                            <span class="text-muted">Unassigned</span>
+                          }
+                        </td>
+                        <td>
+                          @if (task.dueDate) {
+                            <span [class.overdue]="task.isOverdue">
+                              {{ task.dueDate | date:'mediumDate' }}
+                            </span>
+                          } @else {
+                            <span class="text-muted">-</span>
+                          }
+                        </td>
+                      </tr>
+                    } @empty {
+                      <tr>
+                        <td colspan="7" class="empty-table-cell">
+                          <span class="material-symbols-outlined">info</span>
+                          <p>No issues assigned to this team yet.</p>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          }
+
+          <!-- 4. Boards Tab -->
+          @if (activeTab() === 'boards') {
+            <div class="boards-tab-container">
+              <div class="responsive-grid">
+                <!-- Linked Projects list -->
+                <div class="board-panel panel col-6">
+                  <h3>Linked Boards</h3>
+                  <p class="subtitle">Boards visualizing work owned by this team</p>
+                  
+                  <div class="linked-items-list mt-4">
+                    @for (b of teamBoards(); track b.boardId) {
+                      <div class="linked-item">
+                        <span class="material-symbols-outlined item-icon text-primary">dashboard</span>
+                        <div class="item-details">
+                          <h4>{{ b.name }}</h4>
+                          <span class="meta">Board ID: {{ b.boardId }}</span>
+                        </div>
+                      </div>
+                    } @empty {
+                      <p class="subtitle py-4 text-center">No linked boards found.</p>
+                    }
+                  </div>
+                </div>
+
+                <div class="board-panel panel col-6">
+                  <h3>Responsible Projects</h3>
+                  <p class="subtitle">Projects containing issues owned by this team</p>
+                  
+                  <div class="linked-items-list mt-4">
+                    @for (p of linkedProjects(); track p.projectId) {
+                      <div class="linked-item">
+                        <span class="material-symbols-outlined item-icon text-success">folder</span>
+                        <div class="item-details">
+                          <h4>{{ p.name }}</h4>
+                          <span class="meta">Code: {{ p.key }}</span>
+                        </div>
+                      </div>
+                    } @empty {
+                      <p class="subtitle py-4 text-center">No responsible projects found.</p>
+                    }
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+
+          <!-- 5. Settings Tab -->
+          @if (activeTab() === 'settings' && isLead()) {
+            <div class="settings-tab-container panel">
+              <h3>Team Lifecycle & Details</h3>
+              <p class="subtitle">Manage team metadata, rename details or archive the team</p>
+
+              <form (submit)="updateTeamDetails($event)" class="settings-form mt-4">
+                @if (settingsError()) {
+                  <div class="alert alert-danger">{{ settingsError() }}</div>
+                }
+                @if (settingsSuccess()) {
+                  <div class="alert alert-success">{{ settingsSuccess() }}</div>
+                }
+
+                <div class="form-group">
+                  <label for="settings-name">Team Name</label>
+                  <input
+                    type="text"
+                    id="settings-name"
+                    [(ngModel)]="editName"
+                    name="editName"
+                    required
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="settings-desc">Description</label>
+                  <textarea
+                    id="settings-desc"
+                    [(ngModel)]="editDescription"
+                    name="editDescription"
+                    rows="3"
+                  ></textarea>
+                </div>
+
+                <div class="form-group">
+                  <label for="settings-visibility">Visibility</label>
+                  <select id="settings-visibility" [(ngModel)]="editVisibility" name="editVisibility">
+                    <option value="Public">Public (visible to organization)</option>
+                    <option value="Private">Private (hidden and invite-only)</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="settings-avatar">Avatar URL</label>
+                  <input
+                    type="text"
+                    id="settings-avatar"
+                    [(ngModel)]="editAvatarUrl"
+                    name="editAvatarUrl"
+                  />
+                </div>
+
+                <div class="settings-actions">
+                  <button type="submit" class="btn btn-primary" [disabled]="busy()">
+                    @if (busy()) {
+                      <span class="spinner-sm"></span> Saving...
+                    } @else {
+                      Save Changes
+                    }
+                  </button>
+                </div>
+              </form>
+
+              <div class="danger-zone border-top mt-5 pt-4">
+                <h3 class="text-danger">Danger Zone</h3>
+                <p class="subtitle mb-4">Soft-deletion operations are reversible. Archives preserve historical reports.</p>
+
+                <div class="danger-row">
+                  <div>
+                    <h4>Archive Team</h4>
+                    <p class="subtitle">Temporarily hide team profile while preserving references in reports.</p>
+                  </div>
+                  @if (t.isArchived) {
+                    <button class="btn btn-secondary" (click)="restoreTeam()" [disabled]="busy()">
+                      Restore Team
+                    </button>
+                  } @else {
+                    <button class="btn btn-secondary text-danger" (click)="archiveTeam()" [disabled]="busy()">
+                      Archive Team
+                    </button>
+                  }
+                </div>
+
+                <div class="danger-row border-top mt-4 pt-4">
+                  <div>
+                    <h4>Transfer Ownership</h4>
+                    <p class="subtitle">Change lead of the team to another member. You will remain a member.</p>
+                  </div>
+                  <div class="transfer-box">
+                    <select [(ngModel)]="newLeadId" class="me-2">
+                      <option value="">Select a new Lead...</option>
+                      @for (m of t.members; track m.userId) {
+                        @if (m.userId !== t.leadId) {
+                          <option [value]="m.userId">{{ getUserName(m.userId) }}</option>
+                        }
+                      }
+                    </select>
+                    <button class="btn btn-primary" (click)="transferOwnership()" [disabled]="busy() || !newLeadId">
+                      Transfer
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+        </main>
+        }
+      }
+
+      <!-- Invite Member Modal -->
+      @if (showInviteModal()) {
+        <div class="modal-backdrop" (click)="closeInviteModal()">
+          <div class="modal-card" (click)="$event.stopPropagation()">
+            <header class="modal-header">
+              <h2>Invite Workspace Member</h2>
+              <button class="btn-close" (click)="closeInviteModal()">
+                <span class="material-symbols-outlined">close</span>
+              </button>
+            </header>
+
+            <div class="form-body">
+              @if (inviteError()) {
+                <div class="alert alert-danger">{{ inviteError() }}</div>
+              }
+
+              <div class="form-group">
+                <label for="invite-user">Select Workspace Member</label>
+                <select id="invite-user" [(ngModel)]="inviteUserId">
+                  <option value="">Choose a member...</option>
+                  @for (user of users(); track user.userId) {
+                    @if (!isAlreadyMember(user.userId)) {
+                      <option [value]="user.userId">
+                        {{ user.firstName }} {{ user.lastName }} ({{ user.email }})
+                      </option>
+                    }
+                  }
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="invite-role">Role</label>
+                <select id="invite-role" [(ngModel)]="inviteRole">
+                  <option value="Member">Member</option>
+                  <option value="Lead">Lead</option>
+                </select>
+              </div>
+            </div>
+
+            <footer class="modal-footer">
+              <button class="btn btn-secondary" (click)="closeInviteModal()">Cancel</button>
+              <button class="btn btn-primary" [disabled]="busy() || !inviteUserId" (click)="inviteMember()">
+                @if (busy()) {
+                  <span class="spinner-sm"></span> Inviting...
+                } @else {
+                  Invite
+                }
+              </button>
+            </footer>
+          </div>
+        </div>
+      }
+
+      <!-- Member Detail Modal -->
+      @if (showMemberDetailModal()) {
+        @if (selectedMemberDetails(); as user) {
+          <div class="modal-backdrop" (click)="closeMemberDetailModal()">
+            <div class="modal-card member-detail-card" (click)="$event.stopPropagation()">
+              <header class="modal-header">
+                <h2>Member Profile Detail</h2>
+                <button class="btn-close" (click)="closeMemberDetailModal()">
+                  <span class="material-symbols-outlined">close</span>
+                </button>
+              </header>
+
+              <div class="form-body text-center d-flex flex-column align-items-center gap-3">
+                @if (user.avatarUrl) {
+                  <img [src]="user.avatarUrl" alt="{{ user.firstName }} Avatar" class="detail-avatar" />
+                } @else {
+                  <div class="detail-avatar-fallback" [ngStyle]="{'background': getGradient(user.firstName + ' ' + user.lastName)}">
+                    {{ user.firstName.charAt(0) }}{{ user.lastName.charAt(0) }}
+                  </div>
+                }
+                
+                <div>
+                  <h2 class="m-0">{{ user.firstName }} {{ user.lastName }}</h2>
+                  <p class="subtitle">{{ user.email }}</p>
+                </div>
+
+                <div class="detail-badges mt-2">
+                  <span class="badge badge-info me-2">{{ user.role }}</span>
+                  <span class="badge" [class]="user.status === 0 ? 'badge-success' : 'badge-warning'">
+                    {{ user.status === 0 ? 'Active' : user.status === 1 ? 'Inactive' : 'Suspended' }}
+                  </span>
+                </div>
+
+                <!-- Issues Assigned inside Team -->
+                <div class="member-tasks-section mt-4 text-start w-100 border-top pt-3">
+                  <h3>Assigned Team Tasks</h3>
+                  <div class="member-tasks-list mt-2">
+                    @for (task of getMemberTasks(user.userId); track task.taskId) {
+                      <div class="member-task-item">
+                        <a [routerLink]="['/tasks', task.taskId]" (click)="closeMemberDetailModal()" class="task-key">{{ task.issueKey }}</a>
+                        <span class="task-title">{{ task.title }}</span>
+                        <span class="status-pill mini" [class]="getStatusClass(task.status)">{{ getStatusName(task.status) }}</span>
+                      </div>
+                    } @empty {
+                      <p class="subtitle text-center py-3">No issues assigned in this team.</p>
+                    }
+                  </div>
+                </div>
+
+                <div class="contact-box mt-3 w-100">
+                  <a href="mailto:{{ user.email }}" class="btn btn-secondary w-100">
+                    <span class="material-symbols-outlined font-icon">mail</span>
+                    Contact Member
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+      }
+    </div>
+  

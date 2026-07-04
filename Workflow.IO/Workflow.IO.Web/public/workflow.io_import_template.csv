@@ -1,0 +1,5 @@
+Title,Description,Priority,IssueType,StoryPoints,DueDate
+Integrate Stripe Payments,Implement checkout page webhook handler for payment success events.,High,Story,5,2026-06-15
+Fix billing address country code crash,Address form validation crash when country code is empty in payload.,Critical,Bug,2,2026-05-30
+Optimize gateway routing performance,Perform load test and configure socket reuse limits in Ocelot.,Medium,Task,3,2026-06-10
+Design marketing landing page hero section,Create high-fidelity dark mode visual designs with subtle gradients.,Low,Story,8,2026-06-20

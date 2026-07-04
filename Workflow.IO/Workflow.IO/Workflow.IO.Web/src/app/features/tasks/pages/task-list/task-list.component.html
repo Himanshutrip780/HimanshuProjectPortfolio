@@ -1,0 +1,576 @@
+
+    <div class="page-container">
+      <!-- Page Header -->
+      <header class="page-header">
+        <div class="header-left">
+          <h1>Tasks Dashboard</h1>
+          <p class="subtitle">Search, filter, track and create tasks for your delivery teams.</p>
+        </div>
+        <div class="header-actions">
+          <button type="button" class="btn btn-secondary" (click)="openPredefinedModal()">
+            <span class="material-symbols-outlined btn-icon">assignment_turned_in</span>
+            Predefined Tasks
+          </button>
+          <button type="button" class="btn btn-primary" (click)="openCreateModal()">
+            <span class="material-symbols-outlined btn-icon">add</span>
+            New Task
+          </button>
+        </div>
+      </header>
+
+      <!-- Stats Grid -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon-wrapper tasks-icon">
+            <span class="material-symbols-outlined">assignment</span>
+          </div>
+          <div class="stat-details">
+            <span class="stat-label">Total Tasks</span>
+            <span class="stat-value">{{ totalTasksCount() }}</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon-wrapper todo-icon">
+            <span class="material-symbols-outlined">assignment_late</span>
+          </div>
+          <div class="stat-details">
+            <span class="stat-label">To Do</span>
+            <span class="stat-value">{{ todoTasksCount() }}</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon-wrapper progress-icon">
+            <span class="material-symbols-outlined">progress_activity</span>
+          </div>
+          <div class="stat-details">
+            <span class="stat-label">In Progress</span>
+            <span class="stat-value">{{ inProgressTasksCount() }}</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon-wrapper completed-icon">
+            <span class="material-symbols-outlined">check_circle</span>
+          </div>
+          <div class="stat-details">
+            <span class="stat-label">Completed</span>
+            <span class="stat-value">{{ completedTasksCount() }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Layout (Full Screen Real Estate) -->
+      <div class="tasks-workspace-full" style="width:100%; display:flex; flex-direction:column; gap:1.5rem;">
+        <!-- Toolbar -->
+        <div class="toolbar">
+          <div class="toolbar-left">
+            <span class="toolbar-title">Project Tasks</span>
+            <span class="toolbar-badge">{{ filteredTasks().length }}</span>
+          </div>
+
+          <div class="toolbar-right">
+            <!-- Filter & Search Form -->
+            <form [formGroup]="searchForm" (ngSubmit)="search()" style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap; margin:0;">
+              <!-- Search box -->
+              <div class="search-box">
+                <span class="material-symbols-outlined">search</span>
+                <input
+                  type="text"
+                  placeholder="Search task title..."
+                  formControlName="query"
+                />
+              </div>
+
+              <!-- Status Dropdown -->
+              <select formControlName="status" class="select-toolbar" title="Filter by Status">
+                <option value="">Any Status</option>
+                <option [value]="TaskStatus.Todo">Todo</option>
+                <option [value]="TaskStatus.InProgress">In Progress</option>
+                <option [value]="TaskStatus.Review">Review</option>
+                <option [value]="TaskStatus.Done">Done</option>
+                <option [value]="TaskStatus.Blocked">Blocked</option>
+              </select>
+
+              <!-- Priority Dropdown -->
+              <select formControlName="priority" class="select-toolbar" title="Filter by Priority">
+                <option value="">Any Priority</option>
+                <option [value]="TaskPriority.Low">Low</option>
+                <option [value]="TaskPriority.Medium">Medium</option>
+                <option [value]="TaskPriority.High">High</option>
+                <option [value]="TaskPriority.Critical">Critical</option>
+              </select>
+
+              <!-- Team Dropdown -->
+              <select formControlName="teamId" class="select-toolbar" title="Filter by Team">
+                <option value="">Any Team</option>
+                @for (team of teams(); track team.teamId) {
+                  <option [value]="team.teamId">{{ team.name }}</option>
+                }
+              </select>
+
+              <!-- Sort Dropdown -->
+              <select [formControl]="sortByControl" class="select-toolbar" title="Sort Tasks">
+                <option value="recent">Sort: Recent</option>
+                <option value="priority">Sort: Priority</option>
+                <option value="dueDate">Sort: Due Date</option>
+                <option value="storyPoints">Sort: Story Points</option>
+                <option value="title">Sort: Title (A-Z)</option>
+              </select>
+
+              <!-- Search/Clear Buttons -->
+              <div style="display:flex; gap:0.4rem; flex-shrink:0;">
+                <button type="button" class="btn btn-secondary" (click)="clearSearch()" style="padding:0.35rem 0.75rem; font-size:0.8rem;">Clear Filters</button>
+              </div>
+            </form>
+
+            <!-- Quick Lookup Form -->
+            <form (ngSubmit)="openByIssueKey()" style="display:flex; align-items:center; margin:0;">
+              <div class="search-box" style="width:160px;">
+                <input
+                  type="text"
+                  placeholder="Go to Key..."
+                  [formControl]="issueKeyLookup"
+                />
+                <button type="submit" [disabled]="issueKeyLookup.invalid" style="background:transparent; border:none; color:var(--text-muted); cursor:pointer; display:flex; align-items:center; padding:0;">
+                  <span class="material-symbols-outlined" style="font-size:1.1rem;">arrow_forward</span>
+                </button>
+              </div>
+            </form>
+
+            <!-- View Mode Toggle -->
+            <div class="view-toggles">
+              <button 
+                type="button" 
+                class="btn-toggle" 
+                [class.active]="viewMode() === 'grid'" 
+                (click)="viewMode.set('grid')"
+                title="Tiles View"
+              >
+                <span class="material-symbols-outlined">grid_view</span>
+              </button>
+              <button 
+                type="button" 
+                class="btn-toggle" 
+                [class.active]="viewMode() === 'list'" 
+                (click)="viewMode.set('list')"
+                title="List View"
+              >
+                <span class="material-symbols-outlined">format_list_bulleted</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- Tasks Display -->
+        @if (loading()) {
+          <div class="loading-state" style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding:5rem; background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius-lg);">
+            <div class="spinner"></div>
+            <p style="margin-top:1rem; color:var(--text-secondary);">Loading tasks...</p>
+          </div>
+        } @else if (error()) {
+          <div class="error-state" style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding:5rem; background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius-lg); color:var(--danger-color);">
+            <span class="material-symbols-outlined" style="font-size:3rem;">error</span>
+            <p style="margin-top:1rem;">{{ error() }}</p>
+          </div>
+        } @else if (filteredTasks().length === 0) {
+          <div class="empty-state" style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding:5rem; background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius-lg); text-align:center;">
+            <span class="material-symbols-outlined" style="font-size:3rem; color:var(--text-muted);">assignment_late</span>
+            <p style="margin-top:1rem; color:var(--text-secondary);">No tasks match your filters.</p>
+          </div>
+        } @else {
+          <!-- GRID/TILES VIEW MODE -->
+          @if (viewMode() === 'grid') {
+            <div class="tasks-grid">
+              @for (task of pagedTasks(); track task.taskId) {
+                <a [routerLink]="['/tasks', task.taskId]" class="task-card hover-scale">
+                  <div class="task-card-glow" [class]="getPriorityClass(task.priority)"></div>
+                  
+                  <div class="task-card-header">
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                      <span class="task-key">{{ task.issueKey }}</span>
+                      <span class="badge" [class]="getIssueTypeClass(task.issueType)">
+                        {{ getIssueTypeLabel(task.issueType) }}
+                      </span>
+                    </div>
+                    
+                    <span class="priority-label-badge" [class]="getPriorityClass(task.priority)">
+                      <span class="material-symbols-outlined priority-icon">{{ getPriorityIcon(task.priority) }}</span>
+                      {{ getPriorityLabel(task.priority) }}
+                    </span>
+                  </div>
+
+                  <h3 class="task-title">{{ task.title }}</h3>
+
+                  <!-- Developers & Dates (Basic Details) -->
+                  <div class="dev-details" style="display:flex; flex-direction:column; gap:0.4rem; margin-top:0.15rem; margin-bottom:0.15rem;">
+                    @if (task.dueDate || task.latestEta) {
+                      <div class="eta-badge" [class.delayed]="task.isOverdue" style="display:inline-flex; align-items:center; gap:0.25rem; font-size:0.75rem; color:var(--text-secondary); font-weight:500;">
+                        <span class="material-symbols-outlined" style="font-size:0.9rem;" [style.color]="task.isOverdue ? 'var(--danger-color)' : 'inherit'">schedule</span>
+                        <span>Due: {{ formatDate(task.dueDate || task.latestEta) }}</span>
+                        @if (task.isOverdue) {
+                          <span style="color:var(--danger-color); font-weight:700; font-size:0.7rem; margin-left:0.25rem;">⚠ OVERDUE</span>
+                        }
+                      </div>
+                    }
+                  </div>
+
+                  <div class="task-card-footer">
+                    <div class="team-info" style="display:flex; align-items:center; gap:0.5rem;">
+                      @if (task.teamId) {
+                        <span class="team-badge">
+                          <span class="material-symbols-outlined">groups</span>
+                          {{ getTeamName(task.teamId) }}
+                        </span>
+                      }
+                      @if (task.storyPoints) {
+                        <span class="story-points" style="background:var(--primary-glow); color:var(--primary-color); font-size:0.7rem; font-weight:700; padding:0.1rem 0.4rem; border-radius:var(--radius-sm);" title="Story Points">{{ task.storyPoints }} SP</span>
+                      }
+                    </div>
+                    
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                      <span class="status-badge" [class]="getStatusClass(task.status)">
+                        {{ getStatusLabel(task.status) }}
+                      </span>
+                      @if (task.assigneeId) {
+                        @if (getUserAvatarUrl(task.assigneeId); as avatar) {
+                          <img class="assignee-avatar" [src]="avatar" [title]="'Assignee: ' + getUserDisplayName(task.assigneeId)" alt="Avatar" style="width:24px; height:24px; border-radius:50%; object-fit:cover;" />
+                        } @else {
+                          <div class="assignee-avatar" [style.background-color]="getAssigneeColor(task.assigneeId)" [title]="'Assignee: ' + getUserDisplayName(task.assigneeId)">
+                            {{ getUserInitials(task.assigneeId) }}
+                          </div>
+                        }
+                      } @else {
+                        <div class="assignee-avatar unassigned" title="Unassigned">?</div>
+                      }
+                    </div>
+                  </div>
+                </a>
+              }
+            </div>
+          }
+
+          <!-- LIST/ROW VIEW MODE -->
+          @if (viewMode() === 'list') {
+            <div class="tasks-list-table" style="display:flex; flex-direction:column; background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius-lg); box-shadow:var(--shadow-sm); overflow:hidden; width:100%;">
+              <div class="table-header" style="display:grid; grid-template-columns: 90px 90px 1fr 110px 110px 130px 120px 70px 40px; gap:0.75rem; padding:1rem 1.25rem; border-bottom:1px solid var(--border-color); font-weight:600; font-size:0.75rem; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.05em; background:var(--bg-hover);">
+                <div>Key</div>
+                <div>Type</div>
+                <div>Title</div>
+                <div>Priority</div>
+                <div>Status</div>
+                <div>Team</div>
+                <div>Due Date</div>
+                <div style="text-align:right;">Points</div>
+                <div style="text-align:right;">User</div>
+              </div>
+              
+              <div class="table-body" style="display:flex; flex-direction:column;">
+                @for (task of pagedTasks(); track task.taskId) {
+                  <a [routerLink]="['/tasks', task.taskId]" class="task-list-row" style="display:grid; grid-template-columns: 90px 90px 1fr 110px 110px 130px 120px 70px 40px; gap:0.75rem; padding:1rem 1.25rem; align-items:center; border-bottom:1px solid var(--border-color); text-decoration:none; color:inherit; transition:all var(--transition-fast); position:relative; min-height:64px;">
+                    <!-- Left glow indicating priority -->
+                    <div class="row-glow" [class]="getPriorityClass(task.priority)" style="position:absolute; left:0; top:0; bottom:0; width:4px;"></div>
+                    
+                    <div class="task-key" style="font-weight:700; color:var(--text-muted);">{{ task.issueKey }}</div>
+                    
+                    <div>
+                      <span class="badge badge-outline" [class]="getIssueTypeClass(task.issueType)" style="font-size:0.7rem; font-weight:600; padding:0.15rem 0.45rem; border-radius:var(--radius-sm); border:1.5px solid currentColor; display:inline-block;">
+                        {{ getIssueTypeLabel(task.issueType) }}
+                      </span>
+                    </div>
+                    
+                    <div class="task-title-cell" style="font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:0.9rem; color:var(--text-primary); display:flex; align-items:center; gap:0.5rem;" [title]="task.title">
+                      @if (hasSubtasks(task.taskId)) {
+                        <button type="button" (click)="toggleSubtasks(task.taskId); $event.preventDefault(); $event.stopPropagation();" class="subtask-toggle" style="background:transparent; border:none; cursor:pointer; color:var(--text-secondary); display:flex; align-items:center; justify-content:center; padding:0; outline:none;">
+                          <span class="material-symbols-outlined" style="font-size:1.15rem; transition:transform 0.15s; color: var(--primary-color);" [style.transform]="expandedTasks()[task.taskId] ? 'rotate(90deg)' : 'none'">chevron_right</span>
+                        </button>
+                      }
+                      {{ task.title }}
+                    </div>
+                    
+                    <div>
+                      <span class="priority-label-badge" [class]="getPriorityClass(task.priority)" style="font-size:0.725rem; display:inline-flex; align-items:center; gap:0.25rem;">
+                        <span class="material-symbols-outlined priority-icon" style="font-size:0.9rem;">{{ getPriorityIcon(task.priority) }}</span>
+                        {{ getPriorityLabel(task.priority) }}
+                      </span>
+                    </div>
+                    
+                    <div>
+                      <span class="status-badge" [class]="getStatusClass(task.status)">
+                        {{ getStatusLabel(task.status) }}
+                      </span>
+                    </div>
+                    
+                    <div style="font-size:0.8rem; color:var(--text-secondary); font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                      {{ task.teamId ? getTeamName(task.teamId) : '—' }}
+                    </div>
+                    
+                    <div style="font-size:0.8rem; color:var(--text-secondary); display:flex; align-items:center; gap:0.25rem;">
+                      @if (task.dueDate || task.latestEta) {
+                        <span class="material-symbols-outlined" style="font-size:0.9rem;" [style.color]="task.isOverdue ? 'var(--danger-color)' : 'inherit'">schedule</span>
+                        <span [style.color]="task.isOverdue ? 'var(--danger-color)' : 'inherit'" [style.font-weight]="task.isOverdue ? '700' : 'normal'">
+                          {{ formatDate(task.dueDate || task.latestEta) }}
+                        </span>
+                      } @else {
+                        <span>—</span>
+                      }
+                    </div>
+                    
+                    <div style="text-align:right; font-weight:700; font-size:0.8rem; color:var(--text-secondary);">
+                      {{ task.storyPoints != null ? task.storyPoints + ' SP' : '—' }}
+                    </div>
+                    
+                    <div style="display:flex; justify-content:flex-end;">
+                      @if (task.assigneeId) {
+                        @if (getUserAvatarUrl(task.assigneeId); as avatar) {
+                          <img class="assignee-avatar" [src]="avatar" [title]="'Assignee: ' + getUserDisplayName(task.assigneeId)" alt="Avatar" style="width:26px; height:26px; border-radius:50%; object-fit:cover; display:block;" />
+                        } @else {
+                          <div class="assignee-avatar" [style.background-color]="getAssigneeColor(task.assigneeId)" [title]="'Assignee: ' + getUserDisplayName(task.assigneeId)" style="width:26px; height:26px; font-size:0.7rem; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-weight:700;">
+                            {{ getUserInitials(task.assigneeId) }}
+                          </div>
+                        }
+                      } @else {
+                        <div class="assignee-avatar unassigned" title="Unassigned" style="width:26px; height:26px; font-size:0.7rem; border-radius:50%; display:flex; align-items:center; justify-content:center; border:1px dashed var(--border-color); background:var(--bg-hover); color:var(--text-muted);">?</div>
+                      }
+                    </div>
+                  </a>
+
+                  <!-- Subtasks expansion rendering list -->
+                  @if (expandedTasks()[task.taskId]) {
+                    @for (sub of getSubtasks(task.taskId); track sub.taskId) {
+                      <a [routerLink]="['/tasks', sub.taskId]" class="task-list-row subtask-row" style="display:grid; grid-template-columns: 90px 90px 1fr 110px 110px 130px 120px 70px 40px; gap:0.75rem; padding:0.85rem 1.25rem 0.85rem 3rem; align-items:center; border-bottom:1px solid var(--border-color); text-decoration:none; color:inherit; transition:all var(--transition-fast); position:relative; min-height:56px; background: rgba(255,255,255,0.015);">
+                        <div class="row-glow" [class]="getPriorityClass(sub.priority)" style="position:absolute; left:0; top:0; bottom:0; width:4px;"></div>
+                        <div class="task-key" style="font-weight:700; color:var(--text-muted); padding-left: 1rem;">↳ {{ sub.issueKey }}</div>
+                        <div>
+                          <span class="badge badge-outline" [class]="getIssueTypeClass(sub.issueType)" style="font-size:0.7rem; font-weight:600; padding:0.15rem 0.45rem; border-radius:var(--radius-sm); border:1.5px solid currentColor; display:inline-block;">
+                            {{ getIssueTypeLabel(sub.issueType) }}
+                          </span>
+                        </div>
+                        <div class="task-title-cell" style="font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:0.85rem; color:var(--text-primary);" [title]="sub.title">
+                          {{ sub.title }}
+                        </div>
+                        <div>
+                          <span class="priority-label-badge" [class]="getPriorityClass(sub.priority)" style="font-size:0.725rem; display:inline-flex; align-items:center; gap:0.25rem;">
+                            <span class="material-symbols-outlined priority-icon" style="font-size:0.9rem;">{{ getPriorityIcon(sub.priority) }}</span>
+                            {{ getPriorityLabel(sub.priority) }}
+                          </span>
+                        </div>
+                        <div>
+                          <span class="status-badge" [class]="getStatusClass(sub.status)">
+                            {{ getStatusLabel(sub.status) }}
+                          </span>
+                        </div>
+                        <div style="font-size:0.8rem; color:var(--text-secondary); font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                          {{ sub.teamId ? getTeamName(sub.teamId) : '—' }}
+                        </div>
+                        <div style="font-size:0.8rem; color:var(--text-secondary); display:flex; align-items:center; gap:0.25rem;">
+                          @if (sub.dueDate || sub.latestEta) {
+                            <span class="material-symbols-outlined" style="font-size:0.9rem;" [style.color]="sub.isOverdue ? 'var(--danger-color)' : 'inherit'">schedule</span>
+                            <span [style.color]="sub.isOverdue ? 'var(--danger-color)' : 'inherit'" [style.font-weight]="sub.isOverdue ? '700' : 'normal'">
+                              {{ formatDate(sub.dueDate || sub.latestEta) }}
+                            </span>
+                          } @else {
+                            <span>—</span>
+                          }
+                        </div>
+                        <div style="text-align:right; font-weight:700; font-size:0.8rem; color:var(--text-secondary);">
+                          {{ sub.storyPoints != null ? sub.storyPoints + ' SP' : '—' }}
+                        </div>
+                        <div style="display:flex; justify-content:flex-end;">
+                          @if (sub.assigneeId) {
+                            @if (getUserAvatarUrl(sub.assigneeId); as avatar) {
+                              <img class="assignee-avatar" [src]="avatar" [title]="'Assignee: ' + getUserDisplayName(sub.assigneeId)" alt="Avatar" style="width:26px; height:26px; border-radius:50%; object-fit:cover; display:block;" />
+                            } @else {
+                              <div class="assignee-avatar" [style.background-color]="getAssigneeColor(sub.assigneeId)" [title]="'Assignee: ' + getUserDisplayName(sub.assigneeId)" style="width:26px; height:26px; font-size:0.7rem; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-weight:700;">
+                                {{ getUserInitials(sub.assigneeId) }}
+                              </div>
+                            }
+                          } @else {
+                            <div class="assignee-avatar unassigned" title="Unassigned" style="width:26px; height:26px; font-size:0.7rem; border-radius:50%; display:flex; align-items:center; justify-content:center; border:1px dashed var(--border-color); background:var(--bg-hover); color:var(--text-muted);">?</div>
+                          }
+                        </div>
+                      </a>
+                    }
+                  }
+                }
+              </div>
+            </div>
+          }
+
+          <!-- Shared Pagination Component -->
+          <app-pagination
+            [totalItems]="filteredTasks().length"
+            [pageSize]="pageSize()"
+            [currentPage]="currentPage()"
+            (pageChange)="onPageChange($event)"
+            (pageSizeChange)="onPageSizeChange($event)"
+          ></app-pagination>
+        }
+      </div>
+
+      <!-- Create Custom Task Modal -->
+      @if (showCreateModal()) {
+        <div class="modal-backdrop" (click)="closeCreateModal()">
+          <div class="modal-content" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+              <h2>Create Custom Task</h2>
+              <button type="button" class="btn-close-modal" (click)="closeCreateModal()" aria-label="Close modal">
+                <span class="material-symbols-outlined">close</span>
+              </button>
+            </div>
+            
+            <form [formGroup]="createForm" (ngSubmit)="createTask()" class="modal-form">
+              <div class="form-group">
+                <label for="task-title">Title <span class="required">*</span></label>
+                <input id="task-title" type="text" placeholder="Enter task title..." formControlName="title" required />
+              </div>
+
+              <div class="form-group">
+                <label for="task-priority">Priority</label>
+                <select id="task-priority" formControlName="priority">
+                  <option [value]="TaskPriority.Low">Low</option>
+                  <option [value]="TaskPriority.Medium">Medium</option>
+                  <option [value]="TaskPriority.High">High</option>
+                  <option [value]="TaskPriority.Critical">Critical</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="task-team">Team</label>
+                <select id="task-team" formControlName="teamId">
+                  <option value="">No team</option>
+                  @for (team of teams(); track team.teamId) {
+                    <option [value]="team.teamId">{{ team.name }}</option>
+                  }
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="task-parent">Parent Task</label>
+                <select id="task-parent" formControlName="parentTaskId">
+                  <option value="">None (Top-level Task)</option>
+                  @for (parentTask of potentialParents(); track parentTask.taskId) {
+                    <option [value]="parentTask.taskId">{{ parentTask.issueKey }} - {{ parentTask.title }}</option>
+                  }
+                </select>
+              </div>
+
+              <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" (click)="closeCreateModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary" [disabled]="creating() || createForm.invalid">
+                  @if (creating()) {
+                    <span class="spinner-sm"></span> Creating...
+                  } @else {
+                    Create Task
+                  }
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      }
+
+      <!-- Predefined Tasks Modal -->
+      @if (showPredefinedModal()) {
+        <div class="modal-backdrop" (click)="closePredefinedModal()">
+          <div class="modal-content predefined-modal" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+              <h2>Add Predefined Standard Tasks</h2>
+              <button type="button" class="btn-close-modal" (click)="closePredefinedModal()" aria-label="Close modal">
+                <span class="material-symbols-outlined">close</span>
+              </button>
+            </div>
+
+            <div class="modal-body-scrollable">
+              <p class="modal-instruction">Select the standard tasks you want to add to this project. They will be created as tasks with default configurations.</p>
+              
+              <div class="predefined-global-actions">
+                <button type="button" class="btn btn-secondary btn-sm" (click)="selectAllPredefined()">Select All</button>
+                <button type="button" class="btn btn-secondary btn-sm" (click)="deselectAllPredefined()">Deselect All</button>
+              </div>
+
+              <div class="predefined-groups-list">
+                @for (group of predefinedGroups(); track group.name) {
+                  <div class="predefined-group-card">
+                    <div class="group-header">
+                      <div class="group-header-left">
+                        <span class="material-symbols-outlined group-icon">assignment_ind</span>
+                        <h3>{{ group.name }}</h3>
+                      </div>
+                      <div class="group-actions">
+                        <button type="button" class="btn-text-action" (click)="toggleGroupSelection(group)">
+                          {{ isGroupSelected(group) ? 'Deselect Group' : 'Select Group' }}
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div class="group-tasks-list">
+                      @for (task of group.tasks; track task.id) {
+                        <label class="predefined-task-item" [class.selected]="selectedTaskIds()[task.id]">
+                          <div class="task-checkbox-wrapper">
+                            <input
+                              type="checkbox"
+                              [checked]="!!selectedTaskIds()[task.id]"
+                              (change)="toggleTaskSelection(task.id)"
+                            />
+                          </div>
+                          <div class="task-item-details">
+                            <div class="task-item-title-row">
+                              <span class="task-item-title">{{ task.title }}</span>
+                              <span class="badge badge-outline" [class]="getIssueTypeClass(task.issueType)">
+                                {{ getIssueTypeLabel(task.issueType) }}
+                              </span>
+                            </div>
+                            <p class="task-item-desc">{{ task.description }}</p>
+                          </div>
+                        </label>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+
+            <!-- Configuration for predefined tasks -->
+            <div class="predefined-config-section">
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label for="predef-priority">Priority for New Tasks</label>
+                  <select id="predef-priority" [(ngModel)]="predefinedPriority">
+                    <option [value]="TaskPriority.Low">Low</option>
+                    <option [value]="TaskPriority.Medium">Medium</option>
+                    <option [value]="TaskPriority.High">High</option>
+                    <option [value]="TaskPriority.Critical">Critical</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="predef-team">Team Assignment</label>
+                  <select id="predef-team" [(ngModel)]="predefinedTeamId">
+                    <option value="">No team</option>
+                    @for (team of teams(); track team.teamId) {
+                      <option [value]="team.teamId">{{ team.name }}</option>
+                    }
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="modal-footer">
+              <div class="selection-count">
+                {{ getSelectedCount() }} task(s) selected
+              </div>
+              <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" (click)="closePredefinedModal()">Cancel</button>
+                <button type="button" class="btn btn-primary" (click)="createPredefinedTasks()" [disabled]="creating() || getSelectedCount() === 0">
+                  @if (creating()) {
+                    <span class="spinner-sm"></span> Creating Tasks...
+                  } @else {
+                    Add Selected Tasks
+                  }
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  

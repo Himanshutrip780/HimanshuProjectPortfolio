@@ -1,0 +1,119 @@
+
+    <div class="page-container">
+      <header class="page-header">
+        <div class="header-left">
+          <h1>Analytics & Reports</h1>
+          <p class="subtitle">Aggregate insights on workspace performance and task distribution.</p>
+        </div>
+      </header>
+
+      @if (loading()) {
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p>Loading reports...</p>
+        </div>
+      } @else if (error()) {
+        <div class="error-state">
+          <span class="material-symbols-outlined text-danger">error</span>
+          <p>{{ error() }}</p>
+        </div>
+      } @else {
+        <!-- Grid of general stats -->
+        <div class="reports-grid">
+          <div class="report-card">
+            <span class="report-card-label">Workspace Health</span>
+            <div class="health-gauge">
+              <svg width="120" height="120" viewBox="0 0 36 36" class="donut-svg">
+                <circle cx="18" cy="18" r="15.915" fill="none" stroke="var(--border-color)" stroke-width="3.5"></circle>
+                <circle 
+                  cx="18" 
+                  cy="18" 
+                  r="15.915" 
+                  fill="none" 
+                  stroke="var(--success-color)" 
+                  stroke-width="3.5" 
+                  [attr.stroke-dasharray]="completionRate() + ' ' + (100 - completionRate())"
+                  stroke-dashoffset="25"
+                ></circle>
+              </svg>
+              <div class="gauge-text">
+                <span class="gauge-value">{{ completionRate() }}%</span>
+                <span class="gauge-sub">Tasks Done</span>
+              </div>
+            </div>
+            <p class="card-summary">{{ doneTasksCount() }} of {{ totalTasksCount() }} tasks completed.</p>
+          </div>
+
+          <div class="report-card progress-report">
+            <span class="report-card-label">Task Status Breakdown</span>
+            <div class="bar-chart-container">
+              @for (stat of statusStats(); track stat.label) {
+                <div class="chart-bar-item">
+                  <div class="item-label-group">
+                    <span class="item-label">{{ stat.label }}</span>
+                    <span class="item-count">{{ stat.count }} ({{ stat.percentage }}%)</span>
+                  </div>
+                  <div class="progress-bar-track">
+                    <div class="progress-bar-fill" [style.width.%]="stat.percentage" [class]="stat.class"></div>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+
+          <div class="report-card priority-report">
+            <span class="report-card-label">Task Priority Breakdown</span>
+            <div class="bar-chart-container">
+              @for (pri of priorityStats(); track pri.label) {
+                <div class="chart-bar-item">
+                  <div class="item-label-group">
+                    <span class="item-label">{{ pri.label }}</span>
+                    <span class="item-count">{{ pri.count }} ({{ pri.percentage }}%)</span>
+                  </div>
+                  <div class="progress-bar-track">
+                    <div class="progress-bar-fill" [style.width.%]="pri.percentage" [class]="pri.class"></div>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- Project Performance Summary Table -->
+        <div class="panel performance-table-container">
+          <h3>Project Performance Index</h3>
+          <div class="table-scroll">
+            <table class="report-table">
+              <thead>
+                <tr>
+                  <th>Project Name</th>
+                  <th>Total Tasks</th>
+                  <th>Done</th>
+                  <th>Overdue</th>
+                  <th>Completion Rate</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (p of projectMetrics(); track p.name) {
+                  <tr>
+                    <td class="project-name-cell">{{ p.name }}</td>
+                    <td>{{ p.total }}</td>
+                    <td>{{ p.done }}</td>
+                    <td [class.overdue-count]="p.overdue > 0">{{ p.overdue }}</td>
+                    <td>
+                      <div class="rate-cell">
+                        <div class="mini-progress-track">
+                          <div class="mini-progress-fill" [style.width.%]="p.rate"></div>
+                        </div>
+                        <span class="rate-val">{{ p.rate }}%</span>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+    </div>
+  

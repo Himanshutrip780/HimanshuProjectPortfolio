@@ -1,0 +1,334 @@
+<!-- ================= SOLID APPLICATION SHELL ================= -->
+<div class="flex h-screen w-screen overflow-hidden bg-background text-foreground transition-colors duration-300 font-sans">
+  
+  <!-- Left Side: Solid Navigation Sidebar (280px wide) -->
+  <aside 
+    [class.w-[280px]]="!isCollapsed()" 
+    [class.w-20]="isCollapsed()" 
+    class="flex flex-col bg-card border-r border-border transition-all duration-300 h-full select-none z-30 shrink-0 overflow-hidden"
+  >
+    <!-- HireNow Logo Header -->
+    <div 
+      class="h-[72px] flex items-center relative shrink-0 border-b border-border transition-all duration-300"
+      [class.px-6]="!isCollapsed()"
+      [class.px-0]="isCollapsed()"
+      [class.justify-between]="!isCollapsed()"
+      [class.justify-center]="isCollapsed()"
+    >
+      <div class="flex items-center gap-3 select-none">
+        <div class="w-8 h-8 rounded-[10px] bg-primary flex items-center justify-center text-white shrink-0">
+          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z"/>
+          </svg>
+        </div>
+        <span *ngIf="!isCollapsed()" class="text-base font-extrabold tracking-tight text-foreground">HireNow</span>
+      </div>
+      <button 
+        *ngIf="!isCollapsed()"
+        (click)="toggleSidebar()" 
+        class="p-1.5 rounded-[8px] hover:bg-secondary text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Workspace identity (Static organization name) -->
+    <div class="px-4 py-4 border-b border-border shrink-0 relative">
+      <div 
+        class="flex items-center gap-3 p-2 rounded-[14px] flex-1 min-w-0 border border-border bg-secondary/20 transition-premium"
+      >
+        <!-- Logo or Initial -->
+        <img *ngIf="companyLogoUrl()" [src]="companyLogoUrl()" class="w-7 h-7 rounded-[8px] object-cover shrink-0 shadow-sm" alt="Corp Logo" />
+        <div *ngIf="!companyLogoUrl()" class="w-7 h-7 rounded-[8px] bg-primary flex items-center justify-center text-white font-bold text-xs shrink-0 shadow-sm">
+          {{ companyName() ? companyName().charAt(0) : 'A' }}
+        </div>
+        <div class="flex-1 min-w-0 flex flex-col text-left">
+          <span class="text-xs font-bold tracking-tight truncate leading-none text-foreground">{{ companyName() }}</span>
+          <span class="text-[9px] font-semibold text-muted-foreground mt-1 truncate leading-none">Active Workspace</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation Links -->
+    <nav class="flex-1 px-3 py-4 space-y-2 overflow-y-auto">
+      @for (item of filteredNavItems(); track item.path) {
+        <a 
+          [routerLink]="item.path" 
+          routerLinkActive="active-nav-item"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-[14px] text-muted-foreground hover:text-foreground transition-premium cursor-pointer group relative text-xs"
+          [title]="isCollapsed() ? item.label : ''"
+        >
+          <!-- Glowing active indicator line -->
+          <span class="active-indicator absolute left-0 top-2.5 bottom-2.5 w-1 rounded-r bg-white opacity-0 transition-opacity duration-300 shadow-[0_0_8px_#ffffff]"></span>
+          <!-- SVG Icon mappings -->
+          <div class="w-5 h-5 flex items-center justify-center shrink-0">
+            <!-- Dashboard Icon -->
+            <svg *ngIf="item.iconName === 'dashboard'" class="w-5 h-5 text-muted-foreground group-hover:text-foreground" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6a7.5 7.5 0 1 0 7.5 7.5h-7.5V6Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5H21A7.5 7.5 0 0 0 13.5 3v7.5Z"/></svg>
+            <!-- Jobs Icon -->
+            <svg *ngIf="item.iconName === 'jobs'" class="w-5 h-5 text-muted-foreground group-hover:text-foreground" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 14.15v4.25c0 .9-.73 1.63-1.63 1.63H5.38c-.9 0-1.63-.72-1.63-1.62v-4.25m16.5 0a2.18 2.18 0 0 0 .07-.54V8c0-.9-.73-1.63-1.63-1.63h-2.25m-12.75 9.38c-.06-.17-.07-.36-.07-.53V8c0-.9.73-1.63 1.63-1.63h2.25m3.75 3c0-.9.73-1.63 1.63-1.63h3.75c.9 0 1.63.73 1.63 1.63v4.5m-7 0H21m-18 0h3.75M9 6.38V4.5c0-.9.73-1.63 1.63-1.63h2.75c.9 0 1.62.73 1.62 1.63v1.88"/></svg>
+            <!-- Candidates Icon -->
+            <svg *ngIf="item.iconName === 'candidates'" class="w-5 h-5 text-muted-foreground group-hover:text-foreground" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"/></svg>
+            <!-- Pipeline Icon -->
+            <svg *ngIf="item.iconName === 'pipeline'" class="w-5 h-5 text-muted-foreground group-hover:text-foreground" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 4.5v15m6-15v15m-9-15h12c.9 0 1.63.73 1.63 1.63v12c0 .9-.73 1.62-1.63 1.62H4.5c-.9 0-1.63-.72-1.63-1.62v-12c0-.9.73-1.63 1.63-1.63Z"/></svg>
+            <!-- Interviews Icon -->
+            <svg *ngIf="item.iconName === 'interviews'" class="w-5 h-5 text-muted-foreground group-hover:text-foreground" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z"/></svg>
+            <!-- Offers Icon -->
+            <svg *ngIf="item.iconName === 'offers'" class="w-5 h-5 text-muted-foreground group-hover:text-foreground" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></svg>
+            <!-- Analytics Icon -->
+            <svg *ngIf="item.iconName === 'analytics'" class="w-5 h-5 text-muted-foreground group-hover:text-foreground" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v5.25c0 .621-.504 1.125-1.125 1.125h-2.25A1.125 1.125 0 0 1 3 18.375v-5.25ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125v-9.75ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v14.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z"/></svg>
+            <!-- Settings Icon -->
+            <svg *ngIf="item.iconName === 'settings'" class="w-5 h-5 text-muted-foreground group-hover:text-foreground" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.43l-1.003.828c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.43l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg>
+          </div>
+          <span *ngIf="!isCollapsed()" class="font-bold tracking-tight truncate">{{ item.label }}</span>
+        </a>
+      }
+    </nav>
+
+    <!-- Sidebar Footer -->
+    <div class="p-3.5 border-t border-border flex flex-col gap-1.5 relative shrink-0">
+      <!-- Notifications -->
+      <a 
+        (click)="toggleNotifications()"
+        class="flex items-center justify-between px-3.5 py-2.5 rounded-[14px] text-muted-foreground hover:text-foreground transition-all duration-200 cursor-pointer text-xs group relative"
+        [title]="isCollapsed() ? 'Notifications (' + unreadCount() + ')' : ''"
+      >
+        <div class="flex items-center gap-3">
+          <div class="w-5 h-5 flex items-center justify-center shrink-0 relative">
+            <svg class="w-5 h-5 text-muted-foreground group-hover:text-foreground" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"/></svg>
+            <span *ngIf="isCollapsed() && unreadCount() > 0" class="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-primary text-[8px] font-black text-white flex items-center justify-center">{{ unreadCount() }}</span>
+          </div>
+          <span *ngIf="!isCollapsed()" class="font-bold tracking-tight">Notifications</span>
+        </div>
+        <span *ngIf="!isCollapsed() && unreadCount() > 0" class="w-5 h-5 rounded-full bg-primary text-[10px] font-black text-white flex items-center justify-center">{{ unreadCount() }}</span>
+      </a>
+
+      <!-- User Profile Section -->
+      <div class="mt-2 pt-2 border-t border-border flex flex-col gap-1.5">
+        <div 
+          (click)="toggleSidebarProfile()" 
+          class="flex items-center justify-between gap-2.5 cursor-pointer hover:bg-secondary/60 p-1.5 rounded-[14px] transition-premium hover-scale"
+          [title]="isCollapsed() ? (authService.currentUser()?.firstName + ' (' + getFormattedRole() + ')') : ''"
+        >
+          <div class="flex items-center gap-2.5 min-w-0">
+            <!-- User Avatar -->
+            <div class="w-8 h-8 rounded-full bg-primary/10 text-primary border border-primary/20 flex items-center justify-center font-bold text-xs shrink-0">
+              {{ authService.currentUser()?.firstName?.charAt(0) || 'U' }}
+            </div>
+            <!-- User Info -->
+            <div class="flex-1 min-w-0 flex flex-col leading-none" *ngIf="!isCollapsed()">
+              <span class="text-xs font-bold text-foreground truncate">{{ authService.currentUser()?.firstName }}</span>
+              <span class="text-[9px] font-semibold text-muted-foreground mt-1 truncate">{{ getFormattedRole() }}</span>
+            </div>
+          </div>
+          <svg *ngIf="!isCollapsed()" class="w-3.5 h-3.5 text-muted-foreground shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/></svg>
+        </div>
+      </div>
+
+      <!-- User dropdown popup menu -->
+      <div *ngIf="isSidebarProfileOpen()" [class.left-3]="!isCollapsed()" [class.left-20]="isCollapsed()" class="absolute bottom-16 w-54 bg-card border border-border rounded-[20px] shadow-level2 py-1.5 z-40 animate-slide-down text-[10px]">
+        <div class="px-3 py-2 border-b border-border">
+          <span class="block font-bold text-foreground truncate">{{ getUserFullName() }}</span>
+          <span class="block text-[9px] text-muted-foreground truncate mt-0.5">{{ authService.currentUser()?.email }}</span>
+        </div>
+        <a (click)="onLogout()" class="flex items-center gap-2 px-3 py-2 text-destructive hover:bg-destructive/5 cursor-pointer font-bold mt-1 transition-colors">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M12 9l-3 3m0 0 3 3m-3-3h12.75"/></svg>
+          <span>Logout</span>
+        </a>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Right Side: Content Area (Topbar & Viewport) -->
+  <div class="flex-1 flex flex-col h-full overflow-hidden bg-background">
+    
+    <!-- Topbar Header (Rigid 72px, solid bg) -->
+    <header class="h-[72px] bg-card border-b border-border px-6 flex items-center justify-between z-20 shrink-0">
+      <!-- Left: Mobile Menu / Collapse trigger & Global search -->
+      <div class="flex items-center gap-3 flex-1 max-w-xl">
+        <!-- Hamburger menu button when collapsed -->
+        <button 
+          *ngIf="isCollapsed()"
+          (click)="toggleSidebar()"
+          class="p-2 rounded-[14px] hover:bg-secondary/60 text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+          </svg>
+        </button>
+        
+        <!-- Wide Global Search Trigger -->
+        <div 
+          (click)="toggleCommandPalette()"
+          class="flex items-center justify-between px-3.5 py-2 rounded-[14px] border border-border bg-secondary/30 hover:bg-secondary/70 hover:border-violet-500/30 text-xs text-muted-foreground hover:text-foreground transition-premium hover-scale cursor-pointer flex-1 max-w-md select-none"
+        >
+          <div class="flex items-center gap-2">
+            <svg class="w-4 h-4 text-violet-500" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.637 10.637Z"/></svg>
+            <span>⌘ Search candidates, jobs...</span>
+          </div>
+          <kbd class="px-1.5 py-0.5 rounded bg-card border border-border text-[9px] font-bold shadow-xs leading-none select-none">⌘ K</kbd>
+        </div>
+      </div>
+
+      <!-- Right: Topbar Actions -->
+      <div class="flex items-center gap-3">
+        <!-- Theme Toggle Button -->
+        <button 
+          (click)="themeService.toggleTheme()"
+          class="p-2 border border-border rounded-[10px] bg-card hover:bg-secondary/60 text-muted-foreground hover:text-foreground transition-all duration-200 cursor-pointer w-9 h-9 flex items-center justify-center"
+          [title]="themeService.isDark() ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
+        >
+          <!-- Sun Icon -->
+          <svg *ngIf="themeService.isDark()" class="w-5 h-5 animate-fade-in" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m0 13.5V21M5.25 5.25l1.626 1.626m10.248 10.248 1.626 1.626M3 12h2.25m13.5 0H21M5.25 18.75l1.626-1.626m10.248-10.248 1.626-1.626M12 7.5a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9Z"/></svg>
+          <!-- Moon Icon -->
+          <svg *ngIf="!themeService.isDark()" class="w-5 h-5 animate-fade-in" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z"/></svg>
+        </button>
+
+        <!-- Notifications Bell -->
+        <div class="relative">
+          <button 
+            (click)="toggleNotifications()"
+            class="p-2 border border-border rounded-[10px] bg-card hover:bg-secondary/60 text-muted-foreground hover:text-foreground relative transition-premium hover-scale cursor-pointer w-9 h-9 flex items-center justify-center"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"/></svg>
+            <span *ngIf="unreadCount() > 0" class="absolute top-1 right-1 w-2 h-2 rounded-full bg-primary ring-2 ring-card animate-pulse"></span>
+          </button>
+
+          <!-- Notifications Dropdown -->
+          <div *ngIf="isNotificationsOpen()" class="absolute top-12 right-0 w-80 bg-card border border-border rounded-[20px] shadow-level2 overflow-hidden py-1.5 z-40 animate-slide-down">
+            <div class="px-4 py-2.5 border-b border-border flex justify-between items-center bg-secondary/10 bg-opacity-90">
+              <span class="font-bold text-xs text-foreground">Notifications</span>
+              <button (click)="markAllAsRead()" class="text-[10px] text-primary hover:underline font-bold cursor-pointer transition-all">Mark all read</button>
+            </div>
+            <div class="max-h-64 overflow-y-auto divide-y divide-border">
+              @for (notif of notifications(); track notif.id) {
+                <div (click)="markAsRead(notif.id)" class="px-4 py-3 hover:bg-secondary/40 text-[11px] flex flex-col gap-1 transition-colors cursor-pointer">
+                  <div class="flex justify-between items-start">
+                    <span class="font-bold text-foreground flex items-center gap-1.5">
+                      <span *ngIf="!notif.isRead" class="w-1.5 h-1.5 rounded-full bg-primary shrink-0"></span>
+                      {{ notif.title }}
+                    </span>
+                    <span class="text-[9px] text-muted-foreground">{{ notif.createdDate | date:'short' }}</span>
+                  </div>
+                  <p class="text-muted-foreground leading-normal mt-0.5">{{ notif.message }}</p>
+                </div>
+              }
+              @if (notifications().length === 0) {
+                <div class="text-center py-6 text-xs text-muted-foreground">No notifications.</div>
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- Elongated Email Pill Dropdown Trigger -->
+        <div class="relative shrink-0 select-none">
+          <button 
+            (click)="toggleHeaderProfile()"
+            class="border border-border rounded-full bg-secondary/10 hover:bg-secondary/40 px-3 py-1.5 flex items-center gap-2.5 cursor-pointer transition-premium h-9 max-w-[400px]"
+          >
+            <!-- Initials Avatar -->
+            <div class="w-6 h-6 rounded-full bg-primary/20 text-primary border border-primary/20 flex items-center justify-center font-bold text-[10px] shrink-0 select-none">
+              {{ authService.currentUser()?.firstName?.charAt(0) || 'U' }}{{ authService.currentUser()?.lastName?.charAt(0) || '' }}
+            </div>
+            <!-- Email Text -->
+            <span class="text-xs font-semibold text-foreground truncate max-w-[300px] leading-none">
+              {{ authService.currentUser()?.email }}
+            </span>
+            <!-- Down arrow/chevron -->
+            <svg class="w-3.5 h-3.5 text-muted-foreground shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/>
+            </svg>
+          </button>
+
+          <!-- User dropdown popup menu right here! -->
+          <div 
+            *ngIf="isHeaderProfileOpen()" 
+            class="absolute top-10 right-0 w-54 bg-card border border-border rounded-[20px] shadow-level2 py-1.5 z-40 animate-slide-down text-[10px]"
+          >
+            <div class="px-3 py-2 border-b border-border">
+              <span class="block font-bold text-foreground truncate">{{ getUserFullName() }}</span>
+              <span class="block text-[9px] text-muted-foreground truncate mt-0.5">{{ authService.currentUser()?.email }}</span>
+            </div>
+            <a (click)="onLogout()" class="flex items-center gap-2 px-3 py-2 text-destructive hover:bg-destructive/5 cursor-pointer font-bold mt-1 transition-colors">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M12 9l-3 3m0 0 3 3m-3-3h12.75"/></svg>
+              <span>Logout</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Sign Out Button -->
+        <button 
+          (click)="onLogout()" 
+          class="border border-border rounded-[10px] bg-card hover:bg-destructive/5 hover:border-destructive/30 text-foreground hover:text-destructive flex items-center justify-center gap-2 px-4 py-2 text-xs font-bold transition-premium cursor-pointer h-9 shrink-0"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M12 9l-3 3m0 0 3 3m-3-3h12.75"/>
+          </svg>
+          <span>Sign Out</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content Viewport (Centered 1440px content wrapper) -->
+    <main class="flex-1 overflow-y-auto p-8 scrollbar-thin">
+      <div class="max-w-[1440px] mx-auto w-full">
+        <router-outlet></router-outlet>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Ctrl+K Command Palette Modal -->
+<div 
+  *ngIf="isCommandPaletteOpen()" 
+  class="fixed inset-0 bg-black/50 z-50 flex items-start justify-center pt-[15vh] px-4 animate-slide-down"
+  (click)="closeCommandPalette()"
+>
+  <div 
+    class="bg-card w-full max-w-lg rounded-[20px] border border-border shadow-level2 overflow-hidden flex flex-col animate-slide-down"
+    (click)="$event.stopPropagation()"
+  >
+    <!-- Search Field -->
+    <div class="flex items-center gap-3 px-4 py-3.5 border-b border-border">
+      <svg class="w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.637 10.637Z"/></svg>
+      <input 
+        type="text" 
+        [(ngModel)]="searchQuery"
+        placeholder="Type a command or search route..." 
+        class="flex-1 bg-transparent text-sm text-foreground outline-none border-none placeholder-muted-foreground"
+        focus
+      >
+      <span class="text-[9px] font-bold text-muted-foreground border border-border rounded px-1.5 py-0.5 select-none shadow-xs">ESC</span>
+    </div>
+
+    <!-- Search Results -->
+    <div class="max-h-72 overflow-y-auto p-2">
+      <div *ngIf="filteredPaletteItems().length === 0" class="px-4 py-8 text-center text-xs text-muted-foreground">
+        No results found for "{{ searchQuery() }}"
+      </div>
+
+      @for (item of filteredPaletteItems(); track item.label; let idx = $index) {
+        <div 
+          (click)="triggerCommand(item)"
+          [class.bg-secondary]="idx === selectedIndex()"
+          [class.text-foreground]="idx === selectedIndex()"
+          class="flex items-center justify-between px-3.5 py-2.5 rounded-[14px] cursor-pointer text-xs text-muted-foreground hover:bg-secondary/40 hover:text-foreground transition-all duration-150"
+        >
+          <span class="font-bold">{{ item.label }}</span>
+          <span class="text-[9px] uppercase font-bold tracking-wider text-muted-foreground bg-secondary border border-border px-1.5 py-0.5 rounded shadow-xs">{{ item.category }}</span>
+        </div>
+      }
+    </div>
+
+    <!-- Palette Footer shortcut tips -->
+    <div class="px-4 py-2.5 border-t border-border bg-secondary/15 flex items-center justify-end gap-3 text-[10px] text-muted-foreground select-none">
+      <span class="flex items-center gap-1">
+        <kbd class="px-1 py-0.5 bg-muted rounded border border-border shadow-xs">↑↓</kbd> Navigate
+      </span>
+      <span class="flex items-center gap-1">
+        <kbd class="px-1 py-0.5 bg-muted rounded border border-border shadow-xs">Enter</kbd> Select
+      </span>
+    </div>
+  </div>
+</div>

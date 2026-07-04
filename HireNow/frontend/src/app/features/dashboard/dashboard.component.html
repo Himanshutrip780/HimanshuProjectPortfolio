@@ -1,0 +1,518 @@
+<!-- Toast/Status Banner -->
+@if (toast(); as t) {
+  <div 
+    [ngClass]="t.type === 'success' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400' : 'bg-red-500/10 border-red-500/30 text-red-600 dark:text-red-400'"
+    class="fixed bottom-6 right-6 z-50 glass-panel border px-5 py-3.5 rounded-[16px] shadow-lg flex items-center gap-3 animate-fade-in-up text-xs font-bold"
+  >
+    <span>{{ t.type === 'success' ? '✓' : '✗' }}</span>
+    <span>{{ t.message }}</span>
+  </div>
+}
+
+<!-- ================= SKELETON LOADER STATE ================= -->
+@if (store.loading()) {
+  <div class="space-y-6 animate-pulse select-none">
+    <!-- Header skeleton -->
+    <div class="h-9 w-64 bg-slate-200 dark:bg-slate-800 rounded-[14px]"></div>
+    
+    <!-- Hero banner skeleton -->
+    <div class="bg-card border border-border rounded-[20px] p-6 h-48 flex flex-col justify-between">
+      <div class="space-y-3">
+        <div class="h-8 w-64 bg-slate-200 dark:bg-slate-800 rounded-md"></div>
+        <div class="h-4 w-96 bg-slate-200 dark:bg-slate-800 rounded-md"></div>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
+        <div class="h-12 bg-slate-200 dark:bg-slate-800 rounded-[14px]"></div>
+        <div class="h-12 bg-slate-200 dark:bg-slate-800 rounded-[14px]"></div>
+        <div class="h-12 bg-slate-200 dark:bg-slate-800 rounded-[14px]"></div>
+      </div>
+    </div>
+
+    <!-- KPI Cards Skeletons -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      @for (i of [1,2,3,4]; track i) {
+        <div class="bg-card border border-border p-6 h-28 rounded-[20px] flex items-center justify-between">
+          <div class="space-y-2">
+            <div class="h-3 w-16 bg-slate-200 dark:bg-slate-800 rounded"></div>
+            <div class="h-6 w-12 bg-slate-200 dark:bg-slate-800 rounded"></div>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Main Grid Skeleton -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div class="h-[400px] lg:col-span-2 bg-card border border-border rounded-[20px] p-6"></div>
+      <div class="h-[400px] bg-card border border-border rounded-[20px] p-6"></div>
+    </div>
+  </div>
+}
+
+<!-- ================= ERROR STATE ================= -->
+@else if (store.error()) {
+  <div class="flex flex-col items-center justify-center min-h-[400px] bg-card border border-border p-8 text-center space-y-4 rounded-[20px] shadow-level1">
+    <div class="w-16 h-16 rounded-full bg-destructive/10 text-destructive border border-destructive/20 flex items-center justify-center text-2xl font-bold">⚠️</div>
+    <h3 class="text-lg font-bold text-foreground">Failed to Load Dashboard Metrics</h3>
+    <p class="text-sm text-muted-foreground max-w-sm">{{ store.error() }}</p>
+    <button (click)="store.loadAll()" class="btn-primary py-2 px-6 text-xs font-semibold">Retry Loading</button>
+  </div>
+}
+
+<!-- ================= SUCCESS CONTENT STATE ================= -->
+@else {
+  <div class="space-y-6 select-none animate-fade-in pb-8">
+    
+    <!-- Title Area answering "What needs my attention today?" -->
+    <div class="flex flex-col gap-1">
+      <span class="text-xs font-bold uppercase tracking-wider text-muted-foreground">Command Center</span>
+      <h1 class="text-3xl font-extrabold tracking-tight text-foreground">What needs my attention today?</h1>
+    </div>
+
+    <!-- Hero Welcome & Top Actions Banner -->
+    <div class="bg-gradient-to-br from-card to-secondary/30 border border-border rounded-[20px] p-6 md:p-8 shadow-level1 flex flex-col gap-6">
+      <div class="space-y-2">
+        <h2 class="text-2xl font-bold tracking-tight text-foreground">Good Morning, {{ authService.currentUser()?.firstName || 'User' }} 👋</h2>
+        <p class="text-sm text-muted-foreground max-w-2xl">
+          You have <strong class="text-foreground">{{ store.interviewsCount() }} interviews</strong> scheduled today, <strong class="text-foreground">{{ store.pendingOffersCount() }} pending offer approvals</strong>, and <strong class="text-foreground">{{ store.urgentCandidatesCount() }} urgent candidates</strong> requiring feedback.
+        </p>
+      </div>
+
+      <!-- Top 3 Visually Dominant Recruiter Actions styled with transition premium and hover scale -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <!-- Action 1: Interviews -->
+        <div 
+          (click)="onNavigateToInterviews()" 
+          class="bg-card/50 backdrop-blur-md border border-border hover:border-primary/50 p-4 rounded-[14px] flex items-center justify-between cursor-pointer transition-premium hover-scale group shadow-xs"
+        >
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-[10px] bg-primary/10 text-primary flex items-center justify-center shrink-0">
+              <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z"/>
+              </svg>
+            </div>
+            <div class="flex flex-col leading-none">
+              <span class="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Interviews Today</span>
+              <span class="text-base font-extrabold text-foreground mt-1">{{ store.interviewsCount() }} Scheduled</span>
+            </div>
+          </div>
+          <span class="text-xs text-muted-foreground group-hover:text-primary transition-colors font-bold">→</span>
+        </div>
+
+        <!-- Action 2: Offers -->
+        @if (canViewOffers()) {
+          <div 
+            (click)="onNavigateToOffers()" 
+            class="bg-card/50 backdrop-blur-md border border-border hover:border-primary/50 p-4 rounded-[14px] flex items-center justify-between cursor-pointer transition-premium hover-scale group shadow-xs"
+          >
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-[10px] bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/>
+                </svg>
+              </div>
+              <div class="flex flex-col leading-none">
+                <span class="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Pending Offers</span>
+                <span class="text-base font-extrabold text-foreground mt-1">{{ store.pendingOffersCount() }} Approvals</span>
+              </div>
+            </div>
+            <span class="text-xs text-muted-foreground group-hover:text-primary transition-colors font-bold">→</span>
+          </div>
+        }
+
+        <!-- Action 3: Candidates -->
+        @if (canViewCandidates()) {
+          <div 
+            (click)="onNavigateToCandidates()" 
+            class="bg-card/50 backdrop-blur-md border border-border hover:border-primary/50 p-4 rounded-[14px] flex items-center justify-between cursor-pointer transition-premium hover-scale group shadow-xs"
+          >
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-[10px] bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/>
+                </svg>
+              </div>
+              <div class="flex flex-col leading-none">
+                <span class="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Priority Pipeline</span>
+                <span class="text-base font-extrabold text-foreground mt-1">{{ store.urgentCandidatesCount() }} Urgent</span>
+              </div>
+            </div>
+            <span class="text-xs text-muted-foreground group-hover:text-primary transition-colors font-bold">→</span>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- 4 KPI Cards Grid with glass styling and hover scaling -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <!-- KPI 1: Active Jobs -->
+      <div class="glass-panel p-6 shadow-level1 flex flex-col justify-between min-h-[120px] transition-premium hover-scale relative overflow-hidden group">
+        <div class="absolute -right-4 -bottom-4 text-primary/5 group-hover:text-primary/10 transition-colors duration-300 pointer-events-none">
+          <svg class="w-24 h-24" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 14.15v4.25c0 .9-.73 1.63-1.63 1.63H5.38c-.9 0-1.63-.72-1.63-1.62v-4.25m16.5 0a2.18 2.18 0 0 0 .07-.54V8c0-.9-.73-1.63-1.63-1.63h-2.25m-12.75 9.38c-.06-.17-.07-.36-.07-.53V8c0-.9.73-1.63 1.63-1.63h2.25m3.75 3c0-.9.73-1.63 1.63-1.63h3.75c.9 0 1.63.73 1.63 1.63v4.5m-7 0H21m-18 0h3.75M9 6.38V4.5c0-.9.73-1.63 1.63-1.63h2.75c.9 0 1.62.73 1.62 1.63v1.88"/></svg>
+        </div>
+        <span class="text-xs font-bold text-muted-foreground uppercase tracking-wider relative z-10">Active Jobs</span>
+        <div class="flex items-baseline justify-between mt-2 relative z-10">
+          <span class="text-3xl font-black text-foreground">{{ store.openPositionsCount() }}</span>
+          <span class="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-md">Requisitions</span>
+        </div>
+      </div>
+
+      <!-- KPI 2: Total Candidates -->
+      <div class="glass-panel p-6 shadow-level1 flex flex-col justify-between min-h-[120px] transition-premium hover-scale relative overflow-hidden group">
+        <div class="absolute -right-4 -bottom-4 text-emerald-500/5 group-hover:text-emerald-500/10 transition-colors duration-300 pointer-events-none">
+          <svg class="w-24 h-24" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"/></svg>
+        </div>
+        <span class="text-xs font-bold text-muted-foreground uppercase tracking-wider relative z-10">Total Candidates</span>
+        <div class="flex items-baseline justify-between mt-2 relative z-10">
+          <span class="text-3xl font-black text-foreground">{{ store.activeApplicationsCount() }}</span>
+          <span class="text-[10px] font-bold text-emerald-600 bg-emerald-500/10 px-2 py-0.5 rounded-md">Applications</span>
+        </div>
+      </div>
+
+      <!-- KPI 3: Time to Fill -->
+      <div class="glass-panel p-6 shadow-level1 flex flex-col justify-between min-h-[120px] transition-premium hover-scale relative overflow-hidden group">
+        <div class="absolute -right-4 -bottom-4 text-amber-500/5 group-hover:text-amber-500/10 transition-colors duration-300 pointer-events-none">
+          <svg class="w-24 h-24" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+        </div>
+        <span class="text-xs font-bold text-muted-foreground uppercase tracking-wider relative z-10">Time to Fill</span>
+        <div class="flex items-baseline justify-between mt-2 relative z-10">
+          <span class="text-3xl font-black text-foreground">{{ store.meanTimeToFillDays() }} Days</span>
+          <span class="text-[10px] font-bold text-amber-600 bg-amber-500/10 px-2 py-0.5 rounded-md">Avg Duration</span>
+        </div>
+      </div>
+
+      <!-- KPI 4: Acceptance Rate -->
+      <div class="glass-panel p-6 shadow-level1 flex flex-col justify-between min-h-[120px] transition-premium hover-scale relative overflow-hidden group">
+        <div class="absolute -right-4 -bottom-4 text-sky-500/5 group-hover:text-sky-500/10 transition-colors duration-300 pointer-events-none">
+          <svg class="w-24 h-24" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.746 3.746 0 0 1 3.296-1.043A3.746 3.746 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 3.296 1.043 3.746 3.746 0 0 1 1.043 3.296A3.745 3.745 0 0 1 21 12Z"/></svg>
+        </div>
+        <span class="text-xs font-bold text-muted-foreground uppercase tracking-wider relative z-10">Offer Acceptance</span>
+        <div class="flex items-baseline justify-between mt-2 relative z-10">
+          <span class="text-3xl font-black text-foreground">{{ store.offerAcceptanceRate() }}%</span>
+          <span class="text-[10px] font-bold text-sky-600 bg-sky-500/10 px-2 py-0.5 rounded-md">Target: 85%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Middle Grid: Recruitment Trend (2/3 width) and Pipeline Snapshot (1/3 width) -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      
+      <!-- Recruitment Trend Chart Card -->
+      <div class="bg-card border border-border rounded-[20px] p-6 shadow-level1 lg:col-span-2 flex flex-col justify-between min-h-[420px]">
+        <div class="flex items-center justify-between mb-4">
+          <div class="space-y-1">
+            <h3 class="text-base font-bold text-foreground">Recruitment Trend</h3>
+            <span class="text-xs text-muted-foreground">Month-over-month hiring progress</span>
+          </div>
+          <!-- Simple timeframe switcher -->
+          <div class="flex border border-border rounded-md overflow-hidden bg-background">
+            <button class="px-3 py-1 text-[10px] font-bold bg-secondary text-foreground">6M</button>
+            <button class="px-3 py-1 text-[10px] font-bold text-muted-foreground hover:bg-secondary/40">12M</button>
+          </div>
+        </div>
+
+        <!-- SVG Line/Bar Chart Area (Enlarged by 50% for prominence) -->
+        <div class="flex-1 flex items-center justify-center py-4">
+          <svg viewBox="0 0 500 220" class="w-full h-full text-primary max-h-[280px]">
+            <!-- Grid lines -->
+            <line x1="40" y1="20" x2="480" y2="20" stroke="var(--border)" stroke-width="1" stroke-dasharray="4,4"></line>
+            <line x1="40" y1="70" x2="480" y2="70" stroke="var(--border)" stroke-width="1" stroke-dasharray="4,4"></line>
+            <line x1="40" y1="120" x2="480" y2="120" stroke="var(--border)" stroke-width="1" stroke-dasharray="4,4"></line>
+            <line x1="40" y1="170" x2="480" y2="170" stroke="var(--border)" stroke-width="1" stroke-dasharray="4,4"></line>
+            <line x1="40" y1="170" x2="480" y2="170" stroke="var(--border)" stroke-width="1.5"></line>
+
+            <!-- Y Axis Labels -->
+            <text x="30" y="24" fill="var(--muted-foreground)" font-size="9" text-anchor="end" font-weight="600">{{ getYLabel(0) }}</text>
+            <text x="30" y="74" fill="var(--muted-foreground)" font-size="9" text-anchor="end" font-weight="600">{{ getYLabel(1) }}</text>
+            <text x="30" y="124" fill="var(--muted-foreground)" font-size="9" text-anchor="end" font-weight="600">{{ getYLabel(2) }}</text>
+            <text x="30" y="174" fill="var(--muted-foreground)" font-size="9" text-anchor="end" font-weight="600">0</text>
+
+            <!-- Columns representation (Flat Solid Bars) with Premium Interactive Tooltips and Hover Scaling -->
+            @for (item of store.monthlyTrends(); track item.month; let idx = $index) {
+              <g class="group/bar cursor-pointer">
+                <!-- Bar with Hover Scaling -->
+                <rect 
+                  [attr.x]="70 + (idx * 65)" 
+                  [attr.y]="170 - getBarHeight(item)" 
+                  width="30" 
+                  [attr.height]="getBarHeight(item)" 
+                  fill="currentColor" 
+                  rx="4" 
+                  class="opacity-80 group-hover/bar:opacity-100 group-hover/bar:text-violet-500 transition-all duration-300 transform origin-bottom hover:scale-y-[1.03]"
+                ></rect>
+                
+                <!-- Value Label -->
+                <text 
+                  [attr.x]="85 + (idx * 65)" 
+                  [attr.y]="162 - getBarHeight(item)" 
+                  fill="var(--foreground)" 
+                  font-size="9" 
+                  font-weight="bold" 
+                  text-anchor="middle"
+                  class="transition-all duration-300 group-hover/bar:translate-y-[-2px]"
+                >
+                  {{ getBarValue(item) }}
+                </text>
+
+                <!-- Custom Interactive SVG Tooltip Bubble -->
+                <g class="opacity-0 group-hover/bar:opacity-100 transition-opacity duration-200 pointer-events-none">
+                  <rect 
+                    [attr.x]="85 + (idx * 65) - 45" 
+                    [attr.y]="170 - getBarHeight(item) - 42" 
+                    width="90" 
+                    height="20" 
+                    rx="6" 
+                    fill="var(--card)" 
+                    stroke="var(--primary)" 
+                    stroke-width="1.5"
+                    class="shadow-lg"
+                  ></rect>
+                  <text 
+                    [attr.x]="85 + (idx * 65)" 
+                    [attr.y]="170 - getBarHeight(item) - 29" 
+                    fill="var(--foreground)" 
+                    font-size="8" 
+                    font-weight="800" 
+                    text-anchor="middle"
+                  >
+                    Hires: {{ getBarValue(item) }}
+                  </text>
+                </g>
+
+                <!-- X Axis Label -->
+                <text 
+                  [attr.x]="85 + (idx * 65)" 
+                  y="192" 
+                  fill="var(--muted-foreground)" 
+                  font-size="9" 
+                  font-weight="600" 
+                  text-anchor="middle"
+                >
+                  {{ item.month }}
+                </text>
+              </g>
+            }
+          </svg>
+        </div>
+      </div>
+
+      <!-- Pipeline Snapshot Funnel Card -->
+      <div class="bg-card border border-border rounded-[20px] p-6 shadow-level1 flex flex-col justify-between min-h-[420px]">
+        <div class="space-y-1">
+          <div class="flex items-center justify-between">
+            <h3 class="text-base font-bold text-foreground">Pipeline Snapshot</h3>
+            <span class="text-[10px] font-bold text-amber-600 bg-amber-500/10 px-2 py-0.5 rounded-md">Conversion: {{ store.overallConversionRate() | number:'1.1-1' }}%</span>
+          </div>
+          <span class="text-xs text-muted-foreground block">Active recruiting stages volumes</span>
+        </div>
+
+        <!-- Simplified flat funnel SVG -->
+        <div class="flex-1 flex flex-col justify-center gap-3 py-3">
+          @for (stage of store.funnelStages(); track stage.stage) {
+            <div class="flex items-center justify-between text-xs font-bold py-1 border-b border-border/40 last:border-none">
+              <div class="flex items-center gap-2">
+                <!-- Solid indicator dot -->
+                <span class="w-2 h-2 rounded-full" 
+                  [class.bg-violet-500]="stage.stage==='Applied'" 
+                  [class.bg-indigo-500]="stage.stage==='Screening'" 
+                  [class.bg-blue-500]="stage.stage==='Technical'" 
+                  [class.bg-sky-500]="stage.stage==='Interview'" 
+                  [class.bg-teal-500]="stage.stage==='Offer'" 
+                  [class.bg-emerald-500]="stage.stage==='Hired'">
+                </span>
+                <span class="text-muted-foreground font-semibold">{{ stage.stage }}</span>
+              </div>
+              
+              <div class="flex items-center gap-2">
+                <span class="text-foreground font-black">{{ stage.count }}</span>
+                <span class="text-[10px] text-muted-foreground font-medium">({{ stage.percentage }}%)</span>
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Primary redirect action -->
+        @if (canViewPipeline()) {
+          <button 
+            (click)="onViewPipelineClick()" 
+            class="btn-secondary py-2 w-full text-xs font-semibold"
+          >
+            View Kanban Pipeline →
+          </button>
+        }
+      </div>
+
+    </div>
+
+    <!-- Bottom Grid: Upcoming Interviews (Left) and Recent Activity (Right) -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      
+      <!-- Upcoming Interviews Card -->
+      <div class="bg-card border border-border rounded-[20px] p-6 shadow-level1 flex flex-col justify-between min-h-[320px]">
+        <div class="flex justify-between items-center mb-4 select-none">
+          <div class="space-y-0.5">
+            <h3 class="text-base font-bold text-foreground">Interviews Today</h3>
+            <span class="text-xs text-muted-foreground">Confirm review round schedule</span>
+          </div>
+          <button (click)="onNavigateToInterviews()" class="text-xs text-primary hover:underline font-bold">Calendar View</button>
+        </div>
+
+        <!-- Interviews Feed List with Slide-in animations and Staggered delay -->
+        <div class="flex-1 flex flex-col gap-3 overflow-y-auto pr-1">
+          @for (int of store.todayInterviews(); track int.id; let idx = $index) {
+            <div 
+              class="flex items-center justify-between gap-3 border-b border-border/40 pb-3 last:border-0 last:pb-0 animate-fade-in-up"
+              [style.animation-delay]="(idx * 75) + 'ms'"
+            >
+              <div class="flex items-center gap-3 min-w-0">
+                <div class="w-8 h-8 rounded-full bg-primary/10 border border-primary/20 text-primary flex items-center justify-center font-bold text-xs shrink-0 select-none">
+                  {{ int.candidateName.charAt(0) }}{{ (int.candidateName.split(' ')[1] || '').charAt(0) }}
+                </div>
+                <div class="min-w-0 flex flex-col">
+                  <span class="text-xs font-bold text-foreground truncate">{{ int.candidateName }}</span>
+                  <span class="text-[10px] text-muted-foreground truncate mt-0.5">{{ int.roleTitle }}</span>
+                </div>
+              </div>
+              
+              <div class="flex items-center gap-3 shrink-0">
+                <span class="text-[10px] font-bold text-muted-foreground">{{ int.scheduledTime | date:'shortTime' }}</span>
+                <button 
+                  (click)="store.completeInterview(int.id)"
+                  class="px-2.5 py-1 bg-primary/10 text-primary hover:bg-primary hover:text-white rounded-[8px] text-[10px] font-bold transition-premium hover-scale cursor-pointer"
+                >
+                  Complete
+                </button>
+              </div>
+            </div>
+          }
+          @if (store.todayInterviews().length === 0) {
+            <div class="flex flex-col items-center justify-center h-full text-center py-6 text-xs text-muted-foreground select-none">
+              No upcoming interviews today.
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Recent Activity Timeline Card -->
+      <div class="bg-card border border-border rounded-[20px] p-6 shadow-level1 flex flex-col justify-between min-h-[320px]">
+        <div class="space-y-0.5 mb-4 select-none">
+          <h3 class="text-base font-bold text-foreground">Recent Activity</h3>
+          <span class="text-xs text-muted-foreground">Recruitment team operations logs</span>
+        </div>
+
+        <!-- Activity Timeline List with Slide-in animations and Staggered delay -->
+        <div class="flex-1 flex flex-col gap-3 overflow-y-auto pr-1">
+          @for (act of store.activities(); track act.id; let idx = $index) {
+            <div 
+              class="flex gap-3 text-xs leading-normal animate-fade-in-up"
+              [style.animation-delay]="(idx * 75) + 'ms'"
+            >
+              <!-- Initial marker circle -->
+              <div class="w-7 h-7 rounded-full bg-secondary text-secondary-foreground border border-border flex items-center justify-center font-bold text-[10px] shrink-0 select-none mt-0.5">
+                {{ act.userInitials }}
+              </div>
+              <!-- Log text -->
+              <div class="flex-1 flex flex-col">
+                <div class="flex items-baseline justify-between gap-2">
+                  <span class="font-bold text-foreground">{{ act.userName }}</span>
+                  <span class="text-[9px] text-muted-foreground shrink-0">{{ act.time }}</span>
+                </div>
+                <p class="text-muted-foreground mt-0.5 text-[11px]">
+                  {{ act.action }} <strong class="text-foreground font-semibold">{{ act.target }}</strong>
+                </p>
+              </div>
+            </div>
+          }
+          @if (store.activities().length === 0) {
+            <div class="flex flex-col items-center justify-center h-full text-center py-6 text-xs text-muted-foreground select-none">
+              No recent logs found.
+            </div>
+          }
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+}
+
+<!-- ================= DYNAMIC CREATE JOB REQUISITION DIALOG OVERLAY ================= -->
+<div 
+  *ngIf="isCreateJobModalOpen()" 
+  class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 animate-fade-in"
+  (click)="closeCreateJobModal()"
+>
+  <div 
+    class="bg-card w-full max-w-md rounded-[20px] border border-border shadow-level2 overflow-hidden flex flex-col animate-fade-in"
+    (click)="$event.stopPropagation()"
+  >
+    <!-- Header -->
+    <div class="px-6 py-4 border-b border-border flex justify-between items-center select-none bg-secondary/20">
+      <h3 class="font-bold text-sm text-foreground">Create Job Requisition</h3>
+      <button 
+        (click)="closeCreateJobModal()" 
+        class="text-muted-foreground hover:text-foreground text-xs cursor-pointer font-bold"
+      >
+        ✕
+      </button>
+    </div>
+
+    <!-- Fields Form -->
+    <div class="p-6 space-y-4">
+      <!-- Title input -->
+      <div class="space-y-1.5">
+        <label class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">Position Role Title</label>
+        <input 
+          type="text" 
+          [(ngModel)]="newJobTitle" 
+          placeholder="Staff Security Engineer" 
+          class="input-field"
+          required
+        />
+      </div>
+
+      <!-- Department dropdown -->
+      <div class="space-y-1.5">
+        <label class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">Department</label>
+        <select 
+          [(ngModel)]="newJobDepartment" 
+          class="input-field appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2371717a%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.1rem] bg-[right_0.6rem_center] bg-no-repeat pr-8"
+        >
+          @for (dept of departmentsList; track dept) {
+            <option [value]="dept">{{ dept }}</option>
+          }
+        </select>
+      </div>
+
+      <!-- Manager dropdown -->
+      <div class="space-y-1.5">
+        <label class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">Hiring Manager</label>
+        <select 
+          [(ngModel)]="newJobManager" 
+          class="input-field appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2371717a%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.1rem] bg-[right_0.6rem_center] bg-no-repeat pr-8"
+        >
+          @for (mgr of managersList; track mgr) {
+            <option [value]="mgr">{{ mgr }}</option>
+          }
+        </select>
+      </div>
+    </div>
+
+    <!-- Actions Footer -->
+    <div class="px-6 py-4 border-t border-border flex justify-end gap-3 bg-secondary/20">
+      <button 
+        (click)="closeCreateJobModal()" 
+        class="btn-secondary py-1.5 px-4 text-xs font-bold"
+      >
+        Cancel
+      </button>
+      
+      <button 
+        (click)="submitCreateJob()" 
+        [disabled]="!newJobTitle().trim()"
+        class="btn-primary py-1.5 px-4 text-xs font-bold disabled:opacity-50"
+      >
+        Create Position
+      </button>
+    </div>
+  </div>
+</div>

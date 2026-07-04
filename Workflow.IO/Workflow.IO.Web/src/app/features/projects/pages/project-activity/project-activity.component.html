@@ -1,0 +1,23 @@
+
+    <section class="panel">
+      <h2>Project activity</h2>
+
+      @if (loading()) {
+        <p>Loading activity…</p>
+      } @else if (error()) {
+        <p class="error">{{ error() }}</p>
+      } @else if (activities().length === 0) {
+        <p>No activity recorded yet.</p>
+      } @else {
+        <ul>
+          @for (a of activities(); track a.activityRecordId) {
+            <li>
+              <strong>{{ a.eventType }}</strong>
+              <p>{{ a.description ?? '—' }}</p>
+              <small>{{ a.entityType }} · {{ a.createdAt }}</small>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+  

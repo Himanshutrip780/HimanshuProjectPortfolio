@@ -1,0 +1,115 @@
+
+    <div class="page-container">
+      <header class="page-header">
+        <div class="header-left">
+          <h1>Daily Sprint Updates</h1>
+          <p class="subtitle">Broadcast sprint progress, velocity, and updates to leadership and project members.</p>
+        </div>
+      </header>
+
+      <div class="daily-update-panel panel">
+        <div class="card-header-area">
+          <span class="material-symbols-outlined header-icon">mail</span>
+          <div class="header-text-block">
+            <h3>Sprint Broadcast Configuration</h3>
+            <p class="desc-text">Manage manual sprint email triggers and configure mailing list recipients.</p>
+          </div>
+        </div>
+
+        <div class="card-body-area">
+          @if (sendingEmail()) {
+            <div class="spinner-container">
+              <span class="material-symbols-outlined loading-spinner">autorenew</span>
+              <span>Sending daily update…</span>
+            </div>
+          } @else {
+            <div class="action-row">
+              <button
+                type="button"
+                class="btn btn-primary"
+                [disabled]="!updateState()?.allowedManualTrigger || updateState()?.isTriggeredToday"
+                (click)="sendDailyUpdate()"
+              >
+                Send Daily Update Now
+              </button>
+              <button
+                type="button"
+                class="btn btn-secondary"
+                (click)="openRecipientsModal()"
+              >
+                Manage Recipients
+              </button>
+            </div>
+
+            @if (updateState()?.isTriggeredToday) {
+              <div class="status-banner success">
+                <span class="material-symbols-outlined">check_circle</span>
+                <span>Daily update triggered/sent today. Auto-send scheduled at 12 PM.</span>
+              </div>
+            } @else {
+              <div class="status-banner info">
+                <span class="material-symbols-outlined">schedule</span>
+                <span>Auto-send scheduled at 12 PM (on working days).</span>
+              </div>
+            }
+
+            @if (updateState()?.lastSentAt) {
+              <div class="last-sent">
+                <span class="material-symbols-outlined">done</span>
+                <span>Last sent at: {{ updateState()?.lastSentAt | date:'medium' }}</span>
+              </div>
+            }
+
+            @if (sendError()) {
+              <div class="status-banner error">
+                <span class="material-symbols-outlined">error</span>
+                <span>{{ sendError() }}</span>
+                <button type="button" class="btn btn-text danger" (click)="sendDailyUpdate()">Retry</button>
+              </div>
+            }
+          }
+        </div>
+      </div>
+
+      <!-- Recipient Management Modal Overlay -->
+      @if (showRecipientsModal()) {
+        <div class="modal-overlay" (click)="closeRecipientsModal()">
+          <div class="modal-container" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+              <h3>Manage Extra Recipients</h3>
+              <button type="button" class="btn-close" (click)="closeRecipientsModal()">×</button>
+            </div>
+            <div class="modal-body">
+              <p class="modal-desc">Configure additional email recipients to receive the daily sprint update report.</p>
+
+              <div class="recipient-tags">
+                @for (email of extraRecipientsList(); track email; let idx = $index) {
+                  <span class="tag">
+                    {{ email }}
+                    <button type="button" class="btn-remove-tag" (click)="removeRecipientTag(idx)">×</button>
+                  </span>
+                }
+                @if (extraRecipientsList().length === 0) {
+                  <p class="no-recipients">No additional recipients configured.</p>
+                }
+              </div>
+
+              <form [formGroup]="recipientForm" (ngSubmit)="addRecipientTag()" class="tag-input-row">
+                <input
+                  type="email"
+                  placeholder="Add recipient email…"
+                  formControlName="email"
+                />
+                <button type="submit" [disabled]="recipientForm.invalid" class="btn-add">Add</button>
+              </form>
+
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" (click)="closeRecipientsModal()">Cancel</button>
+                <button type="button" class="btn btn-primary" (click)="saveRecipients()">Save Recipients</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  

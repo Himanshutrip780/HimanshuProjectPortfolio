@@ -1,0 +1,29 @@
+name: Keep Render Services Awake
+
+on:
+  schedule:
+    # Run every 10 minutes to prevent the 15-minute idle sleep on Render
+    - cron: "*/10 * * * *"
+  workflow_dispatch: # Allows manual triggering from the GitHub UI
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Gateway API
+        run: curl -sSf https://gatewayapi-v1.onrender.com/health || true
+
+      - name: Ping User API
+        run: curl -sSf https://userapi-v1.onrender.com/health || true
+
+      - name: Ping Project API
+        run: curl -sSf https://projectapi-v1.onrender.com/health || true
+
+      - name: Ping Task API
+        run: curl -sSf https://taskapi-v1.onrender.com/health || true
+
+      - name: Ping Comment API
+        run: curl -sSf https://commentapi-v1.onrender.com/health || true
+        
+      - name: Ping File API
+        run: curl -sSf https://fileapi-v1.onrender.com/health || true

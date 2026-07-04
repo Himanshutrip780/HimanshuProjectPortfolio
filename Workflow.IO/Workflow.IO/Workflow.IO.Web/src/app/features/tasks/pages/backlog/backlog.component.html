@@ -1,0 +1,138 @@
+
+    <section class="backlog-container">
+      <header class="backlog-header">
+        <div class="header-main">
+          <span class="material-symbols-outlined header-icon">layers</span>
+          <div>
+            <h1>Backlog & Sprints</h1>
+            <p class="subtitle">Plan sprints, manage backlog items, and prioritize team tasks</p>
+          </div>
+        </div>
+      </header>
+
+      <div class="backlog-grid">
+        <div class="main-backlog-section">
+          <!-- Create Sprint form -->
+          <section class="panel glass-panel">
+            <div class="panel-header">
+              <span class="material-symbols-outlined">add_circle</span>
+              <h2>Plan New Sprint</h2>
+            </div>
+            <form [formGroup]="sprintForm" (ngSubmit)="createSprint()" class="sprint-form">
+              <div class="form-group flex-1 min-w-[200px]">
+                <input type="text" placeholder="Enter sprint name..." formControlName="name" />
+              </div>
+              <div class="form-group">
+                <input type="date" formControlName="startDate" title="Start Date" />
+              </div>
+              <div class="form-group">
+                <input type="date" formControlName="endDate" title="End Date" />
+              </div>
+              <button type="submit" class="btn btn-primary" [disabled]="busy()">
+                <span class="material-symbols-outlined">calendar_today</span> Create Sprint
+              </button>
+            </form>
+          </section>
+
+          @if (loading()) {
+            <div class="state-container">
+              <div class="spinner"></div>
+              <p>Loading backlog items...</p>
+            </div>
+          } @else if (error()) {
+            <div class="state-container error-state">
+              <span class="material-symbols-outlined">error_outline</span>
+              <p>{{ error() }}</p>
+            </div>
+          } @else {
+            @let b = backlog();
+            @if (b) {
+              <!-- Backlog Section -->
+              <div class="backlog-section panel">
+                <div class="section-header-bar">
+                  <div class="section-title-group">
+                    <h3>Backlog Tasks</h3>
+                    <span class="badge badge-info">{{ b.backlogTasks.length }} Tasks</span>
+                  </div>
+                  @if (b.backlogTasks.length > 0) {
+                    <button type="button" class="btn btn-secondary btn-danger-hover" (click)="markBacklogDone(b.backlogTasks)" [disabled]="busy()">
+                      <span class="material-symbols-outlined">done_all</span> Mark All Done
+                    </button>
+                  }
+                </div>
+
+                <div class="task-list">
+                  @for (task of b.backlogTasks; track task.taskId) {
+                    <div class="task-row hover-scale">
+                      <div class="task-row-left">
+                        <span class="task-key-tag">{{ task.issueKey }}</span>
+                        <a [routerLink]="['/tasks', task.taskId]" class="task-link-title">{{ task.title }}</a>
+                      </div>
+                      <div class="task-row-actions">
+                        <button type="button" class="btn btn-icon-only btn-secondary-outline" (click)="rankUp(task)" title="Increase Rank">
+                          <span class="material-symbols-outlined">arrow_upward</span>
+                        </button>
+                      </div>
+                    </div>
+                  } @empty {
+                    <div class="empty-list-placeholder">
+                      <span class="material-symbols-outlined">inbox</span>
+                      <p>Backlog is empty. Add tasks to start planning.</p>
+                    </div>
+                  }
+                </div>
+              </div>
+
+              <!-- Sprints Section -->
+              <div class="sprints-section">
+                <h2>Active & Planned Sprints</h2>
+                <div class="sprints-grid">
+                  @for (sprint of b.sprints; track sprint.sprint.sprintId) {
+                    <div class="sprint-card panel" [class.sprint-active]="sprint.sprint.status === SprintStatus.Active">
+                      <div class="sprint-card-header">
+                        <div>
+                          <h3 class="sprint-name">{{ sprint.sprint.name }}</h3>
+                          <span class="badge" [class.badge-success]="sprint.sprint.status === SprintStatus.Active" [class.badge-warning]="sprint.sprint.status === SprintStatus.Planned" [class.badge-info]="sprint.sprint.status === SprintStatus.Completed">
+                            {{ sprintStatusLabel(sprint.sprint.status) }}
+                          </span>
+                        </div>
+                        <div class="sprint-header-actions">
+                          @if (sprint.sprint.status === SprintStatus.Planned) {
+                            <button type="button" class="btn btn-primary btn-sm" (click)="startSprint(sprint.sprint.sprintId)">Start Sprint</button>
+                          }
+                          @if (sprint.sprint.status === SprintStatus.Active) {
+                            <button type="button" class="btn btn-secondary btn-sm" (click)="completeSprint(sprint.sprint.sprintId)">Complete Sprint</button>
+                          }
+                        </div>
+                      </div>
+
+                      <div class="task-list">
+                        @for (task of sprint.tasks; track task.taskId) {
+                          <div class="task-row">
+                            <div class="task-row-left">
+                              <span class="task-key-tag">{{ task.issueKey }}</span>
+                              <a [routerLink]="['/tasks', task.taskId]" class="task-link-title">{{ task.title }}</a>
+                            </div>
+                            <div class="task-row-actions">
+                              <button type="button" class="btn btn-secondary-outline btn-sm btn-icon" (click)="moveToBacklog(task)">
+                                <span class="material-symbols-outlined">move_item</span> To Backlog
+                              </button>
+                            </div>
+                          </div>
+                        } @empty {
+                          <div class="empty-list-placeholder">
+                            <span class="material-symbols-outlined">calendar_today</span>
+                            <p>Drag tasks here or use planning board to assign to this sprint.</p>
+                          </div>
+                        }
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          }
+        </div>
+      </div>
+    </section>
+  

@@ -1,0 +1,473 @@
+<div class="flex flex-col gap-6 w-full animate-fade-in pb-8">
+  
+  <!-- Page Header & Actions Bar (Compact) -->
+  <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between shrink-0">
+    <div class="flex flex-col gap-1">
+      <h2 class="text-2xl font-bold tracking-tight text-foreground">Workflow Control Center</h2>
+      <p class="text-xs text-muted-foreground">Monitor stage conversion, resolve bottlenecks, and process priority candidates.</p>
+    </div>
+
+    <!-- Filters & Selectors -->
+    <div class="flex flex-wrap items-center gap-3">
+      <!-- Search Input -->
+      <div class="search-input-wrapper w-full sm:w-56">
+        <span class="absolute inset-y-0 left-0 flex items-center pl-2.5 pointer-events-none text-muted-foreground">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.602 10.602Z"/>
+          </svg>
+        </span>
+        <input 
+          type="text" 
+          [value]="searchQuery()" 
+          (input)="searchQuery.set($any($event.target).value)"
+          placeholder="Search query..." 
+          class="input-field py-1.5 bg-card"
+        />
+      </div>
+
+      <!-- Match Score Filter -->
+      <div class="relative w-full sm:w-40">
+        <select 
+          [value]="minScore()" 
+          (change)="minScore.set(+$any($event.target).value)"
+          class="input-field py-1.5 bg-card appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2371717a%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.1rem] bg-[right_0.6rem_center] bg-no-repeat pr-8"
+        >
+          <option [value]="0">All Match Scores</option>
+          <option [value]="90">⚡ 90%+ Fit</option>
+          <option [value]="80">✨ 80%+ Fit</option>
+          <option [value]="60">👍 60%+ Fit</option>
+        </select>
+      </div>
+
+      <!-- Job Select Dropdown -->
+      <div class="relative w-full sm:w-56">
+        <select 
+          [value]="selectedJobId()" 
+          (change)="onJobChange($any($event.target).value)"
+          class="input-field py-1.5 bg-card appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2371717a%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.1rem] bg-[right_0.6rem_center] bg-no-repeat pr-8"
+        >
+          @for (job of jobs(); track job.id) {
+            <option [value]="job.id">{{ job.title }}</option>
+          }
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Board Loading State -->
+  @if (loading()) {
+    <div class="flex flex-col items-center justify-center min-h-[300px] gap-4 text-muted-foreground bg-card border border-border rounded-[20px] select-none">
+      <div class="relative w-10 h-10">
+        <div class="absolute inset-0 rounded-full border-4 border-primary/20"></div>
+        <div class="absolute inset-0 rounded-full border-4 border-t-primary animate-spin"></div>
+      </div>
+      <p class="text-xs font-semibold">Configuring workflow controls...</p>
+    </div>
+  } @else {
+    
+    <!-- Top Area: Stage Metrics Overview (Ribbon of compact KPI cards) -->
+    <div class="grid grid-cols-2 md:grid-cols-7 gap-3 shrink-0 select-none">
+      @for (stage of stages; track stage) {
+        <div class="bg-card border border-border rounded-[20px] p-4 flex flex-col justify-between relative overflow-hidden shadow-level1">
+          <!-- Bottleneck indicator dot -->
+          @if (isBottleneck(stage)) {
+            <span class="absolute top-3 right-3 w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse"></span>
+          }
+          <div>
+            <span class="text-[9px] font-bold text-muted-foreground uppercase tracking-wider block truncate">{{ stage }}</span>
+            <span class="text-sm font-extrabold text-foreground mt-1 block leading-none">{{ getStageCount(stage) }} Candidates</span>
+          </div>
+          <div class="flex items-center justify-between text-[10px] text-muted-foreground mt-3 border-t border-border pt-2 leading-none">
+            <span class="font-bold text-primary">{{ getConversionRate(stage) }}% Conv</span>
+            @if (stages.indexOf(stage) > 0) {
+              <span class="text-[9px] font-semibold text-muted-foreground/60">{{ getDropOffRate(stage) }}% Drop</span>
+            }
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Top Area: Pipeline Health KPI cards ribbon -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 shrink-0 select-none">
+      <!-- Overall Conversion -->
+      <div class="bg-card border border-border rounded-[20px] p-4 shadow-level1 flex items-center justify-between">
+        <div class="flex flex-col">
+          <span class="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Overall Conversion</span>
+          <span class="text-base font-black text-foreground mt-1">{{ getOverallConversion() }}%</span>
+        </div>
+        <div class="w-8 h-8 rounded-[10px] bg-primary/10 text-primary flex items-center justify-center text-sm">📊</div>
+      </div>
+      <!-- Offer Acceptance -->
+      <!-- Offer Conversion -->
+      <div class="bg-card border border-border rounded-[20px] p-4 shadow-level1 flex items-center justify-between">
+        <div class="flex flex-col">
+          <span class="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Offer Conversion</span>
+          <span class="text-base font-black text-foreground mt-1">{{ getOfferConversion() }}%</span>
+        </div>
+        <div class="w-8 h-8 rounded-[10px] bg-emerald-500/10 text-emerald-500 flex items-center justify-center shrink-0">
+          <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+        </div>
+      </div>
+      <!-- Interview Conversion -->
+      <div class="bg-card border border-border rounded-[20px] p-4 shadow-level1 flex items-center justify-between">
+        <div class="flex flex-col">
+          <span class="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Interview Conversion</span>
+          <span class="text-base font-black text-foreground mt-1">{{ getInterviewConversion() }}%</span>
+        </div>
+        <div class="w-8 h-8 rounded-[10px] bg-sky-500/10 text-sky-500 flex items-center justify-center shrink-0">
+          <svg class="w-4 h-4 text-sky-500" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 18.75a6 6 0 0 0 6-6v-1.5m-6 7.5a6 6 0 0 1-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 0 1-3-3V4.5a3 3 0 1 1 6 0v8.25a3 3 0 0 1-3 3Z"/></svg>
+        </div>
+      </div>
+      <!-- Hiring Velocity -->
+      <div class="bg-card border border-border rounded-[20px] p-4 shadow-level1 flex items-center justify-between">
+        <div class="flex flex-col">
+          <span class="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Hiring Velocity</span>
+          <span class="text-base font-black text-foreground mt-1">{{ getHiringVelocity() }} Days</span>
+        </div>
+        <div class="w-8 h-8 rounded-[10px] bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0">
+          <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottleneck Alert Banner -->
+    @if (getBottleneckAlert()) {
+      <div class="bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 py-3 px-4 rounded-[14px] flex items-center gap-2.5 text-xs font-bold shrink-0 animate-pulse">
+        <svg class="w-4 h-4 text-red-500 dark:text-red-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/></svg>
+        <span>{{ getBottleneckAlert() }}</span>
+      </div>
+    }
+
+    <!-- Main Pipeline Grid (CDK Drop Lists) -->
+    <div class="flex gap-4 overflow-x-auto pb-4 flex-1 items-stretch min-h-[500px] select-none" cdkDropListGroup>
+      @for (stage of stages; track stage) {
+        <div 
+          [ngClass]="{ 'border-red-500/30 shadow-red-500/5': isBottleneck(stage) }"
+          class="w-80 min-w-[310px] flex flex-col glass-panel border border-border rounded-[20px] shrink-0 p-4 shadow-level1 overflow-hidden transition-all duration-300"
+        >
+          
+          <!-- Column Header with detailed metrics -->
+          <div class="flex flex-col gap-2 mb-4 shrink-0 pb-3 border-b border-border">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full" 
+                  [class.bg-violet-500]="stage === 'Applied'" 
+                  [class.bg-sky-500]="stage === 'Screening'" 
+                  [class.bg-amber-500]="stage === 'Technical'" 
+                  [class.bg-indigo-500]="stage === 'Manager Round'"
+                  [class.bg-pink-500]="stage === 'HR'"
+                  [class.bg-teal-500]="stage === 'Offer'" 
+                  [class.bg-emerald-500]="stage === 'Hired'"
+                ></span>
+                <span class="text-xs font-bold tracking-tight text-foreground">{{ stage }}</span>
+                @if (isBottleneck(stage)) {
+                  <span class="text-[8px] font-black uppercase bg-red-500/15 text-red-500 border border-red-500/20 px-1.5 py-0.5 rounded animate-pulse">Bottleneck</span>
+                }
+              </div>
+              <span class="text-[10px] font-bold text-muted-foreground bg-secondary border border-border px-2 py-0.5 rounded-[8px]">
+                {{ getFilteredApps(stage).length }}
+              </span>
+            </div>
+
+            <!-- Column details (Avg Time and Health) -->
+            <div class="flex items-center justify-between text-[10px] font-bold text-muted-foreground px-0.5 select-none leading-none">
+              <span>Avg Stage Time: {{ getAvgTimeInStage(stage) }}d</span>
+              <span 
+                [class.text-emerald-500]="!isBottleneck(stage)" 
+                [class.text-red-500]="isBottleneck(stage)"
+                class="font-black uppercase tracking-wider text-[8px]"
+              >
+                Health: {{ isBottleneck(stage) ? 'Bottleneck' : 'Good' }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Drag and Drop List Container -->
+          <div 
+            [id]="stage"
+            cdkDropList
+            [cdkDropListData]="columns[stage]"
+            class="flex-1 flex flex-col gap-3 overflow-y-auto pr-1 min-h-[350px] transition-premium rounded-[14px]"
+            (cdkDropListDropped)="drop($event)"
+            cdkDropListReceivingClass="bg-violet-500/5 border-2 border-dashed border-violet-500/35 ring-4 ring-violet-500/5 transition-premium"
+          >
+            <!-- Drop prompt if column is empty -->
+            @if (getFilteredApps(stage).length === 0) {
+              <div class="border border-dashed border-border rounded-[14px] p-6 text-center flex flex-col items-center justify-center text-[10px] text-muted-foreground/60 select-none min-h-[120px] bg-secondary/20">
+                <svg class="w-5 h-5 text-muted-foreground/35 mb-1.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                </svg>
+                <span>Drop candidate here</span>
+              </div>
+            }
+
+            @for (app of getFilteredApps(stage).slice(0, visibleLimits()[stage]); track app.id) {
+              <div 
+                class="candidate-card glass-panel border border-border rounded-[14px] p-4 flex flex-col gap-3 cursor-grab active:cursor-grabbing hover:shadow-level2 transition-premium hover-scale relative overflow-hidden group shadow-xs" 
+                cdkDrag
+                [cdkDragDisabled]="!canMoveCandidate()"
+              >
+                <!-- Card Header -->
+                <div class="flex items-start justify-between gap-2">
+                  <div class="flex items-center gap-2.5 min-w-0">
+                    <!-- Avatar Badge -->
+                    <div class="w-8 h-8 rounded-[8px] bg-primary/10 text-primary border border-primary/20 flex items-center justify-center font-bold text-xs shrink-0 select-none transition-premium group-hover:scale-110">
+                      {{ getInitials(app.candidateName) }}
+                    </div>
+                    <div class="min-w-0 flex flex-col">
+                      <span class="text-xs font-bold text-foreground truncate leading-tight">{{ app.candidateName }}</span>
+                      <span class="text-[10px] font-bold text-primary truncate mt-0.5">{{ app.currentRole }}</span>
+                    </div>
+                  </div>
+
+                  <!-- Priority Tag + Fit Score -->
+                  <div class="flex flex-col items-end gap-1 shrink-0">
+                    <span 
+                      [class]="'text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 border rounded-[6px] ' + 
+                               (app.priorityLevel === 'High' ? 'bg-red-500/10 text-red-500 border-red-500/20' : 
+                                app.priorityLevel === 'Medium' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' : 
+                                'bg-slate-500/10 text-slate-500 border-slate-500/20')"
+                    >
+                      {{ app.priorityLevel }}
+                    </span>
+                    <span 
+                      [class]="getScoreClass(app.aimatchScore) + ' text-[9px] font-bold px-1.5 py-0.5 border rounded-full font-mono transition-premium hover-scale'"
+                    >
+                      {{ app.aimatchScore || 0 }}% Fit
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Meta Row (Exp & Salary) -->
+                <div class="grid grid-cols-2 gap-1 text-[10px] text-muted-foreground font-bold bg-secondary/50 backdrop-blur-xs p-2 rounded-[8px] border border-border/80 select-none leading-none items-center">
+                  <span class="flex items-center gap-1">
+                    <svg class="w-3 h-3 text-muted-foreground" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 14.15v4.25c0 .9-.73 1.63-1.63 1.63H5.38c-.9 0-1.63-.72-1.63-1.62v-4.25m16.5 0a2.18 2.18 0 0 0 .07-.54V8c0-.9-.73-1.63-1.63-1.63h-2.25m-12.75 9.38c-.06-.17-.07-.36-.07-.53V8c0-.9.73-1.63 1.63-1.63h2.25m3.75 3c0-.9.73-1.63 1.63-1.63h3.75c.9 0 1.63.73 1.63 1.63v4.5m-7 0H21m-18 0h3.75M9 6.38V4.5c0-.9.73-1.63 1.63-1.63h2.75c.9 0 1.62.73 1.62 1.63v1.88"/></svg>
+                    {{ app.yearsOfExperience }} Years Exp
+                  </span>
+                  <span class="flex items-center justify-end gap-1 text-right">
+                    <svg class="w-3 h-3 text-muted-foreground" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-1.957-.59a2.384 2.384 0 0 1 0-3.596c1.172-.879 3.07-.879 4.242 0L15 8.5M3 12a9 9 0 1 1 18 0 9 9 0 0 1-18 0Z"/></svg>
+                    {{ app.expectedSalary }}
+                  </span>
+                </div>
+
+                <!-- Skills tags -->
+                @if (app.skillsMatch && app.skillsMatch.length > 0) {
+                  <div class="flex flex-wrap gap-1.5 shrink-0">
+                    @for (skill of app.skillsMatch.slice(0, 3); track skill) {
+                      <span class="text-[9px] font-bold px-1.5 py-0.5 bg-secondary text-muted-foreground rounded border border-border select-none transition-premium hover-scale">
+                        {{ skill }}
+                      </span>
+                    }
+                    @if (app.skillsMatch.length > 3) {
+                      <span class="text-[9px] font-bold px-1 py-0.5 bg-secondary text-muted-foreground/60 rounded border border-border select-none transition-premium hover-scale">
+                        +{{ app.skillsMatch.length - 3 }}
+                      </span>
+                    }
+                  </div>
+                }
+
+                <!-- Recruiter label & Current Date -->
+                <div class="flex items-center justify-between text-[10px] text-muted-foreground/85 font-semibold pt-2.5 border-t border-border select-none">
+                  <span>Recruiter: <strong class="text-foreground font-bold">{{ app.currentRecruiter }}</strong></span>
+                  <span class="text-[9px]">Days in stage: <strong class="text-foreground font-bold font-mono">{{ app.timeInStageDays }}d</strong></span>
+                </div>
+
+                <!-- Inline AI Assistant Layer -->
+                @if (app.aiWarning) {
+                  <div class="bg-amber-500/10 border border-amber-500/20 rounded-[8px] p-2.5 flex flex-col gap-1 text-[9px] leading-normal text-amber-700 dark:text-amber-400 mt-1 shrink-0 animate-fade-in-up">
+                    <span class="font-bold flex items-center gap-1">
+                      <span>⚠</span> {{ app.aiWarning }}
+                    </span>
+                    <span class="text-muted-foreground pl-3.5 font-medium">
+                      Suggested Action: <span class="text-foreground font-bold underline">{{ app.suggestedAction }}</span>
+                    </span>
+                  </div>
+                }
+
+                <!-- Direct Hover Actions Overlay (No 3-dot menus) -->
+                <div class="actions-deck absolute inset-0 bg-background/95 border border-border rounded-[14px] opacity-0 group-hover:opacity-100 transition-all duration-150 flex flex-col justify-center items-center gap-2.5 p-3.5 z-10">
+                  <span class="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Recruiter Actions</span>
+                  <div class="grid grid-cols-2 gap-2 w-full">
+                    <!-- Move Stage -->
+                    @if (canMoveCandidate()) {
+                      <button 
+                        (click)="onMoveCandidate(app)" 
+                        class="py-1.5 px-2 bg-primary text-white rounded-[8px] text-[9px] font-bold uppercase tracking-wider transition-premium hover-scale cursor-pointer border-none"
+                      >
+                        🚀 Move Next
+                      </button>
+                    }
+                    <!-- Schedule -->
+                    @if (canScheduleInterview()) {
+                      <button 
+                        (click)="onScheduleInterview(app)" 
+                        class="py-1.5 px-2 bg-secondary text-foreground hover:bg-border rounded-[8px] text-[9px] font-bold uppercase tracking-wider transition-premium hover-scale cursor-pointer border border-border"
+                      >
+                        📅 Schedule
+                      </button>
+                    }
+                    <!-- View Resume -->
+                    <button 
+                      (click)="onViewResume(app)" 
+                      [class.col-span-2]="!canMoveCandidate() && !canScheduleInterview() && !canAddNote()"
+                      class="py-1.5 px-2 bg-secondary text-foreground hover:bg-border rounded-[8px] text-[9px] font-bold uppercase tracking-wider transition-premium hover-scale cursor-pointer border border-border"
+                    >
+                      📄 Resume
+                    </button>
+                    <!-- Add Note -->
+                    @if (canAddNote()) {
+                      <button 
+                        (click)="onAddNote(app)" 
+                        class="py-1.5 px-2 bg-secondary text-foreground hover:bg-border rounded-[8px] text-[9px] font-bold uppercase tracking-wider transition-premium hover-scale cursor-pointer border border-border"
+                      >
+                        📝 Add Note
+                      </button>
+                    }
+                  </div>
+                  <!-- Reject Button (Full Width bottom) -->
+                  @if (canMoveCandidate()) {
+                    <button 
+                      (click)="onRejectCandidate(app)" 
+                      class="w-full py-1.5 bg-destructive text-white hover:opacity-90 rounded-[8px] text-[9px] font-bold uppercase tracking-wider transition-premium hover-scale cursor-pointer border-none"
+                    >
+                      🚫 Reject Candidate
+                    </button>
+                  }
+                </div>
+
+              </div>
+            }
+
+            <!-- Show More button -->
+            @if (getFilteredApps(stage).length > visibleLimits()[stage]) {
+              <button 
+                type="button"
+                (click)="showMore(stage)"
+                class="w-full py-2 bg-secondary hover:bg-border text-primary text-[10px] font-bold rounded-[10px] border border-border transition-premium cursor-pointer text-center mt-2"
+              >
+                Show More ({{ getFilteredApps(stage).length - visibleLimits()[stage] }} candidates remaining)
+              </button>
+            }
+          </div>
+
+        </div>
+      }
+    </div>
+  }
+ 
+  <!-- Add Note Modal -->
+  <div *ngIf="showNoteModal()" class="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 animate-fade-in p-4">
+    <div class="bg-card border border-border rounded-[20px] max-w-md w-full p-6 shadow-level2 space-y-4">
+      <div class="flex items-center justify-between border-b border-border pb-3">
+        <h3 class="text-sm font-bold tracking-tight">Add Recruitment Note</h3>
+        <button (click)="showNoteModal.set(false)" class="p-1 rounded-[8px] hover:bg-secondary text-muted-foreground hover:text-foreground border-none bg-transparent cursor-pointer">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div>
+        <p class="text-xs text-muted-foreground">Adding a timeline note for <strong>{{ noteCandidate()?.candidateName }}</strong>.</p>
+      </div>
+      <textarea [ngModel]="newNoteText()" (ngModelChange)="newNoteText.set($event)" placeholder="Write internal note details..." rows="4" class="input-field w-full text-xs bg-background"></textarea>
+      <div class="flex justify-end gap-3 pt-2">
+        <button type="button" (click)="showNoteModal.set(false)" class="btn-secondary py-2 px-4 text-xs">Cancel</button>
+        <button type="button" (click)="submitNote()" [disabled]="!newNoteText().trim() || noteSubmitting()" class="btn-primary py-2 px-4 text-xs font-semibold">
+          {{ noteSubmitting() ? 'Saving...' : 'Add Note' }}
+        </button>
+      </div>
+    </div>
+  </div>
+ 
+  <!-- Resume Preview Modal -->
+  <div *ngIf="showResumeModal()" class="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 animate-fade-in p-4">
+    <div class="bg-card border border-border rounded-[20px] max-w-4xl w-full h-[85vh] p-6 shadow-level2 flex flex-col gap-4">
+      <div class="flex items-center justify-between border-b border-border pb-3 shrink-0">
+        <div class="flex flex-col">
+          <h3 class="text-sm font-bold tracking-tight">Resume File Viewer</h3>
+          <span class="text-[10px] text-muted-foreground">Viewing resume for {{ resumeCandidate()?.candidateName }}</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <a [href]="getResumeUrl(resumeCandidate()!)" target="_blank" class="btn-secondary py-1 px-3 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 no-underline">
+            Open in new tab ↗
+          </a>
+          <button (click)="showResumeModal.set(false)" class="p-1 rounded-[8px] hover:bg-secondary text-muted-foreground hover:text-foreground border-none bg-transparent cursor-pointer">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+      </div>
+      
+      <div class="flex-1 bg-secondary rounded-[14px] overflow-hidden relative border border-border">
+        <!-- Render resume file in iframe if available -->
+        <iframe *ngIf="resumeCandidate()?.candidate?.resumePath" [src]="getSafeResumeUrl(resumeCandidate()!)" class="w-full h-full border-none"></iframe>
+        <div *ngIf="!resumeCandidate()?.candidate?.resumePath" class="flex flex-col items-center justify-center h-full text-muted-foreground text-xs p-6 select-none">
+          <span>No resume path found for this candidate.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+ 
+  <!-- Schedule Interview Modal -->
+  <div *ngIf="showScheduleModal()" class="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 animate-fade-in p-4">
+    <div class="bg-card border border-border rounded-[20px] max-w-md w-full p-6 shadow-level2 space-y-4">
+      <div class="flex items-center justify-between border-b border-border pb-3">
+        <h3 class="text-sm font-bold tracking-tight">Schedule Stage Interview</h3>
+        <button (click)="showScheduleModal.set(false)" class="p-1 rounded-[8px] hover:bg-secondary text-muted-foreground hover:text-foreground border-none bg-transparent cursor-pointer">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      
+      <div class="space-y-3.5 text-xs">
+        <div class="space-y-1">
+          <label class="block font-bold text-muted-foreground uppercase tracking-wider text-[10px]">Interview Title</label>
+          <input [(ngModel)]="scheduleForm.title" class="input-field w-full text-xs py-1.5 px-3 bg-background">
+        </div>
+ 
+        <div class="grid grid-cols-2 gap-3">
+          <div class="space-y-1">
+            <label class="block font-bold text-muted-foreground uppercase tracking-wider text-[10px]">Interview Type</label>
+            <select [(ngModel)]="scheduleForm.type" class="input-field w-full text-xs py-1.5 px-3 bg-background appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2371717a%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.1rem] bg-[right_0.6rem_center] bg-no-repeat pr-8">
+              <option [value]="0">Technical Interview</option>
+              <option [value]="1">HR Interview</option>
+              <option [value]="2">Hiring Manager Round</option>
+              <option [value]="3">Final Round</option>
+            </select>
+          </div>
+          <div class="space-y-1">
+            <label class="block font-bold text-muted-foreground uppercase tracking-wider text-[10px]">Duration (Mins)</label>
+            <input type="number" [(ngModel)]="scheduleForm.durationMinutes" class="input-field w-full text-xs py-1.5 px-3 bg-background">
+          </div>
+        </div>
+ 
+        <div class="space-y-1">
+          <label class="block font-bold text-muted-foreground uppercase tracking-wider text-[10px]">Scheduled Time</label>
+          <input type="datetime-local" [(ngModel)]="scheduleForm.scheduledTime" class="input-field w-full text-xs py-1.5 px-3 bg-background">
+        </div>
+ 
+        <div class="space-y-1">
+          <label class="block font-bold text-muted-foreground uppercase tracking-wider text-[10px]">Interviewer</label>
+          <select [(ngModel)]="scheduleForm.interviewerId" class="input-field w-full text-xs py-1.5 px-3 bg-background appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2371717a%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.1rem] bg-[right_0.6rem_center] bg-no-repeat pr-8">
+            <option value="" disabled>-- Select Interviewer --</option>
+            @for (interviewer of interviewers(); track interviewer.id) {
+              <option [value]="interviewer.id">{{ interviewer.firstName }} {{ interviewer.lastName }} ({{ interviewer.role }})</option>
+            }
+          </select>
+        </div>
+ 
+        <div class="space-y-1">
+          <label class="block font-bold text-muted-foreground uppercase tracking-wider text-[10px]">Meeting URL</label>
+          <input [(ngModel)]="scheduleForm.videoLink" class="input-field w-full text-xs py-1.5 px-3 bg-background">
+        </div>
+ 
+        <div *ngIf="scheduleError()" class="p-2.5 bg-destructive/10 border border-destructive/20 text-destructive text-[11px] font-semibold rounded-[10px]">
+          {{ scheduleError() }}
+        </div>
+      </div>
+ 
+      <div class="flex justify-end gap-3 pt-2">
+        <button type="button" (click)="showScheduleModal.set(false)" class="btn-secondary py-2 px-4 text-xs">Cancel</button>
+        <button type="button" (click)="submitSchedule()" [disabled]="!scheduleForm.interviewerId || scheduling()" class="btn-primary py-2 px-4 text-xs font-semibold">
+          {{ scheduling() ? 'Scheduling...' : 'Schedule Round' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

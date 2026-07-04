@@ -1,0 +1,103 @@
+/* CDK Drag and Drop drag preview styles */
+.cdk-drag-preview {
+  box-sizing: border-box;
+  border-radius: 14px;
+  box-shadow: var(--shadow-level2);
+  background: var(--card);
+  border: 1px solid var(--primary);
+  padding: 16px;
+  color: var(--foreground);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 288px;
+  font-family: var(--font-sans);
+  z-index: 9999;
+}
+
+.cdk-drag-placeholder {
+  position: relative;
+  background: var(--secondary) !important;
+  border: 2px dashed var(--border) !important;
+  border-radius: 14px !important;
+  height: 120px;
+  min-height: 120px;
+  margin-bottom: 14px;
+  opacity: 0.5;
+  
+  /* Hide child elements during drag placeholder */
+  & > * {
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+}
+
+.cdk-drag-animating {
+  transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Smooth columns transition when a list changes */
+.cdk-drop-list-dragging .cdk-drag {
+  transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Scrollbar customizations */
+.overflow-y-auto {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+
+  &::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 9999px;
+    
+    &:hover {
+      background: var(--muted-foreground);
+    }
+  }
+}
+
+.scrollbar-thin {
+  scrollbar-width: thin;
+  &::-webkit-scrollbar {
+    height: 6px;
+    width: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 9999px;
+    &:hover {
+      background: var(--muted-foreground);
+    }
+  }
+}
+
+.candidate-card {
+  position: relative;
+  
+  .actions-deck {
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.96);
+    transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  
+  &:hover {
+    .actions-deck {
+      opacity: 1;
+      pointer-events: auto;
+      transform: scale(1);
+    }
+  }
+}

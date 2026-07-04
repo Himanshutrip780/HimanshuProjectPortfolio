@@ -1,0 +1,335 @@
+
+    <section class="board-container">
+      <header class="board-header">
+        <div class="header-main" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+          <div style="display:flex; align-items:center; gap:1rem;">
+            <span class="material-symbols-outlined board-header-icon">dashboard</span>
+            <div>
+              <h1>Kanban Board</h1>
+              @if (board(); as view) {
+                <p class="subtitle">{{ view.board.name }} · Drag cards to transition status</p>
+              }
+            </div>
+          </div>
+          
+          <!-- Filters & Sorting Controls -->
+          <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
+            <!-- Board Team Filter -->
+            <div class="board-team-filter">
+              <span class="material-symbols-outlined dropdown-icon">groups</span>
+              <select [ngModel]="selectedTeamId()" (ngModelChange)="selectedTeamId.set($event)" class="team-select" title="Filter by Team">
+                <option value="">All Teams</option>
+                @for (team of teams(); track team.teamId) {
+                  <option [value]="team.teamId">{{ team.name }}</option>
+                }
+              </select>
+            </div>
+
+            <!-- Board Sort Dropdown -->
+            <div class="board-team-filter">
+              <span class="material-symbols-outlined dropdown-icon">sort</span>
+              <select [ngModel]="sortBy()" (ngModelChange)="sortBy.set($event)" class="team-select" title="Sort Columns">
+                <option value="recent">Sort: Recent</option>
+                <option value="priority">Sort: Priority</option>
+                <option value="dueDate">Sort: Due Date</option>
+                <option value="storyPoints">Sort: Story Points</option>
+                <option value="title">Sort: Title (A-Z)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Smart Filter Pills Sub-Header -->
+      @if (columns().length > 0 && !loading() && !error()) {
+        <div class="board-filters-bar">
+          <div class="filter-pills">
+            <span class="filter-pills-label">Quick Filters:</span>
+            <button 
+              type="button" 
+              class="filter-pill" 
+              [class.active]="activeFilters()['my-tasks']" 
+              (click)="toggleFilter('my-tasks')"
+            >
+              <span class="material-symbols-outlined font-icon">person</span>
+              My Tasks
+            </button>
+            <button 
+              type="button" 
+              class="filter-pill" 
+              [class.active]="activeFilters()['high-priority']" 
+              (click)="toggleFilter('high-priority')"
+            >
+              <span class="material-symbols-outlined font-icon font-red">error</span>
+              High Priority
+            </button>
+            <button 
+              type="button" 
+              class="filter-pill" 
+              [class.active]="activeFilters()['frontend']" 
+              (click)="toggleFilter('frontend')"
+            >
+              <span class="material-symbols-outlined font-icon">code</span>
+              Frontend
+            </button>
+            <button 
+              type="button" 
+              class="filter-pill" 
+              [class.active]="activeFilters()['backend']" 
+              (click)="toggleFilter('backend')"
+            >
+              <span class="material-symbols-outlined font-icon">terminal</span>
+              Backend
+            </button>
+          </div>
+          
+          @if (hasActiveFilters()) {
+            <button type="button" class="btn-clear-filters" (click)="clearFilters()">
+              <span class="material-symbols-outlined font-icon">filter_alt_off</span>
+              Clear Filters
+            </button>
+          }
+        </div>
+      }
+
+      @if (loading()) {
+        <div class="board-state">
+          <div class="spinner"></div>
+          <p>Loading project board...</p>
+        </div>
+      } @else if (error()) {
+        <div class="board-state error-state">
+          <span class="material-symbols-outlined">error_outline</span>
+          <p>{{ error() }}</p>
+        </div>
+      } @else if (columns().length === 0) {
+        <div class="board-state empty-state">
+          <span class="material-symbols-outlined">space_dashboard</span>
+          <h3>No Board Configured</h3>
+          <p class="subtitle">Get started by creating a default board for this project.</p>
+          <button type="button" class="btn btn-primary" (click)="createDefaultBoard()" [disabled]="busy()">
+            @if (busy()) {
+              <span class="spinner-sm"></span> Creating Board...
+            } @else {
+              <span class="material-symbols-outlined font-icon">add</span> Create Default Board
+            }
+          </button>
+        </div>
+      } @else {
+        <div class="board-columns">
+          @for (col of filteredColumns(); track col.column.boardColumnId) {
+            <div class="board-column-wrapper" [class.collapsed]="isColumnCollapsed(col.column.boardColumnId)" [class]="getColumnColorClass(col.column.status, col.column.name)">
+              
+              <!-- Column Top Status Stripe -->
+              <div class="column-status-bar"></div>
+
+              <!-- Column Header Area -->
+              <div class="column-header-container">
+                @if (isColumnCollapsed(col.column.boardColumnId)) {
+                  <!-- Collapsed Column Stripe Header -->
+                  <div class="collapsed-column-header" (click)="toggleColumnCollapse(col.column.boardColumnId)" title="Expand Column">
+                    <button type="button" class="btn-col-toggle collapsed-toggle">
+                      <span class="material-symbols-outlined">last_page</span>
+                    </button>
+                    <div class="collapsed-title-wrapper">
+                      <h3>{{ col.column.name }}</h3>
+                      <span class="column-count">{{ col.tasks.length }}</span>
+                    </div>
+                  </div>
+                } @else {
+                  <!-- Normal Open Column Header -->
+                  <div class="column-header">
+                    <div class="column-title-group">
+                      <h3>{{ col.column.name }}</h3>
+                      <span class="column-count">{{ col.tasks.length }}</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.25rem;">
+                      <button type="button" class="btn-col-toggle" (click)="toggleColumnCollapse(col.column.boardColumnId)" title="Collapse Column">
+                        <span class="material-symbols-outlined">first_page</span>
+                      </button>
+                      <span class="column-actions material-symbols-outlined">more_horiz</span>
+                    </div>
+                  </div>
+                }
+              </div>
+              
+              <!-- Tasks Drop List -->
+              <div
+                class="board-column"
+                [class]="getColumnColorClass(col.column.status, col.column.name) + (isColumnCollapsed(col.column.boardColumnId) ? ' collapsed-column' : '')"
+                cdkDropList
+                [cdkDropListData]="col.tasks"
+                [id]="listId(col)"
+                [cdkDropListConnectedTo]="connectedLists()"
+                (cdkDropListDropped)="onDrop($event, col)"
+                (cdkDropListEntered)="onDragEntered(col)"
+                (cdkDropListExited)="onDragExited(col)"
+                (click)="isColumnCollapsed(col.column.boardColumnId) && toggleColumnCollapse(col.column.boardColumnId)"
+              >
+                @if (!isColumnCollapsed(col.column.boardColumnId)) {
+                  @for (task of col.tasks; track task.taskId) {
+                    <div 
+                      [class]="'task-card ' + getColumnColorClass(col.column.status, col.column.name)"
+                      cdkDrag 
+                      [cdkDragData]="task"
+                      (cdkDragEnded)="onDragEnded()"
+                    >
+                      <div class="task-card-glow" [class]="getIssueTypeClass(task.issueType)"></div>
+                      
+                      <div class="task-card-header">
+                        <span class="task-key">{{ task.issueKey }}</span>
+                        @if (task.storyPoints) {
+                          <span class="story-points" title="Story Points">{{ task.storyPoints }}</span>
+                        }
+                      </div>
+
+                      <a [routerLink]="['/tasks', task.taskId]" class="task-title">
+                        {{ task.title }}
+                      </a>
+
+                      <!-- ETA Badge -->
+                      @if (task.latestEta) {
+                        <div class="eta-badge" [class.delayed]="isDelayed(task)" title="Latest ETA">
+                          <span class="material-symbols-outlined eta-icon">schedule</span>
+                          <span>ETA: {{ formatDate(task.latestEta) }}</span>
+                          @if (isDelayed(task)) { <span class="delayed-label">⚠</span> }
+                        </div>
+                      }
+
+                      <!-- Dev Update Drawer Toggle -->
+                      <div class="drawer-toggle" (click)="toggleDrawer(task.taskId, $event)" cdkDragHandle="false">
+                        <span class="drawer-toggle-label">
+                          <span class="material-symbols-outlined" style="font-size:0.9rem">edit_note</span>
+                          Schedule Info
+                        </span>
+                        <span class="material-symbols-outlined drawer-chevron" [class.open]="isDrawerOpen(task.taskId)">
+                          expand_more
+                        </span>
+                      </div>
+
+                      <!-- Collapsible Drawer -->
+                      @if (isDrawerOpen(task.taskId)) {
+                        <div class="dev-drawer" (mousedown)="$event.stopPropagation()">
+                          <div class="drawer-row">
+                            <div class="drawer-field">
+                              <label class="drawer-label">Initial ETA</label>
+                              <input
+                                type="date"
+                                class="drawer-input"
+                                [ngModel]="getDrawerDraft(task.taskId, 'initialEta')"
+                                (ngModelChange)="onDraftChange(task.taskId, 'initialEta', $event)"
+                              />
+                            </div>
+                            <div class="drawer-field">
+                              <label class="drawer-label">Latest ETA</label>
+                              <input
+                                type="date"
+                                class="drawer-input"
+                                [ngModel]="getDrawerDraft(task.taskId, 'latestEta')"
+                                (ngModelChange)="onDraftChange(task.taskId, 'latestEta', $event)"
+                              />
+                            </div>
+                          </div>
+                          <div class="drawer-actions">
+                            <button
+                              type="button"
+                              class="drawer-save-btn"
+                              (click)="saveDevInfo(task, $event)"
+                              [disabled]="savingDrawer() === task.taskId"
+                            >
+                              @if (savingDrawer() === task.taskId) {
+                                Saving…
+                              } @else {
+                                Save
+                              }
+                            </button>
+                            @if (savedDrawer() === task.taskId) {
+                              <span class="saved-indicator">✓ Saved</span>
+                            }
+                          </div>
+                        </div>
+                      }
+
+                      <div class="task-card-footer">
+                        <div class="task-tags">
+                          <div class="badge-pill type-pill" [class]="getIssueTypeClass(task.issueType)" [title]="getIssueTypeLabel(task.issueType)">
+                            <span class="material-symbols-outlined badge-icon">
+                              {{ getIssueTypeIcon(task.issueType) }}
+                            </span>
+                            <span class="badge-text">{{ getIssueTypeLabel(task.issueType) }}</span>
+                          </div>
+                          
+                          <div class="badge-pill priority-pill" [class]="getPriorityClass(task.priority)" [title]="getPriorityLabel(task.priority)">
+                            <span class="material-symbols-outlined badge-icon">
+                              {{ getPriorityIcon(task.priority) }}
+                            </span>
+                          </div>
+
+                          @if (task.isOverdue) {
+                            <div class="badge-pill overdue-pill" title="Overdue">
+                              <span class="material-symbols-outlined badge-icon text-rose-500">warning</span>
+                            </div>
+                          }
+                        </div>
+
+                        <div class="task-assignee">
+                          @if (getUserAvatarUrl(task.assigneeId); as avatar) {
+                            <img class="assignee-avatar" [src]="avatar" [title]="getUserDisplayName(task.assigneeId)" alt="Avatar" />
+                          } @else {
+                            <div class="assignee-avatar" [style.background-color]="getAssigneeColor(task.assigneeId)" [title]="getUserDisplayName(task.assigneeId)">
+                              {{ getUserInitials(task.assigneeId) }}
+                            </div>
+                          }
+                        </div>
+                      </div>
+
+                      <!-- Premium Custom Drag Preview with Adaptive Neon Glow -->
+                      <div *cdkDragPreview [class]="'task-card cdk-drag-preview ' + (hoveredColumnClass() || getColumnColorClass(col.column.status, col.column.name))">
+                        <div class="task-card-header">
+                          <span class="task-key">{{ task.issueKey }}</span>
+                          @if (task.storyPoints) {
+                            <span class="story-points">{{ task.storyPoints }}</span>
+                          }
+                        </div>
+                        <div class="task-title" style="margin: 0.25rem 0; font-weight:600; font-size: 0.9rem;">{{ task.title }}</div>
+                        <div class="task-card-footer" style="border-top:none; margin-top:0.25rem;">
+                          <div class="badge-pill type-pill" [class]="getIssueTypeClass(task.issueType)">
+                            <span class="material-symbols-outlined badge-icon">
+                              {{ getIssueTypeIcon(task.issueType) }}
+                            </span>
+                            <span class="badge-text">{{ getIssueTypeLabel(task.issueType) }}</span>
+                          </div>
+                          <div class="task-assignee">
+                            @if (getUserAvatarUrl(task.assigneeId); as avatar) {
+                              <img class="assignee-avatar" [src]="avatar" style="width:20px; height:20px;" alt="Avatar" />
+                            } @else {
+                              <div class="assignee-avatar" [style.background-color]="getAssigneeColor(task.assigneeId)" style="width:20px; height:20px; font-size:0.6rem;">
+                                {{ getUserInitials(task.assigneeId) }}
+                              </div>
+                            }
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Animated Ghost Dropzone Placeholder -->
+                      <div *cdkDragPlaceholder [class]="'ghost-dropzone ' + getColumnColorClass(col.column.status, col.column.name)">
+                        <div class="ghost-dropzone-inner">
+                          <span class="material-symbols-outlined">move_item</span>
+                          <span>Drop here</span>
+                        </div>
+                      </div>
+                    </div>
+                  } @empty {
+                    <div class="column-empty-state">
+                      <span class="material-symbols-outlined">inbox</span>
+                      <span>No tasks here</span>
+                    </div>
+                  }
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </section>
+  

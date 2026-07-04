@@ -1,0 +1,87 @@
+<section class="page">
+  <header>
+    <h1>Notifications</h1>
+    <div class="toolbar">
+      <button 
+        type="button" 
+        class="btn-mark-all" 
+        (click)="markAllRead()" 
+        [disabled]="loading() || allItems().length === 0"
+      >
+        <span class="material-symbols-outlined">done_all</span>
+        Mark all read
+      </button>
+    </div>
+  </header>
+
+  <div class="filter-bar">
+    <button type="button" class="filter-btn" [class.active]="activeCategory() === 'all'" (click)="setCategory('all')">
+      All
+    </button>
+    <button type="button" class="filter-btn" [class.active]="activeCategory() === 'unread'" (click)="setCategory('unread')">
+      Unread
+    </button>
+    <button type="button" class="filter-btn" [class.active]="activeCategory() === 'mentions'" (click)="setCategory('mentions')">
+      Mentions
+    </button>
+    <button type="button" class="filter-btn" [class.active]="activeCategory() === 'tasks'" (click)="setCategory('tasks')">
+      Tasks
+    </button>
+    <button type="button" class="filter-btn" [class.active]="activeCategory() === 'projects'" (click)="setCategory('projects')">
+      Projects
+    </button>
+    <button type="button" class="filter-btn" [class.active]="activeCategory() === 'system'" (click)="setCategory('system')">
+      System
+    </button>
+  </div>
+
+  @if (loading()) {
+    <p>Loading…</p>
+  } @else if (error()) {
+    <p class="error">{{ error() }}</p>
+  } @else if (filteredItems().length === 0) {
+    <div class="empty-state">
+      <span class="material-symbols-outlined">notifications_off</span>
+      <p>No notifications in this category.</p>
+    </div>
+  } @else {
+    @for (group of groupedItems(); track group.title) {
+      <div class="group-section">
+        <h3 class="group-header">{{ group.title }}</h3>
+        <ul class="notification-list">
+          @for (n of group.items; track n.notificationId) {
+            <li class="notification-card" [class.unread]="!n.isRead">
+              <div class="card-left">
+                <div class="icon-wrapper" [ngClass]="getIconClass(n)">
+                  <span class="material-symbols-outlined">{{ getIcon(n) }}</span>
+                </div>
+                <div class="card-content">
+                  <div class="card-meta">
+                    <span class="entity-badge">{{ n.entityType }}</span>
+                    <span class="time-stamp">{{ n.createdAt | date:'shortTime' }}</span>
+                  </div>
+                  <p class="notification-message">{{ n.message }}</p>
+                </div>
+              </div>
+              <div class="card-actions">
+                @if (!n.isRead) {
+                  <button type="button" class="btn-action-read" (click)="markRead(n.notificationId)" title="Mark as read">
+                    <span class="material-symbols-outlined">done</span>
+                  </button>
+                }
+              </div>
+            </li>
+          }
+        </ul>
+      </div>
+    }
+
+    <app-pagination 
+      [totalItems]="filteredItems().length" 
+      [pageSize]="pageSize()" 
+      [currentPage]="currentPage()"
+      (pageChange)="onPageChange($event)"
+      (pageSizeChange)="onPageSizeChange($event)"
+    ></app-pagination>
+  }
+</section>

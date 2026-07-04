@@ -1,0 +1,316 @@
+
+    <div class="auth-page-container" [class.dark-theme]="isDarkMode()">
+      <!-- Theme Toggler (Floating Top Right) -->
+      <button type="button" class="theme-toggle-btn" (click)="toggleTheme()" aria-label="Toggle Theme">
+        <span class="material-symbols-outlined">
+          {{ isDarkMode() ? 'light_mode' : 'dark_mode' }}
+        </span>
+      </button>
+
+      <div class="split-layout">
+        <!-- Left Section: Branding & Features -->
+        <div class="branding-section">
+          <div class="mesh-background">
+            <div class="blob blob-1"></div>
+            <div class="blob blob-2"></div>
+            <div class="blob blob-3"></div>
+          </div>
+          
+          <div class="branding-content">
+            <!-- Logo -->
+            <div class="logo-area">
+              <div class="logo-container">
+                <img src="/logo.png" class="logo-image" alt="Workflow.IO Logo" />
+              </div>
+              <span class="logo-text">Workflow.IO</span>
+            </div>
+
+            <!-- Headline & Tagline -->
+            <h1 class="headline">Design, build, and ship premium software.</h1>
+            <p class="tagline">The modern SaaS project workspace inspired by Linear, Notion, and Vercel. Streamline your sprint planning, track issues in real-time, and analyze team velocity with visual excellence.</p>
+
+            <!-- Feature Cards Grid -->
+            <div class="features-grid">
+              <div class="feature-card">
+                <span class="material-symbols-outlined feature-icon purple-glow">task_alt</span>
+                <div class="feature-text">
+                  <h3>Project Tracking</h3>
+                  <p>Minimal layouts for tracking epics, backlog, and sprint boards.</p>
+                </div>
+              </div>
+              <div class="feature-card">
+                <span class="material-symbols-outlined feature-icon green-glow">group</span>
+                <div class="feature-text">
+                  <h3>Team Collaboration</h3>
+                  <p>Real-time updates, comment mentions, and file attachments.</p>
+                </div>
+              </div>
+              <div class="feature-card">
+                <span class="material-symbols-outlined feature-icon amber-glow">timeline</span>
+                <div class="feature-text">
+                  <h3>Agile Workflow</h3>
+                  <p>Interactive timeline charts and drag-and-drop boards.</p>
+                </div>
+              </div>
+              <div class="feature-card">
+                <span class="material-symbols-outlined feature-icon blue-glow">bar_chart</span>
+                <div class="feature-text">
+                  <h3>Analytics Dashboard</h3>
+                  <p>Generate comprehensive reports and project velocities.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Dashboard Mockup Card -->
+            <div class="dashboard-preview-card glass-panel hover-scale">
+              <div class="preview-header">
+                <div class="preview-title">
+                  <span class="status-indicator online"></span>
+                  <span>Workflow.IO Analytics Engine</span>
+                </div>
+                <span class="preview-badge">Active Sprint</span>
+              </div>
+              <div class="preview-body">
+                <div class="preview-chart">
+                  <div class="chart-bar" style="height: 40%"></div>
+                  <div class="chart-bar" style="height: 65%"></div>
+                  <div class="chart-bar" style="height: 50%"></div>
+                  <div class="chart-bar" style="height: 85%"></div>
+                  <div class="chart-bar highlight" style="height: 95%"></div>
+                </div>
+                <div class="preview-stats">
+                  <div class="stat">
+                    <span class="stat-label">Velocity</span>
+                    <span class="stat-value">92%</span>
+                  </div>
+                  <div class="stat">
+                    <span class="stat-label">Closed</span>
+                    <span class="stat-value">48 Tasks</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Trusted By Section -->
+            <div class="trusted-by">
+              <p>Trusted by world-class software teams</p>
+              <div class="avatar-group">
+                <img src="https://avatar.vercel.sh/himanshu" alt="Himanshu" />
+                <img src="https://avatar.vercel.sh/neha" alt="Neha" />
+                <img src="https://avatar.vercel.sh/rohit" alt="Rohit" />
+                <img src="https://avatar.vercel.sh/karan" alt="Karan" />
+                <span class="avatar-more">+8</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Section: Register Card -->
+        <div class="form-section">
+          <div class="form-wrapper">
+            <div class="auth-card glass-panel">
+              
+              <!-- STEP 1: Registration Form -->
+              @if (activeStep() === 'form') {
+                <div class="auth-card-header">
+                  <h2>Create account</h2>
+                  <p class="subtitle">Join Workflow.IO to start tracking tasks</p>
+                </div>
+
+                <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate class="auth-form">
+                  <!-- Email field -->
+                  <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <div class="input-with-icon">
+                      <span class="material-symbols-outlined input-icon">mail</span>
+                      <input
+                        id="email"
+                        type="email"
+                        formControlName="email"
+                        placeholder="name@company.com"
+                        [class.invalid]="emailInvalid()"
+                      />
+                    </div>
+                    @if (emailInvalid()) {
+                      <p class="field-error">Enter a valid email address.</p>
+                    }
+                  </div>
+
+                  <!-- First & Last Name fields in a row -->
+                  <div class="form-row-2">
+                    <div class="form-group">
+                      <label for="first-name">First Name</label>
+                      <input
+                        id="first-name"
+                        type="text"
+                        formControlName="firstName"
+                        placeholder="Enter first name"
+                        [class.invalid]="firstNameInvalid()"
+                      />
+                      @if (firstNameInvalid()) {
+                        <p class="field-error">First name is required.</p>
+                      }
+                    </div>
+                    <div class="form-group">
+                      <label for="last-name">Last Name</label>
+                      <input
+                        id="last-name"
+                        type="text"
+                        formControlName="lastName"
+                        placeholder="Enter last name"
+                        [class.invalid]="lastNameInvalid()"
+                      />
+                      @if (lastNameInvalid()) {
+                        <p class="field-error">Last name is required.</p>
+                      }
+                    </div>
+                  </div>
+
+                  <!-- Password field -->
+                  <div class="form-group">
+                    <label for="password">Password</label>
+                    <div class="input-with-icon">
+                      <span class="material-symbols-outlined input-icon">lock</span>
+                      <input
+                        id="password"
+                        [type]="showPassword() ? 'text' : 'password'"
+                        formControlName="password"
+                        placeholder="••••••••"
+                        autocomplete="new-password"
+                        [class.invalid]="passwordInvalid()"
+                      />
+                      <button type="button" class="password-toggle-btn" (click)="togglePassword()">
+                        <span class="material-symbols-outlined">
+                          {{ showPassword() ? 'visibility_off' : 'visibility' }}
+                        </span>
+                      </button>
+                    </div>
+                    @if (passwordInvalid()) {
+                      <p class="field-error">Password must be at least 8 characters.</p>
+                    }
+                  </div>
+
+                  @if (auth.lastError(); as errorMessage) {
+                    <div class="alert-box error-alert mt-3" role="alert">
+                      <span class="material-symbols-outlined">error</span>
+                      <span>{{ errorMessage }}</span>
+                    </div>
+                  }
+
+                  <button type="submit" class="btn btn-primary submit-btn w-full mt-4 btn-next" [disabled]="auth.isLoading()">
+                    @if (auth.isLoading()) {
+                      <span class="spinner-sm"></span> Creating account...
+                    } @else {
+                      <span>Complete Setup</span>
+                      <span class="material-symbols-outlined">rocket_launch</span>
+                    }
+                  </button>
+                </form>
+
+                <div class="auth-card-footer">
+                  <span>Already have an account?</span>
+                  <a routerLink="/auth/login">Sign in</a>
+                </div>
+              }
+
+              <!-- STEP 2: OTP Verification Form -->
+              @if (activeStep() === 'otp') {
+                <div class="auth-card-header">
+                  <h2>Verify email</h2>
+                  <p class="subtitle">We sent a 6-digit verification code to <strong>{{ form.controls.email.value }}</strong></p>
+                </div>
+
+                <div class="auth-form">
+                  <div class="form-group text-center">
+                    <label>Verification Code</label>
+                    <div class="otp-inputs-wrapper">
+                      @for (digit of [0,1,2,3,4,5]; track digit) {
+                        <input
+                          [id]="'otp-input-' + digit"
+                          type="text"
+                          maxlength="1"
+                          pattern="[0-9]*"
+                          inputmode="numeric"
+                          class="otp-digit-input"
+                          [value]="otpCode()[digit]"
+                          (input)="onOtpInput($event, digit)"
+                          (keydown)="onOtpKeyDown($event, digit)"
+                        />
+                      }
+                    </div>
+                    
+                    <div class="flex-center-y justify-center mt-2">
+                      @if (otpTimer() > 0) {
+                        <div class="timer-badge">
+                          <span class="material-symbols-outlined" style="font-size: 1rem; margin-right: 0.25rem;">schedule</span>
+                          <span>Expires in {{ getFormattedTime() }}</span>
+                        </div>
+                      } @else {
+                        <div class="timer-badge expired">
+                          <span class="material-symbols-outlined" style="font-size: 1rem; margin-right: 0.25rem;">error</span>
+                          <span>Code Expired</span>
+                        </div>
+                      }
+                    </div>
+                  </div>
+
+                  @if (verificationError()) {
+                    <div class="alert-box error-alert" role="alert">
+                      <span class="material-symbols-outlined">error</span>
+                      <span>{{ verificationError() }}</span>
+                    </div>
+                  }
+
+                  @if (otpSuccessMessage()) {
+                    <div class="alert-box success-alert" style="background-color: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.15); color: #10b981; display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1rem; border-radius: 12px; font-size: 0.8rem; font-weight: 500;" role="status">
+                      <span class="material-symbols-outlined">check_circle</span>
+                      <span>{{ otpSuccessMessage() }}</span>
+                    </div>
+                  }
+
+                  <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 1.5rem;">
+                    <button type="button" class="btn btn-secondary" style="height: 2.85rem; border-radius: 12px; font-weight: 600; padding: 0 1.25rem; background-color: var(--bg-hover, #e2e8f0); color: var(--text-primary); border: none;" (click)="backToForm()">
+                      Back
+                    </button>
+                    <button type="button" class="btn btn-primary submit-btn" style="flex: 1; margin-left: 1rem; padding: 0 1.5rem;" (click)="onVerifyOtp()" [disabled]="auth.isLoading() || otpTimer() === 0">
+                      @if (auth.isLoading()) {
+                        <span class="spinner-sm"></span> Verifying...
+                      } @else {
+                        <span>Verify Code</span>
+                        <span class="material-symbols-outlined" style="font-size: 1.1rem; margin-left: 0.35rem;">check</span>
+                      }
+                    </button>
+                  </div>
+
+                  <div class="text-center mt-4" style="font-size: 0.85rem; color: var(--text-secondary);">
+                    Didn't receive the code? 
+                    <button type="button" class="resend-btn" (click)="onResendOtp()" [disabled]="resendCount() >= 3 || auth.isLoading()">
+                      Resend Code {{ resendCount() > 0 ? '(' + (3 - resendCount()) + ' remaining)' : '' }}
+                    </button>
+                  </div>
+                </div>
+              }
+
+              <!-- STEP 3: Verification Success Screen -->
+              @if (activeStep() === 'success') {
+                <div class="text-center py-6" style="padding: 1.5rem 0;">
+                  <div class="success-icon-wrapper">
+                    <span class="material-symbols-outlined" style="font-size: 2.5rem;">check_circle</span>
+                  </div>
+                  
+                  <h2 style="font-size: 1.75rem; font-weight: 800; color: var(--text-primary); margin-top: 1.5rem; letter-spacing: -0.03em;">Email Verified!</h2>
+                  <p class="subtitle" style="margin-top: 0.5rem; line-height: 1.5; color: var(--text-secondary);">Your organization email ownership has been successfully validated. We are initializing your workspace...</p>
+                  
+                  <div style="margin-top: 2rem;">
+                    <span class="spinner-sm" style="border-top-color: #10b981; border-left-color: rgba(16,185,129,0.2); border-right-color: rgba(16,185,129,0.2); border-bottom-color: rgba(16,185,129,0.2); width: 24px; height: 24px;"></span>
+                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.75rem; font-weight: 500;">Logging you in, please wait...</p>
+                  </div>
+                </div>
+              }
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  

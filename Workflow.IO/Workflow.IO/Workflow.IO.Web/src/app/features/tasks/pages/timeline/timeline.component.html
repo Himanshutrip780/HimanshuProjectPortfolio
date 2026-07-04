@@ -1,0 +1,101 @@
+
+    <div class="page-container">
+      <header class="page-header">
+        <div class="header-left">
+          <h1>Timeline Roadmap</h1>
+          <p class="subtitle">Visualize task schedules and durations in a Gantt-style roadmap.</p>
+        </div>
+        <div class="header-right">
+          <div class="timeline-legend">
+            <span class="legend-item"><span class="legend-color bg-todo"></span> Todo</span>
+            <span class="legend-item"><span class="legend-color bg-progress"></span> In Progress</span>
+            <span class="legend-item"><span class="legend-color bg-done"></span> Done</span>
+          </div>
+        </div>
+      </header>
+
+      @if (loading()) {
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p>Loading timeline...</p>
+        </div>
+      } @else if (error()) {
+        <div class="error-state">
+          <span class="material-symbols-outlined text-danger">error</span>
+          <p>{{ error() }}</p>
+        </div>
+      } @else if (timelineProjects().length === 0) {
+        <div class="empty-state">
+          <span class="material-symbols-outlined">timeline</span>
+          <p>No projects or tasks found to show on the timeline.</p>
+        </div>
+      } @else {
+        <div class="timeline-container panel">
+          <!-- Left side: Task list sidebar -->
+          <div class="timeline-sidebar">
+            <div class="sidebar-header">Projects & Tasks</div>
+            <div #sidebarRows class="sidebar-rows" (scroll)="onSidebarScroll()">
+              @for (tp of timelineProjects(); track tp.project.projectId) {
+                <div class="sidebar-project-row">
+                  <span class="project-indicator" [style.background-color]="getProjectColor(tp.project.name)"></span>
+                  {{ tp.project.name }}
+                </div>
+                @for (task of tp.tasks; track task.taskId) {
+                  <div class="sidebar-task-row" [style.padding-left.rem]="task.parentTaskId ? 2.25 : 1.25">
+                    <span class="task-key" style="display: inline-flex; align-items: center; gap: 0.25rem;">
+                      @if (task.parentTaskId) {
+                        <span>↳</span>
+                      }
+                      {{ task.issueKey }}
+                    </span>
+                    <span class="task-title" [title]="task.title" [style.font-weight]="task.parentTaskId ? '500' : '600'">{{ task.title }}</span>
+                  </div>
+                } @empty {
+                  <div class="sidebar-empty-row">No tasks with due dates</div>
+                }
+              }
+            </div>
+          </div>
+
+          <!-- Right side: Scrolling timeline grid -->
+          <div #gridWrapper class="timeline-grid-wrapper" (scroll)="onGridScroll()">
+            <div class="timeline-grid-header">
+              @for (day of timelineDays(); track day.toISOString()) {
+                <div class="day-header" [class.today]="isToday(day)">
+                  <span class="day-num">{{ day.getDate() }}</span>
+                  <span class="day-lbl">{{ getDayLabel(day) }}</span>
+                </div>
+              }
+            </div>
+
+            <div class="timeline-grid-body">
+              @for (tp of timelineProjects(); track tp.project.projectId) {
+                <!-- Project background row -->
+                <div class="grid-project-row"></div>
+                
+                @for (task of tp.tasks; track task.taskId) {
+                  <div class="grid-task-row">
+                    <!-- Task horizontal bar -->
+                    @if (getTaskSpan(task); as span) {
+                      <a 
+                        [routerLink]="['/tasks', task.taskId]"
+                        class="task-bar" 
+                        [class]="getTaskBarClass(task.status)"
+                        [style.left.px]="span.left"
+                        [style.width.px]="span.width"
+                        [title]="task.title + ' (' + formatDueDate(task.dueDate) + ')'"
+                      >
+                        <span class="bar-text">{{ task.title }}</span>
+                      </a>
+                    }
+                  </div>
+                } @empty {
+                  <div class="grid-empty-row"></div>
+                }
+              }
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  

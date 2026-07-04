@@ -1,0 +1,220 @@
+﻿@gateway = http://localhost:5270
+@ownerEmail = owner.demo@workflow.io.local
+@memberEmail = member.demo@workflow.io.local
+@password = Password123!
+
+### Health: gateway
+GET {{gateway}}/health
+
+### Register owner
+# @name registerOwner
+POST {{gateway}}/users/register
+Content-Type: application/json
+
+{
+  "email": "{{ownerEmail}}",
+  "password": "{{password}}",
+  "firstName": "Zen",
+  "lastName": "Owner"
+}
+
+### Register member
+# @name registerMember
+POST {{gateway}}/users/register
+Content-Type: application/json
+
+{
+  "email": "{{memberEmail}}",
+  "password": "{{password}}",
+  "firstName": "Zen",
+  "lastName": "Member"
+}
+
+### Login owner
+# @name loginOwner
+POST {{gateway}}/users/authenticate
+Content-Type: application/json
+
+{
+  "email": "{{ownerEmail}}",
+  "password": "{{password}}"
+}
+
+### Create project
+# @name createProject
+POST {{gateway}}/projects
+Authorization: Bearer {{loginOwner.response.body.$.data.jwtToken}}
+Content-Type: application/json
+
+{
+  "name": "Workflow.IO Demo Project",
+  "description": "End-to-end local smoke test project."
+}
+
+### Add member to project
+POST {{gateway}}/projects/{{createProject.response.body.$.data.projectId}}/members
+Authorization: Bearer {{loginOwner.response.body.$.data.jwtToken}}
+Content-Type: application/json
+
+{
+  "userId": "{{registerMember.response.body.$.data.userId}}",
+  "role": 2
+}
+
+### Create board
+# @name createBoard
+POST {{gateway}}/projects/{{createProject.response.body.$.data.projectId}}/boards
+Authorization: Bearer {{loginOwner.response.body.$.data.jwtToken}}
+Content-Type: application/json
+
+{
+  "name": "Engineering Board"
+}
+
+### Create sprint
+# @name createSprint
+POST {{gateway}}/projects/{{createProject.response.body.$.data.projectId}}/sprints
+Authorization: Bearer {{loginOwner.response.body.$.data.jwtToken}}
+Content-Type: application/json
+
+{
+  "name": "Sprint 1",
+  "startDate": "2026-05-23T00:00:00Z",
+  "endDate": "2026-06-06T00:00:00Z"
+}
+
+### Create epic
+# @name createEpic
+POST {{gateway}}/projects/{{createProject.response.body.$.data.projectId}}/epics
+Authorization: Bearer {{loginOwner.response.body.$.data.jwtToken}}
+Content-Type: application/json
+
+{
+  "name": "Jira-like Planning",
+  "description": "Boards, backlog, sprint planning, and workflow foundation."
+}
+
+### Create task
+# @name createTask
+POST {{gateway}}/projects/{{createProject.response.body.$.data.projectId}}/tasks
+Authorization: Bearer {{loginOwner.response.body.$.data.jwtToken}}
+Content-Type: application/json
+
+{
+  "title": "Build the Workflow.IO local demo flow",
+  "description": "Prove project, task, sprint, comment, notification, and activity flow.",
+  "priority": 3,
+  "assigneeId": "{{registerMember.response.body.$.data.userId}}",
+  "dueDate": "2026-06-01T00:00:00Z"
+}
+
+### Watch task
+POST {{gateway}}/tasks/{{createTask.response.body.$.data.taskId}}/watchers/me
+Authorization: Bearer {{loginOwner.response.body.$.data.jwtToken}}
+
+### Add label
+POST {{gateway}}/tasks/{{createTask.response.body.$.data.taskId}}/labels
+Authorization: Bearer {{loginOwner.response.body.$.data.jwtToken}}
+Content-Type: application/json
+
+{
+  "name": "backend",
+  "color": "#2563eb"
+}
+
+### Add subtask
+POST {{gateway}}/tasks/{{createTask.response.body.$.data.taskId}}/subtasks
+Authorization: Bearer {{loginOwner.response.body.$.data.jwtToken}}
+Content-Type: application/json
+
+{
+  "title": "Verify gateway-to-service routing"
+}
+
+### Add story points
+PATCH {{gateway}}/tasks/{{createTask.response.body.$.data.taskId}}/story-points
+Authorization: Bearer {{loginOwner.response.body.$.data.jwtToken}}
+Content-Type: application/json
+
+{
+  "storyPoints": 5
+}
+
+### Assign task to epic
+PATCH {{gateway}}/tasks/{{createTask.response.body.$.data.taskId}}/epic
+Authorization: Bearer {{loginOwner.response.body.$.data.jwtToken}}
+Content-Type: application/json
+
+{
+  "epicId": "{{createEpic.response.body.$.data.epicId}}"
+}
+
+### Move task into sprint
+PATCH {{gateway}}/tasks/{{createTask.response.body.$.data.taskId}}/sprint
+Authorization: Bearer {{loginOwner.response.body.$.data.jwtToken}}
+Content-Type: application/json
+
+{
+  "sprintId": "{{createSprint.response.body.$.data.sprintId}}"
+}
+
+### Start sprint
+PATCH {{gateway}}/sprints/{{createSprint.response.body.$.data.sprintId}}/start
+Authorization: Bearer {{loginOwner.response.body.$.data.jwtToken}}
+
+### Move task to in progress
+PATCH {{gateway}}/tasks/{{createTask.response.body.$.data.taskId}}/status
+Authorization: Bearer {{loginOwner.response.body.$.data.jwtToken}}
+Content-Type: application/json
+
+{
+  "status": 2
+}
+
+### Add comment with mention
+POST {{gateway}}/tasks/{{createTask.response.body.$.data.taskId}}/comments
+Authorization: Bearer {{loginOwner.response.body.$.data.jwtToken}}
+Content-Type: application/json
+
+{
+  "body": "Please review this demo task when you get a chance.",
+  "mentionedUserIds": [
+    "{{registerMember.response.body.$.data.userId}}"
+  ]
+}
+
+### Get board view
+GET {{gateway}}/projects/{{createProject.response.body.$.data.projectId}}/board
+Authorization: Bearer {{loginOwner.response.body.$.data.jwtToken}}
+
+### Search project tasks
+GET {{gateway}}/projects/{{createProject.response.body.$.data.projectId}}/tasks/search?query=demo&status=2&priority=3
+Authorization: Bearer {{loginOwner.response.body.$.data.jwtToken}}
+
+### Get task comments
+GET {{gateway}}/tasks/{{createTask.response.body.$.data.taskId}}/comments
+Authorization: Bearer {{loginOwner.response.body.$.data.jwtToken}}
+
+### Get member notifications
+GET {{gateway}}/notifications/users/{{registerMember.response.body.$.data.userId}}
+Authorization: Bearer {{loginOwner.response.body.$.data.jwtToken}}
+
+### Get task activity
+GET {{gateway}}/activities/Task/{{createTask.response.body.$.data.taskId}}
+Authorization: Bearer {{loginOwner.response.body.$.data.jwtToken}}
+
+### Get project analytics summary
+GET {{gateway}}/analytics/projects/{{createProject.response.body.$.data.projectId}}/summary
+Authorization: Bearer {{loginOwner.response.body.$.data.jwtToken}}
+
+### Get project tasks by status
+GET {{gateway}}/analytics/projects/{{createProject.response.body.$.data.projectId}}/tasks-by-status
+Authorization: Bearer {{loginOwner.response.body.$.data.jwtToken}}
+
+### Get sprint velocity
+GET {{gateway}}/analytics/projects/{{createProject.response.body.$.data.projectId}}/sprints/{{createSprint.response.body.$.data.sprintId}}/velocity
+Authorization: Bearer {{loginOwner.response.body.$.data.jwtToken}}
+
+### Get activity trends
+GET {{gateway}}/analytics/projects/{{createProject.response.body.$.data.projectId}}/activity-trends?days=14
+Authorization: Bearer {{loginOwner.response.body.$.data.jwtToken}}
